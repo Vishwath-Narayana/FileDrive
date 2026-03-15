@@ -157,8 +157,16 @@ const Topbar = ({ onOpenAdminModal, onOpenCreateOrgModal }) => {
             id="user-dropdown"
           >
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-gray-900 text-white flex items-center justify-center text-sm font-medium">
-                {user?.name?.charAt(0).toUpperCase()}
+              <div className="w-8 h-8 rounded-full bg-gray-900 text-white flex items-center justify-center text-sm font-medium overflow-hidden flex-shrink-0">
+                {user?.avatar ? (
+                  <img
+                    src={`http://localhost:5001${user.avatar}`}
+                    alt={user?.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  user?.name?.charAt(0).toUpperCase()
+                )}
               </div>
               <span className="text-sm font-medium text-gray-900">{user?.name}</span>
               <ChevronDown size={16} className="text-gray-500" />

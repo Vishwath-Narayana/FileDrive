@@ -1,6 +1,7 @@
 const User = require('../models/User');
 const PasswordReset = require('../models/PasswordReset');
 const bcrypt = require('bcryptjs');
+const path = require('path');
 const { sendPasswordResetOTP } = require('../utils/email');
 
 exports.updateProfile = async (req, res) => {
@@ -29,6 +30,22 @@ exports.updateProfile = async (req, res) => {
     
     const updatedUser = await User.findById(user._id).select('-password');
     res.json(updatedUser);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.uploadAvatar = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: 'No image file uploaded' });
+    }
+
+    const avatarUrl = `/uploads/${req.file.filename}`;
+    
+    await User.findByIdAndUpdate(req.user._id, { avatar: avatarUrl });
+    
+    res.json({ avatar: avatarUrl, message: 'Avatar updated successfully' });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

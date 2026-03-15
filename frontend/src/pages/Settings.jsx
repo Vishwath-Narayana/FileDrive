@@ -10,7 +10,7 @@ import { useAuth } from '../context/AuthContext';
 
 const Settings = () => {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user, logout, updateAvatar } = useAuth();
   const location = useLocation();
   const [activeTab, setActiveTab] = useState(location.state?.tab || 'profile');
   
@@ -23,26 +23,58 @@ const Settings = () => {
   const [name, setName] = useState(user?.name || '');
   const [email, setEmail] = useState(user?.email || '');
   const [age, setAge] = useState(user?.age || '');
-  const [avatar, setAvatar] = useState(user?.avatar || '');
+  const [avatarPreview, setAvatarPreview] = useState(
+    user?.avatar ? `http://localhost:5001${user.avatar}` : null
+  );
+  const [avatarFile, setAvatarFile] = useState(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [savingProfile, setSavingProfile] = useState(false);
-  
+
+  // Security tab state
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [changingPassword, setChangingPassword] = useState(false);
-  
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  
   const [sendingOTP, setSendingOTP] = useState(false);
   const [showOTPInput, setShowOTPInput] = useState(false);
   const [otpCode, setOtpCode] = useState('');
 
-  const avatarOptions = [
-    '😀', '😎', '🚀', '💼', '🎨', '🎯', '⚡', '🔥',
-    '🌟', '💡', '🎭', '🎪', '🎬', '🎮', '🎲', '🎸'
-  ];
+  const handleAvatarChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image must be under 5MB');
+      return;
+    }
+    // Show local preview immediately
+    const reader = new FileReader();
+    reader.onloadend = () => setAvatarPreview(reader.result);
+    reader.readAsDataURL(file);
+    setAvatarFile(file);
+
+    // Upload immediately
+    try {
+      setUploadingAvatar(true);
+      const formData = new FormData();
+      formData.append('avatar', file);
+      const response = await api.post('/users/avatar', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      updateAvatar(response.data.avatar);
+      toast.success('Profile picture updated!');
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to upload image');
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
 
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
@@ -54,7 +86,7 @@ const Settings = () => {
 
     try {
       setSavingProfile(true);
-      await api.put('/users/profile', { name, avatar, age: age ? Number(age) : null, email });
+      await api.put('/users/profile', { name, age: age ? Number(age) : null, email });
       toast.success('Profile updated successfully');
       window.location.reload();
     } catch (error) {
@@ -173,44 +205,53 @@ const Settings = () => {
                     <form onSubmit={handleUpdateProfile} className="space-y-6">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-3">
-                          Profile Avatar
+                          Profile Photo
                         </label>
-                        <div className="flex items-center gap-4 mb-4">
-                          <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center text-4xl border-2 border-gray-200">
-                            {avatar || user?.name?.charAt(0).toUpperCase()}
+                        <div className="flex items-center gap-5">
+                          {/* Avatar preview */}
+                          <div className="relative w-20 h-20 flex-shrink-0">
+                            <div className="w-20 h-20 rounded-full bg-gray-100 border-2 border-gray-200 overflow-hidden flex items-center justify-center">
+                              {avatarPreview ? (
+                                <img
+                                  src={avatarPreview}
+                                  alt="Profile"
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <span className="text-3xl font-semibold text-gray-500">
+                                  {user?.name?.charAt(0).toUpperCase()}
+                                </span>
+                              )}
+                            </div>
+                            {uploadingAvatar && (
+                              <div className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center">
+                                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                              </div>
+                            )}
                           </div>
+
+                          {/* Upload button */}
                           <div>
-                            <p className="text-sm text-gray-600 mb-2">Choose an emoji avatar</p>
-                          </div>
-                        </div>
-                        <div className="grid grid-cols-8 gap-2">
-                          {avatarOptions.map((emoji) => (
-                            <button
-                              key={emoji}
-                              type="button"
-                              onClick={() => setAvatar(emoji)}
-                              className={`w-12 h-12 rounded-lg flex items-center justify-center text-2xl transition-all ${
-                                avatar === emoji
-                                  ? 'bg-gray-900 ring-2 ring-gray-900 ring-offset-2'
-                                  : 'bg-gray-100 hover:bg-gray-200'
-                              }`}
+                            <label
+                              htmlFor="avatar-upload"
+                              className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                             >
-                              {emoji}
-                            </button>
-                          ))}
-                          <button
-                            type="button"
-                            onClick={() => setAvatar('')}
-                            className={`w-12 h-12 rounded-lg flex items-center justify-center transition-all ${
-                              !avatar
-                                ? 'bg-gray-900 text-white ring-2 ring-gray-900 ring-offset-2'
-                                : 'bg-gray-100 hover:bg-gray-200 text-gray-600'
-                            }`}
-                          >
-                            <User size={20} />
-                          </button>
+                              <Camera size={16} className="text-gray-500" />
+                              {uploadingAvatar ? 'Uploading...' : 'Upload photo'}
+                            </label>
+                            <input
+                              id="avatar-upload"
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={handleAvatarChange}
+                              disabled={uploadingAvatar}
+                            />
+                            <p className="text-xs text-gray-400 mt-1.5">JPG, PNG or GIF · Max 5MB</p>
+                          </div>
                         </div>
                       </div>
+
 
                       <div>
                         <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">

@@ -123,6 +123,10 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const updateAvatar = (avatarUrl) => {
+    setUser(prev => prev ? { ...prev, avatar: avatarUrl } : prev);
+  };
+
   const value = {
     user,
     organizations,
@@ -132,6 +136,7 @@ export const AuthProvider = ({ children }) => {
     logout,
     switchOrganization,
     refreshOrganizations,
+    updateAvatar,
     loading,
     isAuthenticated: !!user,
   };
