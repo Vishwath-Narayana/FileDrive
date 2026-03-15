@@ -1,6 +1,6 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { User, Lock, ArrowLeft, Camera } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { User, Lock, ArrowLeft, Camera, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { Tab, Tabs } from 'react-bootstrap';
 import Sidebar from '../components/Sidebar';
@@ -11,9 +11,18 @@ import { useAuth } from '../context/AuthContext';
 const Settings = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
-  const [activeTab, setActiveTab] = useState('profile');
+  const location = useLocation();
+  const [activeTab, setActiveTab] = useState(location.state?.tab || 'profile');
+  
+  useEffect(() => {
+    if (location.state?.tab) {
+      setActiveTab(location.state.tab);
+    }
+  }, [location.state?.tab]);
   
   const [name, setName] = useState(user?.name || '');
+  const [email, setEmail] = useState(user?.email || '');
+  const [age, setAge] = useState(user?.age || '');
   const [avatar, setAvatar] = useState(user?.avatar || '');
   const [savingProfile, setSavingProfile] = useState(false);
   
@@ -21,6 +30,14 @@ const Settings = () => {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [changingPassword, setChangingPassword] = useState(false);
+  
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  
+  const [sendingOTP, setSendingOTP] = useState(false);
+  const [showOTPInput, setShowOTPInput] = useState(false);
+  const [otpCode, setOtpCode] = useState('');
 
   const avatarOptions = [
     '😀', '😎', '🚀', '💼', '🎨', '🎯', '⚡', '🔥',
@@ -37,7 +54,7 @@ const Settings = () => {
 
     try {
       setSavingProfile(true);
-      await api.put('/users/profile', { name, avatar });
+      await api.put('/users/profile', { name, avatar, age: age ? Number(age) : null, email });
       toast.success('Profile updated successfully');
       window.location.reload();
     } catch (error) {
@@ -50,9 +67,16 @@ const Settings = () => {
   const handleChangePassword = async (e) => {
     e.preventDefault();
     
-    if (!currentPassword || !newPassword || !confirmPassword) {
-      toast.error('All fields are required');
-      return;
+    if (showOTPInput) {
+      if (!otpCode || !newPassword || !confirmPassword) {
+        toast.error('All fields are required for OTP reset');
+        return;
+      }
+    } else {
+      if (!currentPassword || !newPassword || !confirmPassword) {
+        toast.error('All fields are required');
+        return;
+      }
     }
 
     if (newPassword !== confirmPassword) {
@@ -67,15 +91,42 @@ const Settings = () => {
 
     try {
       setChangingPassword(true);
-      await api.put('/users/change-password', { currentPassword, newPassword });
+      
+      if (showOTPInput) {
+        // use OTP verification route
+        await api.post('/users/reset-password', { 
+          email: user.email, 
+          otp: otpCode, 
+          newPassword 
+        });
+      } else {
+        // use standard change password route
+        await api.put('/users/change-password', { currentPassword, newPassword });
+      }
+      
       toast.success('Password changed successfully');
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
+      setOtpCode('');
+      setShowOTPInput(false);
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to change password');
     } finally {
       setChangingPassword(false);
+    }
+  };
+
+  const handleRequestOTP = async () => {
+    try {
+      setSendingOTP(true);
+      await api.post('/users/request-password-reset', { email: user.email });
+      toast.success('OTP sent to your email! (Check spam)');
+      setShowOTPInput(true);
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to send OTP');
+    } finally {
+      setSendingOTP(false);
     }
   };
 
@@ -182,11 +233,25 @@ const Settings = () => {
                         <input
                           id="email"
                           type="email"
-                          value={user?.email}
-                          disabled
-                          className="input-field bg-gray-50 cursor-not-allowed"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          className="input-field"
                         />
-                        <p className="text-xs text-gray-500 mt-1">Email cannot be changed</p>
+                      </div>
+                      
+                      <div>
+                        <label htmlFor="age" className="block text-sm font-medium text-gray-700 mb-2">
+                          Age
+                        </label>
+                        <input
+                          id="age"
+                          type="number"
+                          value={age}
+                          onChange={(e) => setAge(e.target.value)}
+                          className="input-field"
+                          placeholder="Your age"
+                          min="0"
+                        />
                       </div>
 
                       <div className="flex gap-3 pt-4">
@@ -227,46 +292,108 @@ const Settings = () => {
                         </p>
                       </div>
 
-                      <div>
-                        <label htmlFor="current-password" className="block text-sm font-medium text-gray-700 mb-2">
-                          Current Password
-                        </label>
-                        <input
-                          id="current-password"
-                          type="password"
-                          value={currentPassword}
-                          onChange={(e) => setCurrentPassword(e.target.value)}
-                          className="input-field"
-                          placeholder="Enter current password"
-                        />
-                      </div>
+                      {!showOTPInput ? (
+                        <div>
+                          <label htmlFor="current-password" className="block text-sm font-medium text-gray-700 mb-2 flex justify-between">
+                            <span>Current Password</span>
+                            <button 
+                              type="button" 
+                              onClick={handleRequestOTP}
+                              disabled={sendingOTP}
+                              className="text-xs text-blue-600 hover:underline"
+                            >
+                              {sendingOTP ? 'Sending OTP...' : 'Forgot password?'}
+                            </button>
+                          </label>
+                          <div className="relative">
+                            <input
+                              id="current-password"
+                              type={showCurrentPassword ? "text" : "password"}
+                              value={currentPassword}
+                              onChange={(e) => setCurrentPassword(e.target.value)}
+                              className="input-field pr-10"
+                              placeholder="Enter current password"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                            >
+                              {showCurrentPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div>
+                          <label htmlFor="otp" className="block text-sm font-medium text-gray-700 mb-2 flex justify-between">
+                            <span>Verification OTP</span>
+                            <button 
+                              type="button" 
+                              onClick={() => setShowOTPInput(false)}
+                              className="text-xs text-gray-500 hover:underline"
+                            >
+                              Remembered it?
+                            </button>
+                          </label>
+                          <input
+                            id="otp"
+                            type="text"
+                            value={otpCode}
+                            onChange={(e) => setOtpCode(e.target.value)}
+                            className="input-field"
+                            placeholder="Enter 6-digit OTP code"
+                            maxLength={6}
+                          />
+                          <p className="mt-2 text-xs text-gray-500">
+                            We've sent an OTP to {user?.email}. It may take a minute to arrive.
+                          </p>
+                        </div>
+                      )}
 
                       <div>
                         <label htmlFor="new-password" className="block text-sm font-medium text-gray-700 mb-2">
                           New Password
                         </label>
-                        <input
-                          id="new-password"
-                          type="password"
-                          value={newPassword}
-                          onChange={(e) => setNewPassword(e.target.value)}
-                          className="input-field"
-                          placeholder="Enter new password"
-                        />
+                        <div className="relative">
+                          <input
+                            id="new-password"
+                            type={showNewPassword ? "text" : "password"}
+                            value={newPassword}
+                            onChange={(e) => setNewPassword(e.target.value)}
+                            className="input-field pr-10"
+                            placeholder="Enter new password"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowNewPassword(!showNewPassword)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                          >
+                            {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                          </button>
+                        </div>
                       </div>
 
                       <div>
                         <label htmlFor="confirm-password" className="block text-sm font-medium text-gray-700 mb-2">
                           Confirm New Password
                         </label>
-                        <input
-                          id="confirm-password"
-                          type="password"
-                          value={confirmPassword}
-                          onChange={(e) => setConfirmPassword(e.target.value)}
-                          className="input-field"
-                          placeholder="Confirm new password"
-                        />
+                        <div className="relative">
+                          <input
+                            id="confirm-password"
+                            type={showConfirmPassword ? "text" : "password"}
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            className="input-field pr-10"
+                            placeholder="Confirm new password"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                          >
+                            {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                          </button>
+                        </div>
                       </div>
 
                       <div className="flex gap-3 pt-4">

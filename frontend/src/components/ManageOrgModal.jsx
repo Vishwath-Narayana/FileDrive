@@ -210,13 +210,28 @@ const ManageOrgModal = ({ show, onHide }) => {
                         </div>
                       </div>
                     </div>
-                    <span className={`text-xs px-2 py-1 rounded ${
-                      invitation.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                      invitation.status === 'accepted' ? 'bg-green-100 text-green-800' :
-                      'bg-red-100 text-red-800'
-                    }`}>
-                      {invitation.status}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className={`text-xs px-2 py-1 rounded ${
+                        invitation.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                        invitation.status === 'accepted' ? 'bg-green-100 text-green-800' :
+                        'bg-red-100 text-red-800'
+                      }`}>
+                        {invitation.status}
+                      </span>
+                      {invitation.status === 'pending' && (
+                        <button
+                          onClick={() => {
+                            const link = `${window.location.origin}/accept-invite?token=${invitation.token}`;
+                            navigator.clipboard.writeText(link);
+                            toast.success('Invite link copied!');
+                          }}
+                          className="text-xs px-2 py-1 rounded border border-gray-200 hover:bg-gray-50 text-gray-600 transition-colors"
+                          title="Copy Magic Link"
+                        >
+                          Copy Link
+                        </button>
+                      )}
+                    </div>
                   </div>
                 ))
               )}
