@@ -9,10 +9,10 @@ const DashboardControls = ({
   setViewMode, 
   typeFilter, 
   setTypeFilter,
-  onUpload 
+  onUpload,
+  userRole
 }) => {
-  const { user } = useAuth();
-  const canUpload = user?.role === 'admin' || user?.role === 'editor';
+  const canUpload = userRole === 'admin' || userRole === 'editor';
 
   return (
     <div className="mb-6">

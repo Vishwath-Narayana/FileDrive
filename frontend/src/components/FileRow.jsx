@@ -1,10 +1,10 @@
-import { MoreVertical, Download, Star, Trash2, FileText, Image as ImageIcon, FileSpreadsheet } from 'lucide-react';
+import { MoreVertical, Download, Star, Trash2, FileText, Image as ImageIcon, FileSpreadsheet, RotateCcw } from 'lucide-react';
 import { Dropdown } from 'react-bootstrap';
 import { useAuth } from '../context/AuthContext';
 
-const FileRow = ({ file, onDownload, onDelete }) => {
-  const { user } = useAuth();
-  const canDelete = user?.role === 'admin' || file.uploader._id === user?._id;
+const FileRow = ({ file, onDownload, onDelete, onToggleFavorite, onRestore, userRole, userId, isTrash }) => {
+  const canDelete = userRole === 'admin' || file.uploader._id === userId;
+  const isFavorited = file.favoritedBy?.includes(userId);
 
   const getFileIcon = (fileType) => {
     switch (fileType) {
@@ -65,20 +65,30 @@ const FileRow = ({ file, onDownload, onDelete }) => {
           </Dropdown.Toggle>
 
           <Dropdown.Menu>
-            <Dropdown.Item onClick={() => onDownload(file)}>
-              <Download size={16} className="me-2" />
-              Download
-            </Dropdown.Item>
-            <Dropdown.Item>
-              <Star size={16} className="me-2" />
-              Favorite
-            </Dropdown.Item>
+            {!isTrash && (
+              <>
+                <Dropdown.Item onClick={() => onDownload(file)}>
+                  <Download size={16} className="me-2" />
+                  Download
+                </Dropdown.Item>
+                <Dropdown.Item onClick={() => onToggleFavorite(file)}>
+                  <Star size={16} className="me-2" fill={isFavorited ? 'currentColor' : 'none'} />
+                  {isFavorited ? 'Remove from Favorites' : 'Add to Favorites'}
+                </Dropdown.Item>
+              </>
+            )}
+            {isTrash && canDelete && (
+              <Dropdown.Item onClick={() => onRestore(file)}>
+                <RotateCcw size={16} className="me-2" />
+                Restore
+              </Dropdown.Item>
+            )}
             {canDelete && (
               <>
                 <Dropdown.Divider />
                 <Dropdown.Item onClick={() => onDelete(file)} className="text-danger">
                   <Trash2 size={16} className="me-2" />
-                  Delete
+                  {isTrash ? 'Delete Permanently' : 'Move to Trash'}
                 </Dropdown.Item>
               </>
             )}

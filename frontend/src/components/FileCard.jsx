@@ -1,10 +1,10 @@
-import { MoreVertical, Download, Star, Trash2, FileText, Image as ImageIcon, FileSpreadsheet } from 'lucide-react';
+import { MoreVertical, Download, Star, Trash2, FileText, Image as ImageIcon, FileSpreadsheet, RotateCcw } from 'lucide-react';
 import { Dropdown } from 'react-bootstrap';
 import { useAuth } from '../context/AuthContext';
 
-const FileCard = ({ file, onDownload, onDelete }) => {
-  const { user } = useAuth();
-  const canDelete = user?.role === 'admin' || file.uploader._id === user?._id;
+const FileCard = ({ file, onDownload, onDelete, onToggleFavorite, onRestore, userRole, userId, isTrash }) => {
+  const canDelete = userRole === 'admin' || file.uploader._id === userId;
+  const isFavorited = file.favoritedBy?.includes(userId);
 
   const getFileIcon = (fileType) => {
     switch (fileType) {
@@ -28,55 +28,68 @@ const FileCard = ({ file, onDownload, onDelete }) => {
   };
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex-1">
-          {getFileIcon(file.fileType)}
-        </div>
-        <Dropdown align="end">
-          <Dropdown.Toggle
-            variant="link"
-            className="text-decoration-none p-0 border-0 bg-transparent text-gray-600"
-            id={`file-menu-${file._id}`}
-          >
-            <MoreVertical size={18} />
-          </Dropdown.Toggle>
+    <div className="bg-white border border-gray-200 rounded-lg hover:shadow-md transition-shadow">
+      <div className="p-4">
+        <div className="flex items-start justify-between mb-3">
+          <div className="flex-1">
+            {getFileIcon(file.fileType)}
+          </div>
+          <Dropdown align="end">
+            <Dropdown.Toggle
+              variant="link"
+              className="p-0 text-gray-400 hover:text-gray-600"
+              id={`dropdown-${file._id}`}
+            >
+              <MoreVertical size={20} />
+            </Dropdown.Toggle>
 
-          <Dropdown.Menu>
-            <Dropdown.Item onClick={() => onDownload(file)}>
-              <Download size={16} className="me-2" />
-              Download
-            </Dropdown.Item>
-            <Dropdown.Item>
-              <Star size={16} className="me-2" />
-              Favorite
-            </Dropdown.Item>
-            {canDelete && (
-              <>
-                <Dropdown.Divider />
-                <Dropdown.Item onClick={() => onDelete(file)} className="text-danger">
-                  <Trash2 size={16} className="me-2" />
-                  Delete
+            <Dropdown.Menu>
+              {!isTrash && (
+                <>
+                  <Dropdown.Item onClick={() => onDownload(file)}>
+                    <Download size={16} className="me-2" />
+                    Download
+                  </Dropdown.Item>
+                  <Dropdown.Item onClick={() => onToggleFavorite(file)}>
+                    <Star size={16} className="me-2" fill={isFavorited ? 'currentColor' : 'none'} />
+                    {isFavorited ? 'Remove from Favorites' : 'Add to Favorites'}
+                  </Dropdown.Item>
+                </>
+              )}
+              {isTrash && canDelete && (
+                <Dropdown.Item onClick={() => onRestore(file)}>
+                  <RotateCcw size={16} className="me-2" />
+                  Restore
                 </Dropdown.Item>
-              </>
-            )}
-          </Dropdown.Menu>
-        </Dropdown>
-      </div>
-
-      <h3 className="text-sm font-medium text-gray-900 mb-2 truncate" title={file.originalName}>
-        {file.originalName}
-      </h3>
-
-      <div className="flex items-center gap-2 text-xs text-gray-500">
-        <div className="w-6 h-6 rounded-full bg-gray-900 text-white flex items-center justify-center text-xs font-medium">
-          {file.uploader.name.charAt(0).toUpperCase()}
+              )}
+              {canDelete && (
+                <>
+                  <Dropdown.Divider />
+                  <Dropdown.Item onClick={() => onDelete(file)} className="text-danger">
+                    <Trash2 size={16} className="me-2" />
+                    {isTrash ? 'Delete Permanently' : 'Move to Trash'}
+                  </Dropdown.Item>
+                </>
+              )}
+            </Dropdown.Menu>
+          </Dropdown>
         </div>
-        <span>{file.uploader.name}</span>
-      </div>
 
-      <div className="mt-2 text-xs text-gray-400">
-        {formatDate(file.createdAt)}
+        <div className="mb-3">
+          <h3 className="text-sm font-medium text-gray-900 truncate">{file.originalName}</h3>
+          <p className="text-xs text-gray-500 mt-1">{(file.size / 1024).toFixed(2)} KB</p>
+        </div>
+
+        <div className="flex items-center gap-2 text-xs text-gray-600">
+          <div className="w-6 h-6 rounded-full bg-gray-900 text-white flex items-center justify-center font-medium">
+            {file.uploader.name.charAt(0).toUpperCase()}
+          </div>
+          <span>{file.uploader.name}</span>
+        </div>
+
+        <div className="mt-2 text-xs text-gray-400">
+          {formatDate(file.createdAt)}
+        </div>
       </div>
     </div>
   );

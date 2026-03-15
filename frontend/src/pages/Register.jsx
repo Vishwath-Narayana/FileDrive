@@ -7,7 +7,6 @@ const Register = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState('viewer');
   const [loading, setLoading] = useState(false);
   const { register } = useAuth();
   const navigate = useNavigate();
@@ -27,9 +26,9 @@ const Register = () => {
 
     try {
       setLoading(true);
-      await register(name, email, password, role);
-      toast.success('Registration successful');
-      navigate('/dashboard');
+      await register(name, email, password);
+      toast.success('Account created successfully! You can now login.');
+      navigate('/login');
     } catch (error) {
       toast.error(error.response?.data?.message || 'Registration failed');
     } finally {
@@ -86,22 +85,6 @@ const Register = () => {
               className="input-field"
               placeholder="••••••••"
             />
-          </div>
-
-          <div>
-            <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-1">
-              Role
-            </label>
-            <select
-              id="role"
-              value={role}
-              onChange={(e) => setRole(e.target.value)}
-              className="input-field"
-            >
-              <option value="viewer">Viewer</option>
-              <option value="editor">Editor</option>
-              <option value="admin">Admin</option>
-            </select>
           </div>
 
           <button

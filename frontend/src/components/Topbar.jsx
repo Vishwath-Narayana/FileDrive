@@ -1,26 +1,54 @@
-import { ChevronDown, LogOut } from 'lucide-react';
+import { ChevronDown, LogOut, Plus } from 'lucide-react';
 import { Dropdown } from 'react-bootstrap';
 import { useAuth } from '../context/AuthContext';
 
-const Topbar = ({ onOpenAdminModal }) => {
-  const { user, logout } = useAuth();
+const Topbar = ({ onOpenAdminModal, onOpenCreateOrgModal }) => {
+  const { user, logout, organizations, currentOrganization, switchOrganization } = useAuth();
 
   return (
     <div className="h-16 border-b border-gray-200 bg-white px-6 flex items-center justify-between">
       <div className="flex items-center gap-2">
-        <button className="px-3 py-1.5 border border-gray-300 rounded-md text-sm flex items-center gap-2 hover:bg-gray-50">
-          <span>My Organization</span>
-          <ChevronDown size={16} />
-        </button>
+        <Dropdown>
+          <Dropdown.Toggle
+            variant="outline-secondary"
+            className="d-flex align-items-center gap-2"
+            id="org-dropdown"
+          >
+            <span>{currentOrganization?.name || 'Select Organization'}</span>
+            <ChevronDown size={16} />
+          </Dropdown.Toggle>
+
+          <Dropdown.Menu>
+            {organizations.map((org) => (
+              <Dropdown.Item
+                key={org._id}
+                onClick={() => switchOrganization(org)}
+                active={currentOrganization?._id === org._id}
+              >
+                {org.name}
+              </Dropdown.Item>
+            ))}
+            <Dropdown.Divider />
+            <Dropdown.Item onClick={onOpenCreateOrgModal}>
+              <Plus size={16} className="me-2" />
+              Create Organization
+            </Dropdown.Item>
+          </Dropdown.Menu>
+        </Dropdown>
       </div>
 
       <div className="flex items-center gap-4">
-        {user?.role === 'admin' && (
+        {currentOrganization && 
+         currentOrganization._id !== user?.personalOrganization?._id &&
+         currentOrganization._id !== user?.personalOrganization &&
+         currentOrganization.members?.find(
+          m => m.user._id === user?._id || m.user === user?._id
+        )?.role === 'admin' && (
           <button
             onClick={onOpenAdminModal}
-            className="text-sm text-gray-700 hover:text-gray-900 font-medium"
+            className="px-4 py-2 text-sm text-gray-900 hover:bg-gray-50 font-medium rounded-lg border border-gray-200 transition-colors"
           >
-            Members
+            Manage Organization
           </button>
         )}
         

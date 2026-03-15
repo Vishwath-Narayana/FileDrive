@@ -6,7 +6,8 @@ import Topbar from '../components/Topbar';
 import DashboardControls from '../components/DashboardControls';
 import FileCard from '../components/FileCard';
 import FileRow from '../components/FileRow';
-import AdminModal from '../components/AdminModal';
+import ManageOrgModal from '../components/ManageOrgModal';
+import CreateOrgModal from '../components/CreateOrgModal';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
@@ -19,24 +20,41 @@ const Dashboard = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
   const [showUploadModal, setShowUploadModal] = useState(false);
-  const [showAdminModal, setShowAdminModal] = useState(false);
+  const [showManageOrgModal, setShowManageOrgModal] = useState(false);
+  const [showCreateOrgModal, setShowCreateOrgModal] = useState(false);
   const [uploadFile, setUploadFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef(null);
-  const { user } = useAuth();
+  const { user, currentOrganization } = useAuth();
+  
+  const userRole = currentOrganization?.members?.find(
+    m => (m.user._id || m.user) === user?._id
+  )?.role || 'viewer';
 
   useEffect(() => {
-    fetchFiles();
-  }, []);
+    if (currentOrganization) {
+      fetchFiles();
+    }
+  }, [currentOrganization, activeTab]);
 
   useEffect(() => {
     applyFilters();
   }, [files, searchQuery, typeFilter]);
 
   const fetchFiles = async () => {
+    if (!currentOrganization) return;
+    
     try {
       setLoading(true);
-      const response = await api.get('/files');
+      let url = `/files?organizationId=${currentOrganization._id}`;
+      
+      if (activeTab === 'favorites') {
+        url += '&filter=favorites';
+      } else if (activeTab === 'trash') {
+        url += '&filter=trash';
+      }
+      
+      const response = await api.get(url);
       setFiles(response.data);
     } catch (error) {
       toast.error('Failed to fetch files');
@@ -78,10 +96,16 @@ const Dashboard = () => {
       return;
     }
 
+    if (!currentOrganization) {
+      toast.error('Please select an organization');
+      return;
+    }
+
     try {
       setUploading(true);
       const formData = new FormData();
       formData.append('file', uploadFile);
+      formData.append('organizationId', currentOrganization._id);
 
       const response = await api.post('/files/upload', formData, {
         headers: {
@@ -125,16 +149,41 @@ const Dashboard = () => {
   };
 
   const handleDelete = async (file) => {
-    if (!window.confirm(`Are you sure you want to delete "${file.originalName}"?`)) {
+    const isInTrash = activeTab === 'trash';
+    const confirmMessage = isInTrash 
+      ? `Permanently delete "${file.originalName}"? This cannot be undone.`
+      : `Move "${file.originalName}" to trash?`;
+    
+    if (!window.confirm(confirmMessage)) {
       return;
     }
 
     try {
       await api.delete(`/files/${file._id}`);
       setFiles(files.filter(f => f._id !== file._id));
-      toast.success('File deleted successfully');
+      toast.success(isInTrash ? 'File permanently deleted' : 'File moved to trash');
     } catch (error) {
       toast.error(error.response?.data?.message || 'Delete failed');
+    }
+  };
+
+  const handleToggleFavorite = async (file) => {
+    try {
+      await api.post(`/files/${file._id}/favorite`);
+      await fetchFiles();
+      toast.success(file.favoritedBy?.includes(user._id) ? 'Removed from favorites' : 'Added to favorites');
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to update favorite');
+    }
+  };
+
+  const handleRestore = async (file) => {
+    try {
+      await api.post(`/files/${file._id}/restore`);
+      setFiles(files.filter(f => f._id !== file._id));
+      toast.success('File restored successfully');
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Restore failed');
     }
   };
 
@@ -143,7 +192,10 @@ const Dashboard = () => {
       <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
       
       <div className="flex-1 flex flex-col overflow-hidden">
-        <Topbar onOpenAdminModal={() => setShowAdminModal(true)} />
+        <Topbar 
+          onOpenAdminModal={() => setShowManageOrgModal(true)} 
+          onOpenCreateOrgModal={() => setShowCreateOrgModal(true)}
+        />
         
         <main className="flex-1 overflow-y-auto p-8">
           <DashboardControls
@@ -154,6 +206,7 @@ const Dashboard = () => {
             typeFilter={typeFilter}
             setTypeFilter={setTypeFilter}
             onUpload={handleUploadClick}
+            userRole={userRole}
           />
 
           {loading ? (
@@ -170,6 +223,11 @@ const Dashboard = () => {
                   file={file}
                   onDownload={handleDownload}
                   onDelete={handleDelete}
+                  onToggleFavorite={handleToggleFavorite}
+                  onRestore={handleRestore}
+                  userRole={userRole}
+                  userId={user?._id}
+                  isTrash={activeTab === 'trash'}
                 />
               ))}
             </div>
@@ -203,6 +261,11 @@ const Dashboard = () => {
                       file={file}
                       onDownload={handleDownload}
                       onDelete={handleDelete}
+                      onToggleFavorite={handleToggleFavorite}
+                      onRestore={handleRestore}
+                      userRole={userRole}
+                      userId={user?._id}
+                      isTrash={activeTab === 'trash'}
                     />
                   ))}
                 </tbody>
@@ -253,7 +316,8 @@ const Dashboard = () => {
         </Modal.Footer>
       </Modal>
 
-      <AdminModal show={showAdminModal} onHide={() => setShowAdminModal(false)} />
+      <ManageOrgModal show={showManageOrgModal} onHide={() => setShowManageOrgModal(false)} />
+      <CreateOrgModal show={showCreateOrgModal} onHide={() => setShowCreateOrgModal(false)} />
     </div>
   );
 };
