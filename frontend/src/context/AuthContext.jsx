@@ -18,24 +18,51 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    const savedUser = localStorage.getItem('user');
-    const savedOrgs = localStorage.getItem('organizations');
-    const savedCurrentOrg = localStorage.getItem('currentOrganization');
-    
-    if (token && savedUser) {
-      setUser(JSON.parse(savedUser));
-      if (savedOrgs) {
-        const orgs = JSON.parse(savedOrgs);
-        setOrganizations(orgs);
-        if (savedCurrentOrg) {
-          setCurrentOrganization(JSON.parse(savedCurrentOrg));
-        } else if (orgs.length > 0) {
-          setCurrentOrganization(orgs[0]);
+    const initAuth = async () => {
+      const token = localStorage.getItem('token');
+      
+      if (token) {
+        try {
+          // Perform a hard-check against the database to guarantee the user account still exists
+          const response = await api.get('/auth/me');
+          const userData = response.data;
+          
+          setUser({
+            _id: userData._id,
+            name: userData.name,
+            email: userData.email,
+            avatar: userData.avatar,
+            age: userData.age,
+            personalOrganization: userData.personalOrganization?._id || userData.personalOrganization
+          });
+          
+          setOrganizations(userData.organizations || []);
+          
+          const savedCurrentOrg = localStorage.getItem('currentOrganization');
+          if (savedCurrentOrg) {
+            // Verify if the saved current org exists in updated organizations
+            const parsedOrg = JSON.parse(savedCurrentOrg);
+            const isValidSavedOrg = userData.organizations?.some(org => org._id === parsedOrg._id);
+            
+            if (isValidSavedOrg) {
+              setCurrentOrganization(parsedOrg);
+            } else if (userData.organizations && userData.organizations.length > 0) {
+              setCurrentOrganization(userData.organizations[0]);
+            }
+          } else if (userData.organizations && userData.organizations.length > 0) {
+            setCurrentOrganization(userData.organizations[0]);
+          }
+        } catch (error) {
+          console.error('Session verification failed, force logging out:', error);
+          // If the DB says they don't exist anymore, wipe their local tokens
+          logout();
         }
       }
-    }
-    setLoading(false);
+      
+      setLoading(false);
+    };
+
+    initAuth();
   }, []);
 
   const login = async (email, password) => {
