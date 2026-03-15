@@ -159,7 +159,7 @@ exports.sendInvitation = async (req, res) => {
       { expiresIn: '48h' }
     );
 
-    const inviteLink = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/accept-invite?token=${jwtToken}`;
+    const inviteLink = `${process.env.FRONTEND_URL || 'http://localhost:5174'}/accept-invite?token=${jwtToken}`;
 
     try {
       await sendInviteEmail(email, inviteLink, role, organization.name);

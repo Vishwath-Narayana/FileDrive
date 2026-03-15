@@ -62,7 +62,7 @@ exports.login = async (req, res) => {
 
     const user = await User.findOne({ email }).populate('personalOrganization');
     if (!user) {
-      return res.status(401).json({ message: 'Invalid credentials' });
+      return res.status(404).json({ message: "Account doesn't exist. Please create an account." });
     }
 
     const isPasswordValid = await user.comparePassword(password);
