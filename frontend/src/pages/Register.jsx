@@ -46,17 +46,22 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center px-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-semibold text-gray-900 mb-2">Create account</h1>
-          <p className="text-gray-600">Get started with FileDrive</p>
+    <div className="min-h-screen bg-[#FAFAFA] flex flex-col items-center justify-center px-4">
+      <div className="mb-10 text-center">
+        <div className="w-12 h-12 bg-black rounded-xl mx-auto mb-4 shadow-lg"></div>
+        <h1 className="text-2xl font-bold tracking-tight text-black">FileDrive</h1>
+      </div>
+
+      <div className="w-full max-w-[400px] bg-white p-10 rounded-[24px] shadow-xl border border-[#EDEDED]">
+        <div className="mb-8">
+          <h2 className="text-xl font-bold text-black mb-1">Create account</h2>
+          <p className="text-sm text-gray-500">Join your organization on FileDrive</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-              Name
+            <label htmlFor="name" className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">
+              Full Name
             </label>
             <input
               id="name"
@@ -69,8 +74,8 @@ const Register = () => {
           </div>
 
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-              Email
+            <label htmlFor="email" className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">
+              Email Address
             </label>
             <input
               id="email"
@@ -78,12 +83,12 @@ const Register = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="input-field"
-              placeholder="you@example.com"
+              placeholder="name@company.com"
             />
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="password" className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">
               Password
             </label>
             <div className="relative">
@@ -92,13 +97,13 @@ const Register = () => {
                 type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="input-field pr-10"
+                className="input-field pr-12"
                 placeholder="••••••••"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-300 hover:text-black transition-colors"
               >
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
@@ -108,18 +113,20 @@ const Register = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full btn-primary py-3 flex justify-center text-sm"
           >
             {loading ? 'Creating account...' : 'Create account'}
           </button>
         </form>
 
-        <p className="mt-6 text-center text-sm text-gray-600">
-          Already have an account?{' '}
-          <Link to="/login" className="font-medium text-gray-900 hover:underline">
-            Sign in
-          </Link>
-        </p>
+        <div className="mt-10 pt-8 border-t border-[#EDEDED] text-center">
+          <p className="text-xs text-gray-500">
+            Already have an account?{' '}
+            <Link to="/login" className="font-bold text-black hover:underline underline-offset-4">
+              Sign in instead
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );

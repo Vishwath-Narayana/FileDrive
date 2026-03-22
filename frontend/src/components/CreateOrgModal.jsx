@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Modal } from 'react-bootstrap';
+import { Plus } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -32,15 +33,20 @@ const CreateOrgModal = ({ show, onHide }) => {
   };
 
   return (
-    <Modal show={show} onHide={onHide} centered>
-      <Modal.Header closeButton>
-        <Modal.Title>Create Organization</Modal.Title>
-      </Modal.Header>
-      <Modal.Body>
-        <form onSubmit={handleSubmit}>
-          <div className="mb-3">
-            <label htmlFor="org-name" className="block text-sm font-medium text-gray-700 mb-2">
-              Organization Name
+    <Modal show={show} onHide={onHide} centered className="premium-modal">
+      <div className="p-10">
+        <div className="mb-8 text-center">
+          <div className="w-12 h-12 bg-black rounded-xl mx-auto mb-4 shadow-lg flex items-center justify-center text-white">
+            <Plus size={24} strokeWidth={3} />
+          </div>
+          <h2 className="text-xl font-bold text-black">New Organization</h2>
+          <p className="text-sm text-gray-400 mt-1">Create a shared workspace for your team</p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div>
+            <label htmlFor="org-name" className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">
+              Workspace Name
             </label>
             <input
               id="org-name"
@@ -48,28 +54,30 @@ const CreateOrgModal = ({ show, onHide }) => {
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="input-field"
-              placeholder="My Organization"
+              placeholder="e.g. Design Team, Engineering"
               autoFocus
             />
           </div>
+
+          <div className="grid grid-cols-2 gap-3 pt-2">
+            <button
+              type="button"
+              onClick={onHide}
+              className="btn-secondary justify-center py-3"
+              disabled={loading}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="btn-primary justify-center py-3"
+              disabled={loading || !name.trim()}
+            >
+              {loading ? 'Creating...' : 'Create'}
+            </button>
+          </div>
         </form>
-      </Modal.Body>
-      <Modal.Footer>
-        <button
-          onClick={onHide}
-          className="btn-secondary"
-          disabled={loading}
-        >
-          Cancel
-        </button>
-        <button
-          onClick={handleSubmit}
-          className="btn-primary"
-          disabled={loading || !name.trim()}
-        >
-          {loading ? 'Creating...' : 'Create Organization'}
-        </button>
-      </Modal.Footer>
+      </div>
     </Modal>
   );
 };

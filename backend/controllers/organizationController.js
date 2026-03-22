@@ -104,6 +104,7 @@ exports.updateMemberRole = async (req, res) => {
     }
 
     organization.members[memberIndex].role = role;
+    organization.markModified('members');
     await organization.save();
 
     const updatedOrg = await Organization.findById(organizationId)

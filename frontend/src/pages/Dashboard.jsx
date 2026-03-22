@@ -10,6 +10,7 @@ import ManageOrgModal from '../components/ManageOrgModal';
 import CreateOrgModal from '../components/CreateOrgModal';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { X, File, Plus } from 'lucide-react';
 
 const Dashboard = () => {
   const [files, setFiles] = useState([]);
@@ -28,7 +29,7 @@ const Dashboard = () => {
   const { user, currentOrganization } = useAuth();
   
   const userRole = currentOrganization?.members?.find(
-    m => (m.user._id || m.user) === user?._id
+    m => (m.user._id?.toString() || m.user?.toString() || m.user) === user?._id?.toString()
   )?.role || 'viewer';
 
   useEffect(() => {
@@ -188,7 +189,7 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="flex h-screen bg-white">
+    <div className="flex h-screen bg-[#FAFAFA]">
       <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
       
       <div className="flex-1 flex flex-col overflow-hidden">
@@ -197,66 +198,49 @@ const Dashboard = () => {
           onOpenCreateOrgModal={() => setShowCreateOrgModal(true)}
         />
         
-        <main className="flex-1 overflow-y-auto p-8">
-          <DashboardControls
-            searchQuery={searchQuery}
-            setSearchQuery={setSearchQuery}
-            viewMode={viewMode}
-            setViewMode={setViewMode}
-            typeFilter={typeFilter}
-            setTypeFilter={setTypeFilter}
-            onUpload={handleUploadClick}
-            userRole={userRole}
-          />
+        <main className="flex-1 overflow-y-auto p-12 ml-64">
+          <div className="max-w-[1400px] mx-auto">
+            <div className="mb-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
+              <h1 className="text-3xl font-bold text-black mb-2 tracking-tight">
+                {activeTab === 'all' ? `Welcome back, ${user?.name?.split(' ')[0]}` : 
+                 activeTab === 'favorites' ? 'Your Favorites' : 'Trash'}
+              </h1>
+              <p className="text-sm text-gray-400 font-medium">
+                {activeTab === 'all' ? 'Manage and organize your team\'s digital assets with ease.' : 
+                 activeTab === 'favorites' ? 'Quickly access the files you care about most.' : 'Items here will be permanently deleted after 30 days.'}
+              </p>
+            </div>
 
-          {loading ? (
-            <div className="text-center py-12 text-gray-500">Loading files...</div>
-          ) : filteredFiles.length === 0 ? (
-            <div className="text-center py-12 text-gray-500">
-              {searchQuery || typeFilter !== 'all' ? 'No files match your filters' : 'No files yet'}
-            </div>
-          ) : viewMode === 'grid' ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {filteredFiles.map((file) => (
-                <FileCard
-                  key={file._id}
-                  file={file}
-                  onDownload={handleDownload}
-                  onDelete={handleDelete}
-                  onToggleFavorite={handleToggleFavorite}
-                  onRestore={handleRestore}
-                  userRole={userRole}
-                  userId={user?._id}
-                  isTrash={activeTab === 'trash'}
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-              <table className="w-full">
-                <thead className="bg-gray-50 border-b border-gray-200">
-                  <tr>
-                    <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Name
-                    </th>
-                    <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Type
-                    </th>
-                    <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      User
-                    </th>
-                    <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Uploaded On
-                    </th>
-                    <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Size
-                    </th>
-                    <th className="py-3 px-4"></th>
-                  </tr>
-                </thead>
-                <tbody>
+            <DashboardControls
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
+              viewMode={viewMode}
+              setViewMode={setViewMode}
+              typeFilter={typeFilter}
+              setTypeFilter={setTypeFilter}
+              onUpload={handleUploadClick}
+              userRole={userRole}
+            />
+
+            <div className="mt-8">
+              {loading ? (
+                <div className="text-center py-24 text-gray-300 font-medium animate-pulse">Loading workspace...</div>
+              ) : filteredFiles.length === 0 ? (
+                <div className="text-center py-32 bg-white rounded-[32px] border border-[#F0F0F0] border-dashed">
+                  <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <File size={32} className="text-gray-200" />
+                  </div>
+                  <h3 className="text-lg font-bold text-black mb-2">
+                    {searchQuery || typeFilter !== 'all' ? 'No matches found' : 'Empty workspace'}
+                  </h3>
+                  <p className="text-sm text-gray-400 max-w-[240px] mx-auto leading-relaxed">
+                    {searchQuery || typeFilter !== 'all' ? 'Try adjusting your search or filters to find what you\'re looking for.' : 'Start by uploading your first file to this organization.'}
+                  </p>
+                </div>
+              ) : viewMode === 'grid' ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
                   {filteredFiles.map((file) => (
-                    <FileRow
+                    <FileCard
                       key={file._id}
                       file={file}
                       onDownload={handleDownload}
@@ -268,52 +252,101 @@ const Dashboard = () => {
                       isTrash={activeTab === 'trash'}
                     />
                   ))}
-                </tbody>
-              </table>
+                </div>
+              ) : (
+                <div className="bg-white border border-[#F0F0F0] rounded-[24px] overflow-hidden shadow-sm">
+                  <table className="w-full">
+                    <thead className="bg-[#FAFAFA] border-b border-[#F0F0F0]">
+                      <tr>
+                        <th className="py-4 px-6 text-left text-[11px] font-bold text-gray-400 uppercase tracking-wider">Name</th>
+                        <th className="py-4 px-6 text-left text-[11px] font-bold text-gray-400 uppercase tracking-wider">Type</th>
+                        <th className="py-4 px-6 text-left text-[11px] font-bold text-gray-400 uppercase tracking-wider">User</th>
+                        <th className="py-4 px-6 text-left text-[11px] font-bold text-gray-400 uppercase tracking-wider">Uploaded</th>
+                        <th className="py-4 px-6 text-left text-[11px] font-bold text-gray-400 uppercase tracking-wider">Size</th>
+                        <th className="py-4 px-6"></th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#F5F5F5]">
+                      {filteredFiles.map((file) => (
+                        <FileRow
+                          key={file._id}
+                          file={file}
+                          onDownload={handleDownload}
+                          onDelete={handleDelete}
+                          onToggleFavorite={handleToggleFavorite}
+                          onRestore={handleRestore}
+                          userRole={userRole}
+                          userId={user?._id}
+                          isTrash={activeTab === 'trash'}
+                        />
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </main>
       </div>
 
-      <Modal show={showUploadModal} onHide={() => setShowUploadModal(false)} centered>
-        <Modal.Header closeButton>
-          <Modal.Title>Upload File</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <div className="mb-3">
-            <label htmlFor="file-upload" className="block text-sm font-medium text-gray-700 mb-2">
-              Select a file to upload
-            </label>
-            <input
-              id="file-upload"
-              ref={fileInputRef}
-              type="file"
-              onChange={handleFileSelect}
-              className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-black file:text-white hover:file:bg-gray-800"
-            />
-            {uploadFile && (
-              <p className="mt-2 text-sm text-gray-600">
-                Selected: {uploadFile.name} ({(uploadFile.size / 1024).toFixed(2)} KB)
-              </p>
-            )}
-          </div>
-        </Modal.Body>
-        <Modal.Footer>
-          <button
+      <Modal show={showUploadModal} onHide={() => setShowUploadModal(false)} centered className="premium-modal">
+        <div className="bg-white rounded-[32px] p-10 shadow-2xl border border-[#F0F0F0] max-w-lg mx-auto w-full relative">
+          <button 
             onClick={() => setShowUploadModal(false)}
-            className="btn-secondary"
-            disabled={uploading}
+            className="absolute right-8 top-8 text-gray-300 hover:text-black transition-colors"
           >
-            Cancel
+            <X size={20} />
           </button>
-          <button
-            onClick={handleUploadSubmit}
-            className="btn-primary"
-            disabled={uploading || !uploadFile}
-          >
-            {uploading ? 'Uploading...' : 'Upload'}
-          </button>
-        </Modal.Footer>
+
+          <div className="mb-10">
+            <div className="w-14 h-14 bg-black rounded-2xl flex items-center justify-center mb-6 shadow-lg">
+              <Plus size={28} className="text-white" strokeWidth={2.5} />
+            </div>
+            <h2 className="text-2xl font-bold text-black mb-2 tracking-tight">Upload File</h2>
+            <p className="text-sm text-gray-400 font-medium">Select a file to add to <span className="text-black font-bold">{currentOrganization?.name}</span></p>
+          </div>
+
+          <div className="space-y-8">
+            <div 
+              onClick={() => fileInputRef.current?.click()}
+              className="group cursor-pointer border-2 border-dashed border-[#EDEDED] rounded-[24px] p-12 text-center hover:border-black hover:bg-gray-50 transition-all duration-300"
+            >
+              <input
+                id="file-upload"
+                ref={fileInputRef}
+                type="file"
+                onChange={handleFileSelect}
+                className="hidden"
+              />
+              <div className="w-16 h-16 bg-gray-50 group-hover:bg-white rounded-full flex items-center justify-center mx-auto mb-4 transition-colors">
+                <File size={28} className="text-gray-300 group-hover:text-black transition-colors" />
+              </div>
+              <p className="text-sm font-bold text-black mb-1">
+                {uploadFile ? uploadFile.name : 'Click to browse files'}
+              </p>
+              <p className="text-xs text-gray-400">
+                {uploadFile ? `${(uploadFile.size / 1024).toFixed(2)} KB` : 'PDF, Image, Video, or Text'}
+              </p>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowUploadModal(false)}
+                className="flex-1 btn-secondary py-3.5 justify-center text-sm"
+                disabled={uploading}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleUploadSubmit}
+                className="flex-3 btn-primary py-3.5 justify-center text-sm"
+                disabled={uploading || !uploadFile}
+              >
+                {uploading ? 'Processing...' : 'Start Upload'}
+              </button>
+            </div>
+          </div>
+        </div>
       </Modal>
 
       <ManageOrgModal show={showManageOrgModal} onHide={() => setShowManageOrgModal(false)} />

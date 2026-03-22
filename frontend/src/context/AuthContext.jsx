@@ -40,17 +40,20 @@ export const AuthProvider = ({ children }) => {
           
           const savedCurrentOrg = localStorage.getItem('currentOrganization');
           if (savedCurrentOrg) {
-            // Verify if the saved current org exists in updated organizations
             const parsedOrg = JSON.parse(savedCurrentOrg);
-            const isValidSavedOrg = userData.organizations?.some(org => org._id === parsedOrg._id);
+            // Always fetch the freshest version of the current org from the fresh organizations list
+            const freshOrg = userData.organizations?.find(org => org._id === parsedOrg._id);
             
-            if (isValidSavedOrg) {
-              setCurrentOrganization(parsedOrg);
+            if (freshOrg) {
+              setCurrentOrganization(freshOrg);
+              localStorage.setItem('currentOrganization', JSON.stringify(freshOrg));
             } else if (userData.organizations && userData.organizations.length > 0) {
               setCurrentOrganization(userData.organizations[0]);
+              localStorage.setItem('currentOrganization', JSON.stringify(userData.organizations[0]));
             }
           } else if (userData.organizations && userData.organizations.length > 0) {
             setCurrentOrganization(userData.organizations[0]);
+            localStorage.setItem('currentOrganization', JSON.stringify(userData.organizations[0]));
           }
         } catch (error) {
           console.error('Session verification failed, force logging out:', error);

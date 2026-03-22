@@ -46,46 +46,49 @@ const Topbar = ({ onOpenAdminModal, onOpenCreateOrgModal }) => {
   };
 
   return (
-    <div className="h-16 border-b border-gray-200 bg-white px-6 flex items-center justify-between">
-      <div className="flex items-center gap-2">
+    <div className="h-20 glass-effect px-8 flex items-center justify-between sticky top-0 z-[40] ml-64">
+      <div className="flex items-center gap-4">
         <Dropdown>
           <Dropdown.Toggle
             variant="light"
-            className="d-flex align-items-center gap-2 border-0 bg-transparent text-gray-900 hover:bg-gray-100 font-medium px-3 py-2 rounded-md transition-colors"
+            className="flex items-center gap-2.5 border border-[#F0F0F0] bg-white text-black hover:bg-[#FAFAFA] font-bold px-5 py-2 rounded-full transition-all text-sm shadow-sm"
             id="org-dropdown"
           >
-            <span className="truncate max-w-[150px]">{currentOrganization?.name || 'Select Organization'}</span>
-            <ChevronDown size={16} className="text-gray-500" />
+            <span className="max-w-[150px] truncate tracking-tight">{currentOrganization?.name || 'Select Organization'}</span>
+            <ChevronDown size={14} className="text-gray-400" strokeWidth={2.5} />
           </Dropdown.Toggle>
 
-          <Dropdown.Menu className="shadow-sm border border-gray-200 py-1 rounded-lg min-w-[220px] mt-1">
+          <Dropdown.Menu className="shadow-xl border border-[#EDEDED] py-2 rounded-[12px] min-w-[240px] mt-2 animate-in fade-in slide-in-from-top-2 duration-200">
+            <div className="px-4 py-2 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Organizations</div>
             {organizations.map((org) => (
               <Dropdown.Item
                 key={org._id}
                 onClick={() => switchOrganization(org)}
                 active={currentOrganization?._id === org._id}
-                className={`py-2 px-3 text-sm flex items-center transition-colors ${
+                className={`py-2 px-4 text-sm flex items-center transition-colors mx-1 rounded-[8px] ${
                   currentOrganization?._id === org._id 
-                    ? 'bg-gray-100 text-gray-900 font-medium' 
-                    : 'text-gray-700 hover:bg-gray-50'
+                    ? 'bg-gray-100 text-black font-semibold' 
+                    : 'text-gray-600 hover:bg-gray-50 hover:text-black'
                 }`}
               >
                 {org.name}
               </Dropdown.Item>
             ))}
-            <Dropdown.Divider className="my-1 border-gray-100" />
+            <Dropdown.Divider className="my-2 border-[#EDEDED]" />
             <Dropdown.Item 
               onClick={onOpenCreateOrgModal}
-              className="py-2.5 px-3 text-sm text-gray-700 hover:bg-gray-50 focus:bg-gray-50 flex items-center transition-colors"
+              className="py-2.5 px-4 text-sm text-gray-700 hover:bg-gray-50 flex items-center transition-colors mx-1 rounded-[8px]"
             >
-              <Plus size={16} className="mr-3 text-gray-500" />
-              Create Organization
+              <div className="w-6 h-6 rounded bg-gray-100 flex items-center justify-center mr-3 text-gray-500">
+                <Plus size={14} />
+              </div>
+              Create New
             </Dropdown.Item>
           </Dropdown.Menu>
         </Dropdown>
       </div>
 
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-6">
         {currentOrganization && 
          currentOrganization._id !== user?.personalOrganization?._id &&
          currentOrganization._id !== user?.personalOrganization &&
@@ -94,59 +97,64 @@ const Topbar = ({ onOpenAdminModal, onOpenCreateOrgModal }) => {
         )?.role === 'admin' && (
           <button
             onClick={onOpenAdminModal}
-            className="px-4 py-2 text-sm text-gray-900 hover:bg-gray-50 font-medium rounded-lg border border-gray-200 transition-colors"
+            className="text-sm font-medium text-gray-600 hover:text-black transition-colors"
           >
-            Manage Organization
+            Settings
           </button>
         )}
         
         <Dropdown align="end">
           <Dropdown.Toggle
             variant="light"
-            className="p-2 border-0 bg-transparent text-gray-500 hover:bg-gray-100 rounded-md transition-colors relative flex items-center justify-center"
+            className="p-2 border-0 bg-transparent text-gray-400 hover:text-black rounded-full transition-all relative flex items-center justify-center hover:bg-gray-50"
             id="notifications-dropdown"
           >
-            <Bell size={20} />
+            <Bell size={20} strokeWidth={2} />
             {invitations.length > 0 && (
-              <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></span>
+              <span className="absolute top-2 right-2 w-2 h-2 bg-black rounded-full border-2 border-white"></span>
             )}
           </Dropdown.Toggle>
 
-          <Dropdown.Menu className="shadow-lg border border-gray-200 py-2 rounded-lg min-w-[320px] mt-2 max-h-[400px] overflow-y-auto">
-            <div className="px-4 py-2 border-b border-gray-100 flex items-center justify-between">
-              <span className="font-semibold text-gray-900 text-sm">Notifications</span>
+          <Dropdown.Menu className="shadow-2xl border border-[#EDEDED] py-0 rounded-[16px] min-w-[340px] mt-2 overflow-hidden">
+            <div className="px-5 py-4 bg-gray-50/50 border-b border-[#EDEDED] flex items-center justify-between">
+              <span className="font-bold text-black text-sm">Notifications</span>
               {invitations.length > 0 && (
-                <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">{invitations.length} new</span>
+                <span className="text-[10px] bg-black text-white px-2 py-0.5 rounded-full uppercase tracking-tighter">New</span>
               )}
             </div>
             
-            {invitations.length === 0 ? (
-              <div className="px-4 py-8 text-center text-sm text-gray-500">
-                You have no new notifications.
-              </div>
-            ) : (
-              invitations.map((inv) => (
-                <div key={inv._id} className="px-4 py-3 border-b border-gray-50 hover:bg-gray-50 transition-colors">
-                  <p className="text-sm text-gray-800 mb-2">
-                    <span className="font-semibold">{inv.invitedBy?.name || 'Someone'}</span> invited you to join <span className="font-medium text-gray-900">"{inv.organization?.name || 'an organization'}"</span> as a <span className="capitalize">{inv.role}</span>.
-                  </p>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={(e) => { e.stopPropagation(); handleAcceptInvite(inv._id); }}
-                      className="flex-1 flex items-center justify-center gap-1 bg-black text-white text-xs font-medium py-1.5 rounded hover:bg-gray-800"
-                    >
-                      <Check size={14} /> Accept
-                    </button>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); handleRejectInvite(inv._id); }}
-                      className="flex-1 flex items-center justify-center gap-1 bg-white border border-gray-200 text-gray-700 text-xs font-medium py-1.5 rounded hover:bg-gray-50"
-                    >
-                      <X size={14} /> Decline
-                    </button>
+            <div className="max-h-[400px] overflow-y-auto">
+              {invitations.length === 0 ? (
+                <div className="px-5 py-10 text-center">
+                  <div className="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <Bell size={20} className="text-gray-300" />
                   </div>
+                  <p className="text-sm text-gray-500">All caught up</p>
                 </div>
-              ))
-            )}
+              ) : (
+                invitations.map((inv) => (
+                  <div key={inv._id} className="px-5 py-4 border-b border-[#EDEDED] hover:bg-gray-50 transition-colors">
+                    <p className="text-xs text-gray-600 leading-relaxed mb-3">
+                      <span className="font-bold text-black">{inv.invitedBy?.name || 'Someone'}</span> invited you to join <span className="font-bold text-black">{inv.organization?.name}</span>
+                    </p>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleAcceptInvite(inv._id); }}
+                        className="flex-1 bg-black text-white text-[11px] font-bold py-2 rounded-[6px] hover:bg-gray-800 transition-colors"
+                      >
+                        Accept
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleRejectInvite(inv._id); }}
+                        className="flex-1 bg-white border border-[#EDEDED] text-gray-600 text-[11px] font-bold py-2 rounded-[6px] hover:bg-gray-50 transition-colors"
+                      >
+                        Decline
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
           </Dropdown.Menu>
         </Dropdown>
         
@@ -156,47 +164,49 @@ const Topbar = ({ onOpenAdminModal, onOpenCreateOrgModal }) => {
             className="text-decoration-none p-0 border-0 bg-transparent"
             id="user-dropdown"
           >
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-gray-900 text-white flex items-center justify-center text-sm font-medium overflow-hidden flex-shrink-0">
-                {user?.avatar ? (
-                  <img
-                    src={`http://localhost:5001${user.avatar}`}
-                    alt={user?.name}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  user?.name?.charAt(0).toUpperCase()
-                )}
+            <div className="flex items-center gap-3 group">
+              <div className="w-9 h-9 rounded-full bg-gray-100 border border-[#EDEDED] p-[2px] overflow-hidden transition-all group-hover:border-black">
+                <div className="w-full h-full rounded-full bg-black text-white flex items-center justify-center text-xs font-bold overflow-hidden">
+                  {user?.avatar ? (
+                    <img
+                      src={`http://localhost:5001${user.avatar}`}
+                      alt={user?.name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    user?.name?.charAt(0).toUpperCase()
+                  )}
+                </div>
               </div>
-              <span className="text-sm font-medium text-gray-900">{user?.name}</span>
-              <ChevronDown size={16} className="text-gray-500" />
             </div>
           </Dropdown.Toggle>
 
-          <Dropdown.Menu className="shadow-sm border border-gray-200 py-1 rounded-lg min-w-[200px] mt-2">
-            <Dropdown.Item disabled className="pb-3 pt-2 opacity-100 bg-transparent">
-              <div className="font-medium text-sm text-gray-900 truncate">{user?.name}</div>
-              <div className="text-xs text-gray-500 truncate">{user?.email}</div>
-            </Dropdown.Item>
-            <Dropdown.Divider className="my-1 border-gray-100" />
+          <Dropdown.Menu className="shadow-2xl border border-[#EDEDED] py-2 rounded-[16px] min-w-[220px] mt-2 animate-in fade-in slide-in-from-top-2 duration-200">
+            <div className="px-4 py-3 border-b border-[#EDEDED] mb-1">
+              <div className="font-bold text-sm text-black">{user?.name}</div>
+              <div className="text-[11px] text-gray-400 mt-0.5">{user?.email}</div>
+            </div>
+            
             <Dropdown.Item 
-              onClick={() => navigate('/settings', { state: { tab: 'profile' } })} 
-              className="py-2.5 px-3 text-sm text-gray-700 hover:bg-gray-50 focus:bg-gray-50 flex items-center transition-colors"
+              onClick={() => navigate('/settings')} 
+              className="py-2 px-4 text-sm text-gray-600 hover:bg-gray-50 hover:text-black flex items-center transition-colors mx-1 rounded-[8px]"
             >
-              <User size={16} className="mr-3 text-gray-500" />
-              Account Details
+              <User size={16} className="mr-3 text-gray-400" />
+              Profile
             </Dropdown.Item>
             <Dropdown.Item 
               onClick={() => navigate('/settings', { state: { tab: 'security' } })} 
-              className="py-2.5 px-3 text-sm text-gray-700 hover:bg-gray-50 focus:bg-gray-50 flex items-center transition-colors"
+              className="py-2 px-4 text-sm text-gray-600 hover:bg-gray-50 hover:text-black flex items-center transition-colors mx-1 rounded-[8px]"
             >
-              <Lock size={16} className="mr-3 text-gray-500" />
+              <Lock size={16} className="mr-3 text-gray-400" />
               Security
             </Dropdown.Item>
-            <Dropdown.Divider className="my-1 border-gray-100" />
+            
+            <Dropdown.Divider className="my-2 border-[#EDEDED]" />
+            
             <Dropdown.Item 
               onClick={logout} 
-              className="py-2.5 px-3 text-sm text-red-600 hover:bg-red-50 focus:bg-red-50 flex items-center transition-colors"
+              className="py-2.5 px-4 text-sm text-red-500 hover:bg-red-50 flex items-center transition-colors mx-1 rounded-[8px] font-medium"
             >
               <LogOut size={16} className="mr-3" />
               Sign out

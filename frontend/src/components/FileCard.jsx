@@ -7,15 +7,18 @@ const FileCard = ({ file, onDownload, onDelete, onToggleFavorite, onRestore, use
   const isFavorited = file.favoritedBy?.includes(userId);
 
   const getFileIcon = (fileType) => {
+    const iconSize = 22;
+    const iconStroke = 2.5;
+    
     switch (fileType) {
       case 'image':
-        return <ImageIcon size={40} className="text-blue-500" />;
+        return <ImageIcon size={iconSize} strokeWidth={iconStroke} />;
       case 'csv':
-        return <FileSpreadsheet size={40} className="text-green-500" />;
+        return <FileSpreadsheet size={iconSize} strokeWidth={iconStroke} />;
       case 'pdf':
-        return <FileText size={40} className="text-red-500" />;
+        return <FileText size={iconSize} strokeWidth={iconStroke} />;
       default:
-        return <FileText size={40} className="text-gray-500" />;
+        return <FileText size={iconSize} strokeWidth={iconStroke} />;
     }
   };
 
@@ -23,51 +26,57 @@ const FileCard = ({ file, onDownload, onDelete, onToggleFavorite, onRestore, use
     return new Date(date).toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
-      year: 'numeric',
     });
   };
 
+  const formatFileSize = (bytes) => {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(0) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  };
+
   return (
-    <div className="bg-white border border-gray-200 rounded-lg hover:shadow-md transition-shadow">
-      <div className="p-4">
-        <div className="flex items-start justify-between mb-3">
-          <div className="flex-1">
+    <div className="card-premium group relative flex flex-col h-full bg-white animate-in zoom-in-95 duration-500">
+      <div className="p-7 flex-1 flex flex-col">
+        <div className="flex items-start justify-between mb-8">
+          <div className="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center text-gray-400 group-hover:bg-black group-hover:text-white group-hover:shadow-lg group-hover:shadow-black/10 transition-all duration-500">
             {getFileIcon(file.fileType)}
           </div>
           <Dropdown align="end">
             <Dropdown.Toggle
               variant="link"
-              className="p-0 text-gray-400 hover:text-gray-600"
+              className="p-1.5 text-gray-200 hover:text-black transition-colors rounded-full hover:bg-gray-50"
               id={`dropdown-${file._id}`}
             >
-              <MoreVertical size={20} />
+              <MoreVertical size={16} strokeWidth={2.5} />
             </Dropdown.Toggle>
 
-            <Dropdown.Menu>
+            <Dropdown.Menu className="shadow-2xl border border-[#F0F0F0] py-2 rounded-[18px] min-w-[180px] mt-2 animate-in fade-in slide-in-from-top-1 duration-300 overflow-hidden">
+              <div className="px-4 py-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Actions</div>
               {!isTrash && (
                 <>
-                  <Dropdown.Item onClick={() => onDownload(file)}>
-                    <Download size={16} className="me-2" />
+                  <Dropdown.Item onClick={() => onDownload(file)} className="py-2.5 px-4 text-sm font-semibold hover:bg-[#FAFAFA] rounded-[10px] mx-1 flex items-center gap-3 transition-colors">
+                    <Download size={14} strokeWidth={2.5} className="text-gray-400" />
                     Download
                   </Dropdown.Item>
-                  <Dropdown.Item onClick={() => onToggleFavorite(file)}>
-                    <Star size={16} className="me-2" fill={isFavorited ? 'currentColor' : 'none'} />
-                    {isFavorited ? 'Remove from Favorites' : 'Add to Favorites'}
+                  <Dropdown.Item onClick={() => onToggleFavorite(file)} className="py-2.5 px-4 text-sm font-semibold hover:bg-[#FAFAFA] rounded-[10px] mx-1 flex items-center gap-3 transition-colors">
+                    <Star size={14} strokeWidth={2.5} className={isFavorited ? 'text-black fill-current' : 'text-gray-400'} />
+                    {isFavorited ? 'Unfavorite' : 'Favorite'}
                   </Dropdown.Item>
                 </>
               )}
               {isTrash && canDelete && (
-                <Dropdown.Item onClick={() => onRestore(file)}>
-                  <RotateCcw size={16} className="me-2" />
+                <Dropdown.Item onClick={() => onRestore(file)} className="py-2.5 px-4 text-sm font-semibold hover:bg-[#FAFAFA] rounded-[10px] mx-1 flex items-center gap-3 transition-colors">
+                  <RotateCcw size={14} strokeWidth={2.5} className="text-gray-400" />
                   Restore
                 </Dropdown.Item>
               )}
               {canDelete && (
                 <>
-                  <Dropdown.Divider />
-                  <Dropdown.Item onClick={() => onDelete(file)} className="text-danger">
-                    <Trash2 size={16} className="me-2" />
-                    {isTrash ? 'Delete Permanently' : 'Move to Trash'}
+                  <div className="h-px bg-[#F5F5F5] my-2" />
+                  <Dropdown.Item onClick={() => onDelete(file)} className="py-2.5 px-4 text-sm font-bold text-red-500 hover:bg-red-50 rounded-[10px] mx-1 flex items-center gap-3 transition-colors">
+                    <Trash2 size={14} strokeWidth={2.5} />
+                    {isTrash ? 'Permanently Delete' : 'Move to Trash'}
                   </Dropdown.Item>
                 </>
               )}
@@ -75,20 +84,23 @@ const FileCard = ({ file, onDownload, onDelete, onToggleFavorite, onRestore, use
           </Dropdown>
         </div>
 
-        <div className="mb-3">
-          <h3 className="text-sm font-medium text-gray-900 truncate">{file.originalName}</h3>
-          <p className="text-xs text-gray-500 mt-1">{(file.size / 1024).toFixed(2)} KB</p>
+        <div className="space-y-1.5 mb-8">
+          <h3 className="text-sm font-bold text-black truncate pr-2 tracking-tight" title={file.originalName}>
+            {file.originalName}
+          </h3>
+          <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">
+            {file.fileType} <span className="mx-1 opacity-20">•</span> {formatFileSize(file.size)}
+          </p>
         </div>
 
-        <div className="flex items-center gap-2 text-xs text-gray-600">
-          <div className="w-6 h-6 rounded-full bg-gray-900 text-white flex items-center justify-center font-medium">
-            {file.uploader.name.charAt(0).toUpperCase()}
+        <div className="mt-auto pt-6 border-t border-[#FAFAFA] flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="w-6 h-6 rounded-full bg-black text-white flex items-center justify-center text-[9px] font-bold shadow-sm">
+              {file.uploader.name.charAt(0).toUpperCase()}
+            </div>
+            <span className="text-[11px] font-bold text-gray-500 tracking-tight">{file.uploader.name.split(' ')[0]}</span>
           </div>
-          <span>{file.uploader.name}</span>
-        </div>
-
-        <div className="mt-2 text-xs text-gray-400">
-          {formatDate(file.createdAt)}
+          <span className="text-[10px] font-bold text-gray-300 uppercase tracking-tighter">{formatDate(file.createdAt)}</span>
         </div>
       </div>
     </div>

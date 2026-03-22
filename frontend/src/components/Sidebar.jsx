@@ -11,12 +11,23 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
   ];
 
   return (
-    <div className="w-64 bg-white border-r border-gray-200 flex flex-col">
-      <div className="p-6 border-b border-gray-100">
-        <h1 className="text-xl font-bold text-gray-900">FileDrive</h1>
+    <div className="w-64 glass-effect flex flex-col h-screen fixed left-0 top-0 z-50">
+      <div className="p-8">
+        <div 
+          onClick={() => navigate('/dashboard')}
+          className="flex items-center gap-3 cursor-pointer group"
+        >
+          <div className="w-9 h-9 bg-black rounded-xl flex items-center justify-center shadow-lg transform group-hover:scale-110 transition-transform duration-300">
+            <span className="text-white font-bold text-lg">F</span>
+          </div>
+          <h1 className="text-xl font-bold tracking-tight text-black">FileDrive</h1>
+        </div>
       </div>
       
-      <nav className="flex-1 px-3 py-4">
+      <nav className="flex-1 px-4 py-4 space-y-2">
+        <div className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] px-4 mb-4">
+          Navigation
+        </div>
         <div className="space-y-1">
           {menuItems.map((item) => {
             const Icon = item.icon;
@@ -24,31 +35,39 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
               <button
                 key={item.id}
                 onClick={() => setActiveTab(item.id)}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg mb-1 transition-all ${
+                className={`w-full sidebar-item ${
                   activeTab === item.id
-                    ? 'bg-gray-900 text-white shadow-sm'
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    ? 'sidebar-item-active'
+                    : 'sidebar-item-inactive'
                 }`}
               >
-                <Icon size={20} />
-                <span className="text-sm font-medium">{item.label}</span>
+                <Icon size={18} strokeWidth={activeTab === item.id ? 2.5 : 2} className={activeTab === item.id ? 'animate-in zoom-in-75 duration-300' : ''} />
+                <span className="tracking-tight">{item.label}</span>
               </button>
             );
           })}
         </div>
       </nav>
 
-      <div className="p-3 border-t border-gray-100">
+      <div className="p-4 mt-auto">
+        <div className="bg-[#F9F9F9] rounded-[20px] p-4 border border-[#F0F0F0] mb-4">
+          <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2">Workspace</p>
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+            <span className="text-xs font-semibold text-black">Active Team</span>
+          </div>
+        </div>
+        
         <button
           onClick={() => navigate('/settings')}
-          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${
+          className={`w-full sidebar-item ${
             activeTab === 'settings'
-              ? 'bg-gray-900 text-white shadow-sm'
-              : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+              ? 'sidebar-item-active'
+              : 'sidebar-item-inactive'
           }`}
         >
-          <Settings size={20} />
-          <span className="text-sm font-medium">Settings</span>
+          <Settings size={18} strokeWidth={activeTab === 'settings' ? 2.5 : 2} />
+          <span className="tracking-tight">Settings</span>
         </button>
       </div>
     </div>

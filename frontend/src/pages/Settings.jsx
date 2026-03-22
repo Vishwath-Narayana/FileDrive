@@ -163,7 +163,7 @@ const Settings = () => {
   };
 
   return (
-    <div className="flex h-screen bg-white">
+    <div className="flex h-screen bg-[#FAFAFA]">
       <Sidebar activeTab="settings" setActiveTab={() => {}} />
       
       <div className="flex-1 flex flex-col overflow-hidden">
@@ -172,72 +172,70 @@ const Settings = () => {
           onOpenCreateOrgModal={() => {}}
         />
         
-        <main className="flex-1 overflow-y-auto p-8">
+        <main className="flex-1 overflow-y-auto p-12">
           <div className="max-w-4xl mx-auto">
-            <div className="mb-6">
+            <div className="mb-10">
               <button
                 onClick={() => navigate('/dashboard')}
-                className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4"
+                className="flex items-center gap-2 text-gray-400 hover:text-black mb-6 transition-colors text-sm font-medium"
               >
-                <ArrowLeft size={20} />
+                <ArrowLeft size={16} strokeWidth={2.5} />
                 Back to Dashboard
               </button>
-              <h1 className="text-3xl font-semibold text-gray-900">Settings</h1>
-              <p className="text-gray-600 mt-1">Manage your account settings and preferences</p>
+              <h1 className="text-3xl font-bold tracking-tight text-black mb-1">Settings</h1>
+              <p className="text-sm text-gray-500">Manage your profile and account preferences</p>
             </div>
 
-            <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+            <div className="card-premium overflow-hidden bg-white">
               <Tabs
                 activeKey={activeTab}
                 onSelect={(k) => setActiveTab(k)}
-                className="border-b border-gray-200"
+                className="premium-tabs border-b border-[#EDEDED] px-6 pt-2"
               >
                 <Tab
                   eventKey="profile"
                   title={
-                    <span className="flex items-center gap-2 px-4 py-3">
-                      <User size={18} />
+                    <span className="flex items-center gap-2 px-2 py-4 text-sm font-bold">
+                      <User size={16} />
                       Profile
                     </span>
                   }
                 >
-                  <div className="p-6">
-                    <form onSubmit={handleUpdateProfile} className="space-y-6">
+                  <div className="p-10">
+                    <form onSubmit={handleUpdateProfile} className="space-y-8">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-3">
-                          Profile Photo
+                        <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-4">
+                          Your Avatar
                         </label>
-                        <div className="flex items-center gap-5">
-                          {/* Avatar preview */}
-                          <div className="relative w-20 h-20 flex-shrink-0">
-                            <div className="w-20 h-20 rounded-full bg-gray-100 border-2 border-gray-200 overflow-hidden flex items-center justify-center">
-                              {avatarPreview ? (
-                                <img
-                                  src={avatarPreview}
-                                  alt="Profile"
-                                  className="w-full h-full object-cover"
-                                />
-                              ) : (
-                                <span className="text-3xl font-semibold text-gray-500">
-                                  {user?.name?.charAt(0).toUpperCase()}
-                                </span>
-                              )}
+                        <div className="flex items-center gap-8">
+                          <div className="relative group">
+                            <div className="w-24 h-24 rounded-full bg-gray-100 border-2 border-[#EDEDED] p-1 overflow-hidden transition-all group-hover:border-black">
+                              <div className="w-full h-full rounded-full bg-black text-white flex items-center justify-center text-2xl font-bold overflow-hidden">
+                                {avatarPreview ? (
+                                  <img
+                                    src={avatarPreview}
+                                    alt="Profile"
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  user?.name?.charAt(0).toUpperCase()
+                                )}
+                              </div>
                             </div>
                             {uploadingAvatar && (
-                              <div className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center">
-                                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                              <div className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center backdrop-blur-[1px]">
+                                <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
                               </div>
                             )}
                           </div>
 
-                          {/* Upload button */}
                           <div>
                             <label
                               htmlFor="avatar-upload"
-                              className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                              className="btn-secondary py-2 text-xs"
                             >
-                              <Camera size={16} className="text-gray-500" />
-                              {uploadingAvatar ? 'Uploading...' : 'Upload photo'}
+                              <Camera size={14} />
+                              {uploadingAvatar ? 'Uploading...' : 'Change Photo'}
                             </label>
                             <input
                               id="avatar-upload"
@@ -247,28 +245,44 @@ const Settings = () => {
                               onChange={handleAvatarChange}
                               disabled={uploadingAvatar}
                             />
-                            <p className="text-xs text-gray-400 mt-1.5">JPG, PNG or GIF · Max 5MB</p>
+                            <p className="text-[10px] text-gray-400 mt-3 font-medium uppercase tracking-tighter">Square PNG or JPG • Max 5MB</p>
                           </div>
                         </div>
                       </div>
 
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div>
+                          <label htmlFor="name" className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">
+                            Full Name
+                          </label>
+                          <input
+                            id="name"
+                            type="text"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            className="input-field"
+                            placeholder="John Doe"
+                          />
+                        </div>
 
-                      <div>
-                        <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-                          Full Name
-                        </label>
-                        <input
-                          id="name"
-                          type="text"
-                          value={name}
-                          onChange={(e) => setName(e.target.value)}
-                          className="input-field"
-                          placeholder="Your name"
-                        />
+                        <div>
+                          <label htmlFor="age" className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">
+                            Age (Optional)
+                          </label>
+                          <input
+                            id="age"
+                            type="number"
+                            value={age}
+                            onChange={(e) => setAge(e.target.value)}
+                            className="input-field"
+                            placeholder="e.g. 25"
+                            min="0"
+                          />
+                        </div>
                       </div>
 
                       <div>
-                        <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                        <label htmlFor="email" className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">
                           Email Address
                         </label>
                         <input
@@ -279,36 +293,14 @@ const Settings = () => {
                           className="input-field"
                         />
                       </div>
-                      
-                      <div>
-                        <label htmlFor="age" className="block text-sm font-medium text-gray-700 mb-2">
-                          Age
-                        </label>
-                        <input
-                          id="age"
-                          type="number"
-                          value={age}
-                          onChange={(e) => setAge(e.target.value)}
-                          className="input-field"
-                          placeholder="Your age"
-                          min="0"
-                        />
-                      </div>
 
-                      <div className="flex gap-3 pt-4">
+                      <div className="flex gap-4 pt-4 border-t border-[#FAFAFA]">
                         <button
                           type="submit"
                           disabled={savingProfile}
-                          className="btn-primary disabled:opacity-50"
+                          className="btn-primary"
                         >
-                          {savingProfile ? 'Saving...' : 'Save Changes'}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => navigate('/dashboard')}
-                          className="btn-secondary"
-                        >
-                          Cancel
+                          {savingProfile ? 'Saving...' : 'Update Details'}
                         </button>
                       </div>
                     </form>
@@ -318,148 +310,141 @@ const Settings = () => {
                 <Tab
                   eventKey="security"
                   title={
-                    <span className="flex items-center gap-2 px-4 py-3">
-                      <Lock size={18} />
+                    <span className="flex items-center gap-2 px-2 py-4 text-sm font-bold">
+                      <Lock size={16} />
                       Security
                     </span>
                   }
                 >
-                  <div className="p-6">
-                    <form onSubmit={handleChangePassword} className="space-y-6">
-                      <div>
-                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Change Password</h3>
-                        <p className="text-sm text-gray-600 mb-6">
-                          Ensure your account is using a strong password to stay secure.
-                        </p>
+                  <div className="p-10">
+                    <form onSubmit={handleChangePassword} className="space-y-8">
+                      <div className="mb-2">
+                        <h3 className="text-lg font-bold text-black mb-1">Protected Workspace</h3>
+                        <p className="text-xs text-gray-500">Update your password to keep your folders secure.</p>
                       </div>
 
-                      {!showOTPInput ? (
-                        <div>
-                          <label htmlFor="current-password" className="block text-sm font-medium text-gray-700 mb-2 flex justify-between">
-                            <span>Current Password</span>
-                            <button 
-                              type="button" 
-                              onClick={handleRequestOTP}
-                              disabled={sendingOTP}
-                              className="text-xs text-blue-600 hover:underline"
-                            >
-                              {sendingOTP ? 'Sending OTP...' : 'Forgot password?'}
-                            </button>
-                          </label>
-                          <div className="relative">
+                      <div className="max-w-md space-y-6">
+                        {!showOTPInput ? (
+                          <div>
+                            <div className="flex items-center justify-between mb-2">
+                              <label htmlFor="current-password" className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+                                Current Password
+                              </label>
+                              <button 
+                                type="button" 
+                                onClick={handleRequestOTP}
+                                disabled={sendingOTP}
+                                className="text-[10px] font-bold text-black hover:underline underline-offset-2"
+                              >
+                                {sendingOTP ? 'Sending OTP...' : 'Lost access? Reset via OTP'}
+                              </button>
+                            </div>
+                            <div className="relative">
+                              <input
+                                id="current-password"
+                                type={showCurrentPassword ? "text" : "password"}
+                                value={currentPassword}
+                                onChange={(e) => setCurrentPassword(e.target.value)}
+                                className="input-field pr-12"
+                                placeholder="••••••••"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-300 hover:text-black transition-colors"
+                              >
+                                {showCurrentPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="bg-gray-50 p-6 rounded-[16px] border border-[#EDEDED] animate-in fade-in duration-300">
+                            <div className="flex items-center justify-between mb-2">
+                              <label htmlFor="otp" className="block text-[11px] font-bold text-black uppercase tracking-wider">
+                                Verify Reset code (OTP)
+                              </label>
+                              <button 
+                                type="button" 
+                                onClick={() => setShowOTPInput(false)}
+                                className="text-[10px] font-bold text-gray-400 hover:text-black transition-colors"
+                              >
+                                Back
+                              </button>
+                            </div>
                             <input
-                              id="current-password"
-                              type={showCurrentPassword ? "text" : "password"}
-                              value={currentPassword}
-                              onChange={(e) => setCurrentPassword(e.target.value)}
-                              className="input-field pr-10"
-                              placeholder="Enter current password"
+                              id="otp"
+                              type="text"
+                              value={otpCode}
+                              onChange={(e) => setOtpCode(e.target.value)}
+                              className="input-field bg-white text-center text-lg font-bold tracking-widest"
+                              placeholder="000000"
+                              maxLength={6}
                             />
-                            <button
-                              type="button"
-                              onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                            >
-                              {showCurrentPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                            </button>
+                            <p className="mt-3 text-[10px] font-medium text-gray-400 leading-relaxed uppercase">
+                              We've sent a 6-digit code to your inbox. Please check your spam folder.
+                            </p>
+                          </div>
+                        )}
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label htmlFor="new-password" className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">
+                              New Password
+                            </label>
+                            <div className="relative">
+                              <input
+                                id="new-password"
+                                type={showNewPassword ? "text" : "password"}
+                                value={newPassword}
+                                onChange={(e) => setNewPassword(e.target.value)}
+                                className="input-field pr-12"
+                                placeholder="••••••••"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setShowNewPassword(!showNewPassword)}
+                                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-300 hover:text-black transition-colors"
+                              >
+                                {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                              </button>
+                            </div>
+                          </div>
+
+                          <div>
+                            <label htmlFor="confirm-password" className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">
+                              Confirm
+                            </label>
+                            <div className="relative">
+                              <input
+                                id="confirm-password"
+                                type={showConfirmPassword ? "text" : "password"}
+                                value={confirmPassword}
+                                onChange={(e) => setConfirmPassword(e.target.value)}
+                                className="input-field pr-12"
+                                placeholder="••••••••"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-300 hover:text-black transition-colors"
+                              >
+                                {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                              </button>
+                            </div>
                           </div>
                         </div>
-                      ) : (
-                        <div>
-                          <label htmlFor="otp" className="block text-sm font-medium text-gray-700 mb-2 flex justify-between">
-                            <span>Verification OTP</span>
-                            <button 
-                              type="button" 
-                              onClick={() => setShowOTPInput(false)}
-                              className="text-xs text-gray-500 hover:underline"
-                            >
-                              Remembered it?
-                            </button>
-                          </label>
-                          <input
-                            id="otp"
-                            type="text"
-                            value={otpCode}
-                            onChange={(e) => setOtpCode(e.target.value)}
-                            className="input-field"
-                            placeholder="Enter 6-digit OTP code"
-                            maxLength={6}
-                          />
-                          <p className="mt-2 text-xs text-gray-500">
-                            We've sent an OTP to {user?.email}. It may take a minute to arrive.
-                          </p>
-                        </div>
-                      )}
-
-                      <div>
-                        <label htmlFor="new-password" className="block text-sm font-medium text-gray-700 mb-2">
-                          New Password
-                        </label>
-                        <div className="relative">
-                          <input
-                            id="new-password"
-                            type={showNewPassword ? "text" : "password"}
-                            value={newPassword}
-                            onChange={(e) => setNewPassword(e.target.value)}
-                            className="input-field pr-10"
-                            placeholder="Enter new password"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setShowNewPassword(!showNewPassword)}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                          >
-                            {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                          </button>
-                        </div>
                       </div>
 
-                      <div>
-                        <label htmlFor="confirm-password" className="block text-sm font-medium text-gray-700 mb-2">
-                          Confirm New Password
-                        </label>
-                        <div className="relative">
-                          <input
-                            id="confirm-password"
-                            type={showConfirmPassword ? "text" : "password"}
-                            value={confirmPassword}
-                            onChange={(e) => setConfirmPassword(e.target.value)}
-                            className="input-field pr-10"
-                            placeholder="Confirm new password"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                          >
-                            {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                          </button>
-                        </div>
-                      </div>
-
-                      <div className="flex gap-3 pt-4">
+                      <div className="pt-6 border-t border-[#FAFAFA]">
                         <button
                           type="submit"
                           disabled={changingPassword}
-                          className="btn-primary disabled:opacity-50"
+                          className="btn-primary"
                         >
-                          {changingPassword ? 'Changing...' : 'Change Password'}
+                          {changingPassword ? 'Verifying...' : 'Secure Account'}
                         </button>
                       </div>
                     </form>
-
-                    <div className="mt-8 pt-8 border-t border-gray-200">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-2">Forgot Password?</h3>
-                      <p className="text-sm text-gray-600 mb-4">
-                        If you've forgotten your password, you can request a password reset via email.
-                      </p>
-                      <button
-                        onClick={() => navigate('/forgot-password')}
-                        className="text-sm text-gray-900 font-medium hover:underline"
-                      >
-                        Reset Password via Email →
-                      </button>
-                    </div>
                   </div>
                 </Tab>
               </Tabs>

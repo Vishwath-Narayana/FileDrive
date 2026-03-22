@@ -66,133 +66,139 @@ const ForgotPassword = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center px-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-semibold text-gray-900 mb-2">Reset Password</h1>
-          <p className="text-gray-600">
-            {step === 1 ? 'Enter your email to receive an OTP' : 'Enter the OTP and your new password'}
+    <div className="min-h-screen bg-[#FAFAFA] flex flex-col items-center justify-center px-4">
+      <div className="mb-10 text-center">
+        <div className="w-12 h-12 bg-black rounded-xl mx-auto mb-4 shadow-lg flex items-center justify-center text-white">
+          <Lock size={24} strokeWidth={2.5} />
+        </div>
+        <h1 className="text-2xl font-bold tracking-tight text-black">FileDrive</h1>
+      </div>
+
+      <div className="w-full max-w-[400px] bg-white p-10 rounded-[24px] shadow-xl border border-[#EDEDED]">
+        <div className="mb-8">
+          <h2 className="text-xl font-bold text-black mb-1">
+            {step === 1 ? 'Reset Password' : 'Verify Identity'}
+          </h2>
+          <p className="text-sm text-gray-500">
+            {step === 1 ? 'Enter your email to receive a recovery code' : 'Check your inbox for the 6-digit OTP'}
           </p>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
-          {step === 1 ? (
-            <form onSubmit={handleRequestOTP} className="space-y-4">
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                  Email Address
-                </label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-                  <input
-                    id="email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="input-field pl-10"
-                    placeholder="you@example.com"
-                  />
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full btn-primary disabled:opacity-50"
-              >
-                {loading ? 'Sending...' : 'Send OTP'}
-              </button>
-            </form>
-          ) : (
-            <form onSubmit={handleResetPassword} className="space-y-4">
-              <div>
-                <label htmlFor="otp" className="block text-sm font-medium text-gray-700 mb-2">
-                  OTP Code
-                </label>
+        {step === 1 ? (
+          <form onSubmit={handleRequestOTP} className="space-y-8">
+            <div>
+              <label htmlFor="email" className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">
+                Email Address
+              </label>
+              <div className="relative">
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" size={18} />
                 <input
-                  id="otp"
-                  type="text"
-                  value={otp}
-                  onChange={(e) => setOtp(e.target.value)}
-                  className="input-field text-center text-2xl tracking-widest"
-                  placeholder="000000"
-                  maxLength={6}
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="input-field pl-12"
+                  placeholder="name@company.com"
                 />
-                <p className="text-xs text-gray-500 mt-1">Check your email for the 6-digit code</p>
               </div>
+            </div>
 
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full btn-primary py-3 flex justify-center text-sm"
+            >
+              {loading ? 'Sending code...' : 'Send Recovery OTP'}
+            </button>
+          </form>
+        ) : (
+          <form onSubmit={handleResetPassword} className="space-y-6">
+            <div>
+              <label htmlFor="otp" className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">
+                6-Digit OTP Code
+              </label>
+              <input
+                id="otp"
+                type="text"
+                value={otp}
+                onChange={(e) => setOtp(e.target.value)}
+                className="input-field text-center text-xl font-bold tracking-[0.5em]"
+                placeholder="000000"
+                maxLength={6}
+              />
+            </div>
+
+            <div className="space-y-4">
               <div>
-                <label htmlFor="new-password" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="new-password" className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">
                   New Password
                 </label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
                   <input
                     id="new-password"
                     type={showNewPassword ? "text" : "password"}
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    className="input-field pl-10 pr-10"
+                    className="input-field pr-12 text-sm"
                     placeholder="••••••••"
                   />
                   <button
                     type="button"
                     onClick={() => setShowNewPassword(!showNewPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-300 hover:text-black transition-colors"
                   >
-                    {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
                 </div>
               </div>
 
               <div>
-                <label htmlFor="confirm-password" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="confirm-password" className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">
                   Confirm Password
                 </label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
                   <input
                     id="confirm-password"
                     type={showConfirmPassword ? "text" : "password"}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="input-field pl-10 pr-10"
+                    className="input-field pr-12 text-sm"
                     placeholder="••••••••"
                   />
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-300 hover:text-black transition-colors"
                   >
-                    {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
                 </div>
               </div>
+            </div>
 
-              <div className="flex gap-3">
-                <button
-                  type="button"
-                  onClick={() => setStep(1)}
-                  className="flex-1 btn-secondary"
-                >
-                  Back
-                </button>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="flex-1 btn-primary disabled:opacity-50"
-                >
-                  {loading ? 'Resetting...' : 'Reset Password'}
-                </button>
-              </div>
-            </form>
-          )}
+            <div className="grid grid-cols-2 gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setStep(1)}
+                className="btn-secondary py-3 flex justify-center text-sm"
+              >
+                Back
+              </button>
+              <button
+                type="submit"
+                disabled={loading}
+                className="btn-primary py-3 flex justify-center text-sm"
+              >
+                {loading ? 'Recovering...' : 'Reset Now'}
+              </button>
+            </div>
+          </form>
+        )}
 
-          <div className="mt-6 text-center">
-            <Link to="/login" className="text-sm text-gray-600 hover:text-gray-900">
-              Back to Login
-            </Link>
-          </div>
+        <div className="mt-10 pt-8 border-t border-[#EDEDED] text-center">
+          <Link to="/login" className="text-xs font-bold text-black hover:underline underline-offset-4">
+            ← Return to Sign In
+          </Link>
         </div>
       </div>
     </div>
