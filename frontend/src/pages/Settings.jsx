@@ -177,7 +177,7 @@ const Settings = () => {
             <div className="mb-10">
               <button
                 onClick={() => navigate('/dashboard')}
-                className="flex items-center gap-2 text-gray-400 hover:text-black mb-6 transition-colors text-sm font-medium"
+                className="flex items-center gap-2 text-gray-400 hover:text-black mb-6 transition-colors text-sm font-medium border-none bg-transparent p-0 focus:outline-none"
               >
                 <ArrowLeft size={16} strokeWidth={2.5} />
                 Back to Dashboard
@@ -334,7 +334,7 @@ const Settings = () => {
                                 type="button" 
                                 onClick={handleRequestOTP}
                                 disabled={sendingOTP}
-                                className="text-[10px] font-bold text-black hover:underline underline-offset-2"
+                                className="text-[12px] font-bold text-gray-400 hover:text-black hover:underline underline-offset-2 border-none bg-transparent p-0 focus:outline-none transition-colors"
                               >
                                 {sendingOTP ? 'Sending OTP...' : 'Lost access? Reset via OTP'}
                               </button>
@@ -351,7 +351,7 @@ const Settings = () => {
                               <button
                                 type="button"
                                 onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-300 hover:text-black transition-colors"
+                                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black transition-colors focus:outline-none border-none bg-transparent p-0"
                               >
                                 {showCurrentPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                               </button>
@@ -403,7 +403,7 @@ const Settings = () => {
                               <button
                                 type="button"
                                 onClick={() => setShowNewPassword(!showNewPassword)}
-                                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-300 hover:text-black transition-colors"
+                                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black transition-colors focus:outline-none border-none bg-transparent p-0"
                               >
                                 {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                               </button>
@@ -426,7 +426,7 @@ const Settings = () => {
                               <button
                                 type="button"
                                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-300 hover:text-black transition-colors"
+                                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black transition-colors focus:outline-none border-none bg-transparent p-0"
                               >
                                 {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                               </button>

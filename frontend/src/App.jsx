@@ -7,6 +7,7 @@ import Dashboard from './pages/Dashboard';
 import AcceptInvite from './pages/AcceptInvite';
 import Settings from './pages/Settings';
 import ForgotPassword from './pages/ForgotPassword';
+import Landing from './pages/Landing';
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
@@ -42,7 +43,14 @@ function App() {
       <Router>
         <Toaster position="top-right" />
         <Routes>
-          <Route path="/" element={<Navigate to="/dashboard" />} />
+          <Route 
+            path="/" 
+            element={
+              <PublicRoute>
+                <Landing />
+              </PublicRoute>
+            } 
+          />
           <Route
             path="/login"
             element={
@@ -76,7 +84,14 @@ function App() {
             }
           />
           <Route path="/accept-invite" element={<AcceptInvite />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route 
+            path="/forgot-password" 
+            element={
+              <PublicRoute>
+                <ForgotPassword />
+              </PublicRoute>
+            } 
+          />
         </Routes>
       </Router>
     </AuthProvider>

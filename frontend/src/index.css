@@ -25,6 +25,29 @@ body {
   color: var(--text-primary);
 }
 
+.grid-pattern {
+  background-image:
+    linear-gradient(to right, #F0F0F0 1px, transparent 1px),
+    linear-gradient(to bottom, #F0F0F0 1px, transparent 1px);
+  background-size: 64px 64px;
+}
+
+.hero-text-glow {
+  text-shadow: 0 0 80px rgba(0, 0, 0, 0.05);
+}
+
+.section-container {
+  @apply max-w-7xl mx-auto px-8 py-24 md:py-32;
+}
+
+.feature-check {
+  @apply w-5 h-5 rounded-full border border-black flex items-center justify-center;
+}
+
+.feature-check-disabled {
+  @apply w-5 h-5 rounded-full border border-gray-200 flex items-center justify-center;
+}
+
 @layer components {
   .card-premium {
     @apply bg-white border border-[#F2F2F2] rounded-[16px] transition-all duration-300;
@@ -102,6 +125,30 @@ h1, h2, h3, h4, h5 {
 /* Hide default Bootstrap dropdown carets entirely for a clean Notion look */
 .dropdown-toggle::after {
   display: none !important;
+}
+
+/* Premium Tabs Override (Remove Bootstrap Blue) */
+.premium-tabs.nav-tabs {
+  border-bottom: 1px solid #EDEDED !important;
+}
+
+.premium-tabs .nav-link {
+  color: #9CA3AF !important; /* text-gray-400 */
+  border: none !important;
+  font-weight: 700 !important;
+  transition: all 0.2s ease !important;
+  background: transparent !important;
+  padding-bottom: 1.25rem !important;
+}
+
+.premium-tabs .nav-link:hover {
+  color: #000000 !important;
+}
+
+.premium-tabs .nav-link.active {
+  color: #000000 !important;
+  border-bottom: 2px solid #000000 !important;
+  background: transparent !important;
 }
 
 /* Text smooth rendering */
