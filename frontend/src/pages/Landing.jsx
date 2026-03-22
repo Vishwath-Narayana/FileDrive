@@ -194,9 +194,7 @@ const Landing = () => {
               <div className="mb-6">
                 <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-3">Starter</h4>
                 <div className="flex items-center gap-2">
-                  <span className="text-gray-300 text-sm line-through font-bold">$4,000</span>
-                  <span className="text-2xl font-bold text-black">$2,000</span>
-                  <span className="text-[9px] font-bold text-green-500 uppercase bg-green-50 px-1.5 py-0.5 rounded tracking-tighter">-20% off</span>
+                  <span className="text-2xl font-bold text-black">₹299/month</span>
                 </div>
               </div>
               <p className="text-xs text-gray-400 font-medium mb-8 leading-relaxed">Perfect for MVPs, landing pages, or focused docs.</p>
@@ -216,9 +214,9 @@ const Landing = () => {
               <div className="mb-6">
                 <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-3">Basic</h4>
                 <div className="flex items-center gap-2">
-                  <span className="text-gray-300 text-sm line-through font-bold">$9,000</span>
-                  <span className="text-2xl font-bold text-black">$6,500</span>
-                  <span className="text-[9px] font-bold text-green-500 uppercase bg-green-50 px-1.5 py-0.5 rounded tracking-tighter">-40% off</span>
+                  <span className="text-gray-300 text-sm line-through font-bold">₹1000/month</span>
+                  <span className="text-2xl font-bold text-black">₹799/month</span>
+                  <span className="text-[9px] font-bold text-green-500 uppercase bg-green-50 px-1.5 py-0.5 rounded tracking-tighter">-0% off</span>
                 </div>
               </div>
               <p className="text-xs text-black font-medium mb-8 leading-relaxed">Full documentation site with a structured system.</p>
@@ -238,7 +236,7 @@ const Landing = () => {
               <div className="mb-6">
                 <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-3">Enterprise</h4>
                 <div className="flex items-center gap-2">
-                  <span className="text-2xl font-bold text-black">$12k+</span>
+                  <span className="text-2xl font-bold text-black">₹4000/month</span>
                 </div>
               </div>
               <p className="text-xs text-gray-400 font-medium mb-8 leading-relaxed">End-to-end developer portal, fully tailored.</p>
