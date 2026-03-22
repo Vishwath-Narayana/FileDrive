@@ -1,7 +1,6 @@
 const File = require('../models/File');
 const Organization = require('../models/Organization');
-const path = require('path');
-const fs = require('fs');
+const { cloudinary } = require('../config/cloudinaryConfig');
 
 const getFileType = (mimetype) => {
   if (mimetype.startsWith('image/')) return 'image';
@@ -40,7 +39,8 @@ exports.uploadFile = async (req, res) => {
     const file = await File.create({
       filename: req.file.filename,
       originalName: req.file.originalname,
-      path: req.file.path,
+      path: req.file.path, // Cloudinary URL
+      cloudinaryPublicId: req.file.filename, // Multer-storage-cloudinary uses filename as public_id
       size: req.file.size,
       fileType: fileType,
       uploader: req.user._id,
@@ -114,11 +114,9 @@ exports.downloadFile = async (req, res) => {
       return res.status(404).json({ message: 'File not found' });
     }
 
-    if (!fs.existsSync(file.path)) {
-      return res.status(404).json({ message: 'File not found on server' });
-    }
-
-    res.download(file.path, file.originalName);
+    // For Cloudinary, we can redirect to the secure URL
+    // Or we could fetch and stream, but redirect is more efficient for cloud storage
+    res.redirect(file.path);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -153,8 +151,8 @@ exports.deleteFile = async (req, res) => {
     }
 
     if (file.isDeleted) {
-      if (fs.existsSync(file.path)) {
-        fs.unlinkSync(file.path);
+      if (file.cloudinaryPublicId) {
+        await cloudinary.uploader.destroy(file.cloudinaryPublicId);
       }
       await File.findByIdAndDelete(req.params.id);
       res.json({ message: 'File permanently deleted' });

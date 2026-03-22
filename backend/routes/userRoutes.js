@@ -5,16 +5,11 @@ const path = require('path');
 const { updateProfile, changePassword, requestPasswordReset, verifyOTPAndResetPassword, uploadAvatar } = require('../controllers/userController');
 const authMiddleware = require('../middlewares/authMiddleware');
 
-// Multer config for avatar uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, 'uploads/'),
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    cb(null, `avatar-${req.user._id}-${Date.now()}${ext}`);
-  }
-});
+const { avatarStorage } = require('../config/cloudinaryConfig');
+
+// Multer config for avatar uploads using Cloudinary
 const upload = multer({
-  storage,
+  storage: avatarStorage,
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB max
   fileFilter: (req, file, cb) => {
     if (file.mimetype.startsWith('image/')) cb(null, true);
