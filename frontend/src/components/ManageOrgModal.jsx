@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Modal, Tab, Tabs, Dropdown } from 'react-bootstrap';
-import { Mail, UserPlus, X, ChevronDown } from 'lucide-react';
+import { Mail, UserPlus, X, ChevronDown, Trash2 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -71,6 +71,16 @@ const ManageOrgModal = ({ show, onHide }) => {
       toast.error(error.response?.data?.message || 'Failed to send invitation');
     } finally {
       setSending(false);
+    }
+  };
+
+  const handleRevokeInvitation = async (invitationId) => {
+    try {
+      await api.delete(`/organizations/${currentOrganization._id}/invitations/${invitationId}`);
+      toast.success('Invitation revoked');
+      await fetchOrganizationData();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to revoke invitation');
     }
   };
 
@@ -214,7 +224,7 @@ const ManageOrgModal = ({ show, onHide }) => {
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2">
                       {invitation.status === 'pending' && (
                         <button
                           onClick={() => {
@@ -227,6 +237,13 @@ const ManageOrgModal = ({ show, onHide }) => {
                           Copy Magic Link
                         </button>
                       )}
+                      <button
+                        onClick={() => handleRevokeInvitation(invitation._id)}
+                        className="p-2 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-full transition-all"
+                        title="Revoke invitation"
+                      >
+                        <Trash2 size={14} />
+                      </button>
                     </div>
                   </div>
                 ))

@@ -319,6 +319,30 @@ exports.rejectInvitation = async (req, res) => {
   }
 };
 
+// Admin can revoke/delete any invitation
+exports.revokeInvitation = async (req, res) => {
+  try {
+    const { organizationId, invitationId } = req.params;
+
+    const organization = await Organization.findById(organizationId);
+    if (!organization) {
+      return res.status(404).json({ message: 'Organization not found' });
+    }
+
+    const requesterMember = organization.members.find(
+      m => m.user.toString() === req.user._id.toString()
+    );
+    if (!requesterMember || requesterMember.role !== 'admin') {
+      return res.status(403).json({ message: 'Only admins can revoke invitations' });
+    }
+
+    await Invitation.findByIdAndDelete(invitationId);
+    res.json({ message: 'Invitation revoked' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 exports.acceptInviteByToken = async (req, res) => {
   try {
     const { token } = req.body;
@@ -339,7 +363,7 @@ exports.acceptInviteByToken = async (req, res) => {
     const user = await User.findOne({ email: email.toLowerCase() });
 
     if (!user) {
-      return res.status(404).json({ 
+      return res.status(404).json({
         message: 'User not found. Please register first.',
         needsRegistration: true,
         email,

@@ -85,14 +85,7 @@ function App() {
             }
           />
           <Route path="/accept-invite" element={<AcceptInvite />} />
-          <Route 
-            path="/forgot-password" 
-            element={
-              <PublicRoute>
-                <ForgotPassword />
-              </PublicRoute>
-            } 
-          />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
         </Routes>
       </Router>
