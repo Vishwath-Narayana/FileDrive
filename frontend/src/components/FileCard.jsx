@@ -45,7 +45,7 @@ const FileCard = ({ file, onDownload, onDelete, onToggleFavorite, onRestore, use
           <Dropdown align="end">
             <Dropdown.Toggle
               variant="link"
-              className="p-1.5 text-gray-200 hover:text-black transition-colors rounded-full hover:bg-gray-50"
+              className="p-1.5 text-gray-400 hover:text-black transition-colors rounded-full hover:bg-gray-50"
               id={`dropdown-${file._id}`}
             >
               <MoreVertical size={16} strokeWidth={2.5} />

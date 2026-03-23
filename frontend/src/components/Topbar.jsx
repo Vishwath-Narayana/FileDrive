@@ -64,10 +64,10 @@ const Topbar = ({ onOpenAdminModal, onOpenCreateOrgModal }) => {
               <Dropdown.Item
                 key={org._id}
                 onClick={() => switchOrganization(org)}
-                active={currentOrganization?._id === org._id}
+                active={false}
                 className={`py-2 px-4 text-sm flex items-center transition-colors mx-1 rounded-[8px] ${
                   currentOrganization?._id === org._id 
-                    ? 'bg-gray-100 text-black font-semibold' 
+                    ? 'bg-black text-white font-semibold' 
                     : 'text-gray-600 hover:bg-gray-50 hover:text-black'
                 }`}
               >
