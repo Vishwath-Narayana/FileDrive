@@ -4,8 +4,10 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 
 const sendInviteEmail = async (toEmail, inviteLink, role, organizationName) => {
   try {
-    await resend.emails.send({
-      from: 'onboarding@resend.dev',
+    console.log("📨 Sending email to:", toEmail);
+
+    const response = await resend.emails.send({
+      from: 'FileDrive <onboarding@resend.dev>', // ✅ FIXED
       to: toEmail,
       subject: `You're invited to ${organizationName}`,
       html: `
@@ -19,7 +21,7 @@ const sendInviteEmail = async (toEmail, inviteLink, role, organizationName) => {
       `,
     });
 
-    console.log("✅ Email sent to:", toEmail);
+    console.log("✅ Resend response:", response);
   } catch (error) {
     console.error("❌ Resend email error:", error.message);
   }
