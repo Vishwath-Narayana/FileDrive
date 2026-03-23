@@ -95,18 +95,18 @@ const ManageOrgModal = ({ show, onHide }) => {
               ) : members.length === 0 ? (
                 <div className="text-center py-12 text-gray-400 text-sm">No members found</div>
               ) : (
-                members.map((member) => (
+                members.filter(m => m.user).map((member) => (
                   <div
-                    key={member.user._id || member.user}
+                    key={member.user?._id || member.user}
                     className="flex items-center justify-between p-4 bg-white border border-[#EDEDED] rounded-[16px] hover:border-black transition-all"
                   >
                     <div className="flex items-center gap-4">
                       <div className="w-10 h-10 rounded-full bg-black text-white flex items-center justify-center text-xs font-bold ring-2 ring-gray-50">
-                        {member.user.name?.charAt(0).toUpperCase() || 'U'}
+                        {member.user?.name?.charAt(0).toUpperCase() || 'U'}
                       </div>
                       <div>
-                        <div className="text-sm font-bold text-black">{member.user.name}</div>
-                        <div className="text-[11px] font-medium text-gray-400 uppercase tracking-tight">{member.user.email}</div>
+                        <div className="text-sm font-bold text-black">{member.user?.name || 'Unknown User'}</div>
+                        <div className="text-[11px] font-medium text-gray-400 uppercase tracking-tight">{member.user?.email || ''}</div>
                       </div>
                     </div>
                     <Dropdown align="end">
@@ -116,9 +116,9 @@ const ManageOrgModal = ({ show, onHide }) => {
                       </Dropdown.Toggle>
 
                       <Dropdown.Menu className="shadow-2xl border border-[#EDEDED] py-2 rounded-[12px] min-w-[140px] mt-1">
-                        <Dropdown.Item onClick={() => handleRoleChange(member.user._id || member.user, 'admin')} className="py-2 px-4 text-xs font-bold hover:bg-gray-50 rounded-[8px] mx-1">ADMIN</Dropdown.Item>
-                        <Dropdown.Item onClick={() => handleRoleChange(member.user._id || member.user, 'editor')} className="py-2 px-4 text-xs font-bold hover:bg-gray-50 rounded-[8px] mx-1">EDITOR</Dropdown.Item>
-                        <Dropdown.Item onClick={() => handleRoleChange(member.user._id || member.user, 'viewer')} className="py-2 px-4 text-xs font-bold hover:bg-gray-50 rounded-[8px] mx-1">VIEWER</Dropdown.Item>
+                        <Dropdown.Item onClick={() => handleRoleChange(member.user?._id || member.user, 'admin')} className="py-2 px-4 text-xs font-bold hover:bg-gray-50 rounded-[8px] mx-1">ADMIN</Dropdown.Item>
+                        <Dropdown.Item onClick={() => handleRoleChange(member.user?._id || member.user, 'editor')} className="py-2 px-4 text-xs font-bold hover:bg-gray-50 rounded-[8px] mx-1">EDITOR</Dropdown.Item>
+                        <Dropdown.Item onClick={() => handleRoleChange(member.user?._id || member.user, 'viewer')} className="py-2 px-4 text-xs font-bold hover:bg-gray-50 rounded-[8px] mx-1">VIEWER</Dropdown.Item>
                       </Dropdown.Menu>
                     </Dropdown>
                   </div>
