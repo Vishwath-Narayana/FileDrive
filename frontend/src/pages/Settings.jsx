@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { User, Lock, ArrowLeft, Camera, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { Tab, Tabs } from 'react-bootstrap';
@@ -38,9 +38,6 @@ const Settings = () => {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [sendingOTP, setSendingOTP] = useState(false);
-  const [showOTPInput, setShowOTPInput] = useState(false);
-  const [otpCode, setOtpCode] = useState('');
 
   const handleAvatarChange = async (e) => {
     const file = e.target.files[0];
@@ -99,16 +96,9 @@ const Settings = () => {
   const handleChangePassword = async (e) => {
     e.preventDefault();
     
-    if (showOTPInput) {
-      if (!otpCode || !newPassword || !confirmPassword) {
-        toast.error('All fields are required for OTP reset');
-        return;
-      }
-    } else {
-      if (!currentPassword || !newPassword || !confirmPassword) {
-        toast.error('All fields are required');
-        return;
-      }
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      toast.error('All fields are required');
+      return;
     }
 
     if (newPassword !== confirmPassword) {
@@ -123,42 +113,15 @@ const Settings = () => {
 
     try {
       setChangingPassword(true);
-      
-      if (showOTPInput) {
-        // use OTP verification route
-        await api.post('/users/reset-password', { 
-          email: user.email, 
-          otp: otpCode, 
-          newPassword 
-        });
-      } else {
-        // use standard change password route
-        await api.put('/users/change-password', { currentPassword, newPassword });
-      }
-      
+      await api.put('/users/change-password', { currentPassword, newPassword });
       toast.success('Password changed successfully');
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
-      setOtpCode('');
-      setShowOTPInput(false);
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to change password');
     } finally {
       setChangingPassword(false);
-    }
-  };
-
-  const handleRequestOTP = async () => {
-    try {
-      setSendingOTP(true);
-      await api.post('/users/request-password-reset', { email: user.email });
-      toast.success('OTP sent to your email! (Check spam)');
-      setShowOTPInput(true);
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to send OTP');
-    } finally {
-      setSendingOTP(false);
     }
   };
 
@@ -324,67 +287,37 @@ const Settings = () => {
                       </div>
 
                       <div className="max-w-md space-y-6">
-                        {!showOTPInput ? (
-                          <div>
-                            <div className="flex items-center justify-between mb-2">
-                              <label htmlFor="current-password" className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider">
-                                Current Password
-                              </label>
-                              <button 
-                                type="button" 
-                                onClick={handleRequestOTP}
-                                disabled={sendingOTP}
-                                className="text-[12px] font-bold text-gray-400 hover:text-black hover:underline underline-offset-2 border-none bg-transparent p-0 focus:outline-none transition-colors"
-                              >
-                                {sendingOTP ? 'Sending OTP...' : 'Lost access? Reset via OTP'}
-                              </button>
-                            </div>
-                            <div className="relative">
-                              <input
-                                id="current-password"
-                                type={showCurrentPassword ? "text" : "password"}
-                                value={currentPassword}
-                                onChange={(e) => setCurrentPassword(e.target.value)}
-                                className="input-field pr-12"
-                                placeholder="••••••••"
-                              />
-                              <button
-                                type="button"
-                                onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black transition-colors focus:outline-none border-none bg-transparent p-0"
-                              >
-                                {showCurrentPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                              </button>
-                            </div>
+                        {/* Current Password */}
+                        <div>
+                          <div className="flex items-center justify-between mb-2">
+                            <label htmlFor="current-password" className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+                              Current Password
+                            </label>
+                            <Link 
+                              to="/forgot-password"
+                              className="text-[12px] font-bold text-gray-400 hover:text-black hover:underline underline-offset-2 transition-colors"
+                            >
+                              Forgot password?
+                            </Link>
                           </div>
-                        ) : (
-                          <div className="bg-gray-50 p-6 rounded-[16px] border border-[#EDEDED] animate-in fade-in duration-300">
-                            <div className="flex items-center justify-between mb-2">
-                              <label htmlFor="otp" className="block text-[11px] font-bold text-black uppercase tracking-wider">
-                                Verify Reset code (OTP)
-                              </label>
-                              <button 
-                                type="button" 
-                                onClick={() => setShowOTPInput(false)}
-                                className="text-[10px] font-bold text-gray-400 hover:text-black transition-colors"
-                              >
-                                Back
-                              </button>
-                            </div>
+                          <div className="relative">
                             <input
-                              id="otp"
-                              type="text"
-                              value={otpCode}
-                              onChange={(e) => setOtpCode(e.target.value)}
-                              className="input-field bg-white text-center text-lg font-bold tracking-widest"
-                              placeholder="000000"
-                              maxLength={6}
+                              id="current-password"
+                              type={showCurrentPassword ? "text" : "password"}
+                              value={currentPassword}
+                              onChange={(e) => setCurrentPassword(e.target.value)}
+                              className="input-field pr-12"
+                              placeholder="••••••••"
                             />
-                            <p className="mt-3 text-[10px] font-medium text-gray-400 leading-relaxed uppercase">
-                              We've sent a 6-digit code to your inbox. Please check your spam folder.
-                            </p>
+                            <button
+                              type="button"
+                              onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                              className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black transition-colors focus:outline-none border-none bg-transparent p-0"
+                            >
+                              {showCurrentPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                            </button>
                           </div>
-                        )}
+                        </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div>

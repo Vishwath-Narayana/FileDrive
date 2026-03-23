@@ -30,7 +30,7 @@ const Dashboard = () => {
   const { user, currentOrganization } = useAuth();
   
   const userRole = currentOrganization?.members?.find(
-    m => (m.user._id?.toString() || m.user?.toString() || m.user) === user?._id?.toString()
+    m => m.user && (m.user._id?.toString() || m.user?.toString() || m.user) === user?._id?.toString()
   )?.role || 'viewer';
 
   useEffect(() => {
