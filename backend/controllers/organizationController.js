@@ -184,7 +184,7 @@ exports.sendInvitation = async (req, res) => {
     res.status(201).json(populatedInvitation);
 
     // 🚀 Send email in background (NO await)
-    sendInviteEmail(normalizedEmail, inviteLink, role, organization.name)
+    sendInviteEmail(normalizedEmail, inviteLink, role, organization.name, req.user.name, req.user.email)
       .then(() => {
         console.log("Invite email sent to:", normalizedEmail);
       })
