@@ -33,9 +33,15 @@ const Dashboard = () => {
   )?.role || 'viewer';
 
   useEffect(() => {
-    if (currentOrganization) {
+    if (!currentOrganization) return;
+
+    fetchFiles();
+
+    const interval = setInterval(() => {
       fetchFiles();
-    }
+    }, 5000); // every 5 seconds
+
+    return () => clearInterval(interval);
   }, [currentOrganization, activeTab]);
 
   useEffect(() => {
