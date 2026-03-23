@@ -1,6 +1,7 @@
 const File = require('../models/File');
 const Organization = require('../models/Organization');
 const { cloudinary } = require('../config/cloudinaryConfig');
+const { getIO } = require('../socket');
 
 const getFileType = (mimetype) => {
   if (mimetype.startsWith('image/')) return 'image';
@@ -50,6 +51,13 @@ exports.uploadFile = async (req, res) => {
     const populatedFile = await File.findById(file._id).populate('uploader', 'name email');
 
     res.status(201).json(populatedFile);
+
+    // 🔴 Real-time: notify all other members in the org
+    try {
+      const room = `org:${organizationId.toString()}`;
+      console.log(`📡 Emitting file:new to room ${room}`);
+      getIO().to(room).emit('file:new', populatedFile);
+    } catch (e) { console.error('❌ Socket emit error:', e.message); }
   } catch (error) {
     console.error('Upload file error:', error);
     res.status(500).json({ message: error.message });
@@ -156,12 +164,20 @@ exports.deleteFile = async (req, res) => {
       }
       await File.findByIdAndDelete(req.params.id);
       res.json({ message: 'File permanently deleted' });
+      // 🔴 Real-time
+      const room = `org:${file.organization.toString()}`;
+      console.log(`📡 Emitting file:deleted to room ${room}`);
+      try { getIO().to(room).emit('file:deleted', { fileId: req.params.id }); } catch (e) { console.error('❌ Socket emit error:', e.message); }
     } else {
       file.isDeleted = true;
       file.deletedAt = new Date();
       file.deletedBy = req.user._id;
       await file.save();
       res.json({ message: 'File moved to trash' });
+      // 🔴 Real-time
+      const room = `org:${file.organization.toString()}`;
+      console.log(`📡 Emitting file:trashed to room ${room}`);
+      try { getIO().to(room).emit('file:trashed', { fileId: req.params.id }); } catch (e) { console.error('❌ Socket emit error:', e.message); }
     }
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -204,6 +220,10 @@ exports.toggleFavorite = async (req, res) => {
     const updatedFile = await File.findById(file._id).populate('uploader', 'name email');
 
     res.json(updatedFile);
+    // 🔴 Real-time
+    const room = `org:${file.organization.toString()}`;
+    console.log(`📡 Emitting file:favoriteUpdated to room ${room}`);
+    try { getIO().to(room).emit('file:favoriteUpdated', updatedFile); } catch (e) { console.error('❌ Socket emit error:', e.message); }
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -249,6 +269,10 @@ exports.restoreFile = async (req, res) => {
     const updatedFile = await File.findById(file._id).populate('uploader', 'name email');
 
     res.json(updatedFile);
+    // 🔴 Real-time
+    const room = `org:${file.organization.toString()}`;
+    console.log(`📡 Emitting file:restored to room ${room}`);
+    try { getIO().to(room).emit('file:restored', updatedFile); } catch (e) { console.error('❌ Socket emit error:', e.message); }
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

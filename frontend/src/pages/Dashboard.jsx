@@ -9,6 +9,7 @@ import FileRow from '../components/FileRow';
 import ManageOrgModal from '../components/ManageOrgModal';
 import CreateOrgModal from '../components/CreateOrgModal';
 import api from '../services/api';
+import socket from '../services/socket';
 import { useAuth } from '../context/AuthContext';
 import { X, File, Plus } from 'lucide-react';
 
@@ -36,6 +37,60 @@ const Dashboard = () => {
     if (!currentOrganization) return;
     fetchFiles();
   }, [currentOrganization, activeTab]);
+
+  // 🔴 Real-time: join org room and handle file events
+  useEffect(() => {
+    if (!currentOrganization) return;
+    const orgId = currentOrganization._id;
+
+    console.log('🔌 Joining org room:', orgId);
+    socket.emit('join-org', orgId);
+
+    const handleFileNew = (file) => {
+      console.log('📥 Received file:new', file._id);
+      setFiles((prev) => {
+        if (prev.some((f) => f._id === file._id)) return prev;
+        return [file, ...prev];
+      });
+    };
+
+    const handleFileTrashed = ({ fileId }) => {
+      console.log('📥 Received file:trashed', fileId);
+      setFiles((prev) => prev.filter((f) => f._id !== fileId));
+    };
+
+    const handleFileDeleted = ({ fileId }) => {
+      console.log('📥 Received file:deleted', fileId);
+      setFiles((prev) => prev.filter((f) => f._id !== fileId));
+    };
+
+    const handleFileRestored = (file) => {
+      console.log('📥 Received file:restored', file._id);
+      setFiles((prev) => prev.filter((f) => f._id !== file._id));
+    };
+
+    const handleFavoriteUpdated = (updatedFile) => {
+      console.log('📥 Received file:favoriteUpdated', updatedFile._id);
+      setFiles((prev) =>
+        prev.map((f) => (f._id === updatedFile._id ? updatedFile : f))
+      );
+    };
+
+    socket.on('file:new', handleFileNew);
+    socket.on('file:trashed', handleFileTrashed);
+    socket.on('file:deleted', handleFileDeleted);
+    socket.on('file:restored', handleFileRestored);
+    socket.on('file:favoriteUpdated', handleFavoriteUpdated);
+
+    return () => {
+      socket.emit('leave-org', orgId);
+      socket.off('file:new', handleFileNew);
+      socket.off('file:trashed', handleFileTrashed);
+      socket.off('file:deleted', handleFileDeleted);
+      socket.off('file:restored', handleFileRestored);
+      socket.off('file:favoriteUpdated', handleFavoriteUpdated);
+    };
+  }, [currentOrganization]);
 
   useEffect(() => {
     applyFilters();
