@@ -7,6 +7,7 @@ import Dashboard from './pages/Dashboard';
 import AcceptInvite from './pages/AcceptInvite';
 import Settings from './pages/Settings';
 import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import Landing from './pages/Landing';
 
 const ProtectedRoute = ({ children }) => {
@@ -92,6 +93,7 @@ function App() {
               </PublicRoute>
             } 
           />
+          <Route path="/reset-password" element={<ResetPassword />} />
         </Routes>
       </Router>
     </AuthProvider>

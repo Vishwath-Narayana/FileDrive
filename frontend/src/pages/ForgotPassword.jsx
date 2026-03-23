@@ -1,21 +1,16 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Mail, Lock, Copy, CheckCircle } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import api from '../services/api';
 
 const ForgotPassword = () => {
-  const navigate = useNavigate();
-  const [step, setStep] = useState(1);
   const [email, setEmail] = useState('');
-  const [otp, setOtp] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [resetLink, setResetLink] = useState('');
+  const [copied, setCopied] = useState(false);
 
-  const handleRequestOTP = async (e) => {
+  const handleRequestReset = async (e) => {
     e.preventDefault();
     
     if (!email) {
@@ -25,44 +20,21 @@ const ForgotPassword = () => {
 
     try {
       setLoading(true);
-      await api.post('/users/request-password-reset', { email });
-      toast.success('OTP sent to your email');
-      setStep(2);
+      const response = await api.post('/users/request-password-reset', { email });
+      setResetLink(response.data.resetLink);
+      toast.success('Reset link generated!');
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to send OTP');
+      toast.error(error.response?.data?.message || 'Failed to generate reset link');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleResetPassword = async (e) => {
-    e.preventDefault();
-    
-    if (!otp || !newPassword || !confirmPassword) {
-      toast.error('All fields are required');
-      return;
-    }
-
-    if (newPassword !== confirmPassword) {
-      toast.error('Passwords do not match');
-      return;
-    }
-
-    if (newPassword.length < 6) {
-      toast.error('Password must be at least 6 characters');
-      return;
-    }
-
-    try {
-      setLoading(true);
-      await api.post('/users/reset-password', { email, otp, newPassword });
-      toast.success('Password reset successfully');
-      navigate('/login');
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to reset password');
-    } finally {
-      setLoading(false);
-    }
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(resetLink);
+    setCopied(true);
+    toast.success('Link copied to clipboard');
+    setTimeout(() => setCopied(false), 3000);
   };
 
   return (
@@ -75,124 +47,88 @@ const ForgotPassword = () => {
       </div>
 
       <div className="w-full max-w-[400px] bg-white p-10 rounded-[24px] shadow-xl border border-[#EDEDED]">
-        <div className="mb-8">
-          <h2 className="text-xl font-bold text-black mb-1">
-            {step === 1 ? 'Reset Password' : 'Verify Identity'}
-          </h2>
-          <p className="text-sm text-gray-500">
-            {step === 1 ? 'Enter your email to receive a recovery code' : 'Check your inbox for the 6-digit OTP'}
-          </p>
-        </div>
-
-        {step === 1 ? (
-          <form onSubmit={handleRequestOTP} className="space-y-8">
-            <div>
-              <label htmlFor="email" className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">
-                Email Address
-              </label>
-              <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" size={18} />
-                <input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="input-field pl-12"
-                  placeholder="name@company.com"
-                />
-              </div>
+        {!resetLink ? (
+          <>
+            <div className="mb-8">
+              <h2 className="text-xl font-bold text-black mb-1">Reset Password</h2>
+              <p className="text-sm text-gray-500">Enter your email to get a reset link</p>
             </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full btn-primary py-3 flex justify-center text-sm"
-            >
-              {loading ? 'Sending code...' : 'Send Recovery OTP'}
-            </button>
-          </form>
-        ) : (
-          <form onSubmit={handleResetPassword} className="space-y-6">
-            <div>
-              <label htmlFor="otp" className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">
-                6-Digit OTP Code
-              </label>
-              <input
-                id="otp"
-                type="text"
-                value={otp}
-                onChange={(e) => setOtp(e.target.value)}
-                className="input-field text-center text-xl font-bold tracking-[0.5em]"
-                placeholder="000000"
-                maxLength={6}
-              />
-            </div>
-
-            <div className="space-y-4">
+            <form onSubmit={handleRequestReset} className="space-y-8">
               <div>
-                <label htmlFor="new-password" className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">
-                  New Password
+                <label htmlFor="email" className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">
+                  Email Address
                 </label>
                 <div className="relative">
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" size={18} />
                   <input
-                    id="new-password"
-                    type={showNewPassword ? "text" : "password"}
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    className="input-field pr-12 text-sm"
-                    placeholder="••••••••"
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="input-field pl-12"
+                    placeholder="name@company.com"
+                    autoFocus
                   />
-                  <button
-                    type="button"
-                    onClick={() => setShowNewPassword(!showNewPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-300 hover:text-black transition-colors"
-                  >
-                    {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                  </button>
                 </div>
               </div>
 
-              <div>
-                <label htmlFor="confirm-password" className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">
-                  Confirm Password
-                </label>
-                <div className="relative">
-                  <input
-                    id="confirm-password"
-                    type={showConfirmPassword ? "text" : "password"}
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="input-field pr-12 text-sm"
-                    placeholder="••••••••"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-300 hover:text-black transition-colors"
-                  >
-                    {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3 pt-2">
-              <button
-                type="button"
-                onClick={() => setStep(1)}
-                className="btn-secondary py-3 flex justify-center text-sm"
-              >
-                Back
-              </button>
               <button
                 type="submit"
                 disabled={loading}
-                className="btn-primary py-3 flex justify-center text-sm"
+                className="w-full btn-primary py-3 flex justify-center text-sm"
               >
-                {loading ? 'Recovering...' : 'Reset Now'}
+                {loading ? 'Generating...' : 'Generate Reset Link'}
               </button>
+            </form>
+          </>
+        ) : (
+          <div className="animate-in fade-in duration-500">
+            <div className="text-center mb-8">
+              <div className="w-14 h-14 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                <CheckCircle className="w-7 h-7 text-green-500" strokeWidth={2.5} />
+              </div>
+              <h2 className="text-xl font-bold text-black mb-1">Link Ready!</h2>
+              <p className="text-sm text-gray-500">Share or open this link to reset the password for <strong>{email}</strong></p>
             </div>
-          </form>
+
+            <div className="bg-gray-50 border border-[#EDEDED] rounded-[16px] p-4 mb-6">
+              <p className="text-xs text-gray-500 font-mono break-all leading-relaxed">{resetLink}</p>
+            </div>
+
+            <div className="space-y-3">
+              <button
+                onClick={handleCopyLink}
+                className="w-full btn-primary py-3 flex justify-center items-center gap-2 text-sm"
+              >
+                {copied ? (
+                  <>
+                    <CheckCircle size={16} />
+                    Copied!
+                  </>
+                ) : (
+                  <>
+                    <Copy size={16} />
+                    Copy Reset Link
+                  </>
+                )}
+              </button>
+
+              <a
+                href={resetLink}
+                className="w-full btn-secondary py-3 flex justify-center text-sm font-bold"
+              >
+                Open Link Now
+              </a>
+            </div>
+
+            <button
+              onClick={() => { setResetLink(''); setEmail(''); setCopied(false); }}
+              className="w-full mt-4 text-xs text-gray-400 hover:text-black transition-colors font-medium"
+            >
+              Try a different email
+            </button>
+          </div>
         )}
 
         <div className="mt-10 pt-8 border-t border-[#EDEDED] text-center">

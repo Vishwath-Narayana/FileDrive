@@ -3,7 +3,6 @@ const Invitation = require('../models/Invitation');
 const User = require('../models/User');
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
-const { sendInviteEmail } = require('../utils/email');
 
 exports.createOrganization = async (req, res) => {
   try {
@@ -180,17 +179,8 @@ exports.sendInvitation = async (req, res) => {
       .populate('organization', 'name')
       .populate('invitedBy', 'name email');
 
-    // ⚡ SEND RESPONSE FIRST (FAST UI)
+    // ⚡ SEND RESPONSE (invite link is copied by admin via UI)
     res.status(201).json(populatedInvitation);
-
-    // 🚀 Send email in background (NO await)
-    sendInviteEmail(normalizedEmail, inviteLink, role, organization.name, req.user.name, req.user.email)
-      .then(() => {
-        console.log("Invite email sent to:", normalizedEmail);
-      })
-      .catch(err => {
-        console.error("Email failed:", err.message);
-      });
 
   } catch (error) {
     console.error('Send invitation error:', error);

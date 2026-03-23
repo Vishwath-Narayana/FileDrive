@@ -1,8 +1,7 @@
 const User = require('../models/User');
-const PasswordReset = require('../models/PasswordReset');
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 const path = require('path');
-const { sendPasswordResetOTP } = require('../utils/email');
 
 exports.updateProfile = async (req, res) => {
   try {
@@ -79,6 +78,7 @@ exports.changePassword = async (req, res) => {
   }
 };
 
+// Generate a magic link for password reset (no email — link is shown to the user)
 exports.requestPasswordReset = async (req, res) => {
   try {
     const { email } = req.body;
@@ -90,57 +90,53 @@ exports.requestPasswordReset = async (req, res) => {
     const user = await User.findOne({ email: email.toLowerCase() });
     
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+      return res.status(404).json({ message: 'No account found with that email' });
     }
     
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    // Generate a JWT token for reset (expires in 10 minutes)
+    const resetToken = jwt.sign(
+      { userId: user._id, email: user.email, purpose: 'password-reset' },
+      process.env.JWT_SECRET,
+      { expiresIn: '10m' }
+    );
     
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+    const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
     
-    await PasswordReset.create({
-      user: user._id,
-      email: email.toLowerCase(),
-      otp,
-      expiresAt
+    res.json({ 
+      message: 'Reset link generated',
+      resetLink
     });
-    
-    try {
-      await sendPasswordResetOTP(email, otp, user.name);
-    } catch (emailError) {
-      console.warn('Failed to send OTP email but creating the reset request internal flow. Error:', emailError.message);
-    }
-    
-    res.json({ message: 'OTP sent to your email' });
   } catch (error) {
     console.error('Password reset request error:', error);
     res.status(500).json({ message: error.message });
   }
 };
 
-exports.verifyOTPAndResetPassword = async (req, res) => {
+// Reset password using the magic link token
+exports.resetPasswordByToken = async (req, res) => {
   try {
-    const { email, otp, newPassword } = req.body;
+    const { token, newPassword } = req.body;
     
-    if (!email || !otp || !newPassword) {
-      return res.status(400).json({ message: 'Email, OTP, and new password are required' });
+    if (!token || !newPassword) {
+      return res.status(400).json({ message: 'Token and new password are required' });
     }
     
     if (newPassword.length < 6) {
       return res.status(400).json({ message: 'New password must be at least 6 characters' });
     }
     
-    const passwordReset = await PasswordReset.findOne({
-      email: email.toLowerCase(),
-      otp,
-      isUsed: false,
-      expiresAt: { $gt: new Date() }
-    });
-    
-    if (!passwordReset) {
-      return res.status(400).json({ message: 'Invalid or expired OTP' });
+    let decoded;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET);
+    } catch (err) {
+      return res.status(400).json({ message: 'Invalid or expired reset link' });
     }
     
-    const user = await User.findById(passwordReset.user);
+    if (decoded.purpose !== 'password-reset') {
+      return res.status(400).json({ message: 'Invalid reset link' });
+    }
+    
+    const user = await User.findById(decoded.userId);
     
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
@@ -148,9 +144,6 @@ exports.verifyOTPAndResetPassword = async (req, res) => {
     
     user.password = newPassword;
     await user.save();
-    
-    passwordReset.isUsed = true;
-    await passwordReset.save();
     
     res.json({ message: 'Password reset successfully' });
   } catch (error) {
