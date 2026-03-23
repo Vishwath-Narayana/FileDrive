@@ -144,9 +144,11 @@ exports.sendInvitation = async (req, res) => {
       return res.status(403).json({ message: 'Only admins can send invitations' });
     }
 
+    const normalizedEmail = email.toLowerCase();
+
     const existingInvitation = await Invitation.findOne({
       organization: organizationId,
-      email: email.toLowerCase(),
+      email: normalizedEmail,
       status: 'pending'
     });
 
@@ -154,35 +156,42 @@ exports.sendInvitation = async (req, res) => {
       return res.status(400).json({ message: 'Invitation already sent to this email' });
     }
 
+    // 🔐 Generate token
     const jwtToken = jwt.sign(
-      { email: email.toLowerCase(), organizationId, role },
+      { email: normalizedEmail, organizationId, role },
       process.env.JWT_SECRET,
       { expiresIn: '48h' }
     );
 
-    const inviteLink = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/accept-invite?token=${jwtToken}`;
+    // 🔗 Invite link
+    const inviteLink = `${process.env.FRONTEND_URL}/accept-invite?token=${jwtToken}`;
 
-    try {
-      await sendInviteEmail(email, inviteLink, role, organization.name);
-    } catch (emailError) {
-      console.warn('Failed to send invitation email but proceeding to create the internal invite. Error:', emailError.message);
-    }
-
-    const token = crypto.randomBytes(32).toString('hex');
-
+    // 💾 Save invitation
     const invitation = await Invitation.create({
       organization: organizationId,
-      email: email.toLowerCase(),
+      email: normalizedEmail,
       role,
       invitedBy: req.user._id,
       token: jwtToken
     });
 
+    // 🔍 Populate for frontend
     const populatedInvitation = await Invitation.findById(invitation._id)
       .populate('organization', 'name')
       .populate('invitedBy', 'name email');
 
+    // ⚡ SEND RESPONSE FIRST (FAST UI)
     res.status(201).json(populatedInvitation);
+
+    // 🚀 Send email in background (NO await)
+    sendInviteEmail(normalizedEmail, inviteLink, role, organization.name)
+      .then(() => {
+        console.log("Invite email sent to:", normalizedEmail);
+      })
+      .catch(err => {
+        console.error("Email failed:", err.message);
+      });
+
   } catch (error) {
     console.error('Send invitation error:', error);
     res.status(500).json({ message: error.message });
