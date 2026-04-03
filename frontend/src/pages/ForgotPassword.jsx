@@ -40,10 +40,10 @@ const ForgotPassword = () => {
 
   return (
     <div className="min-h-screen bg-[#FAFAFA] flex flex-col items-center justify-center px-4">
-      <div className="mb-10 text-center">
-        <img src={logo} alt="FileDrive Logo" className="w-12 h-12 object-cover rounded-xl mx-auto mb-4 shadow-lg" />
+      <Link to="/" className="mb-10 text-center block cursor-pointer group">
+        <img src={logo} alt="FileDrive Logo" className="w-12 h-12 object-cover rounded-xl mx-auto mb-4 shadow-lg transform group-hover:-translate-y-1 transition-all duration-300" />
         <h1 className="text-2xl font-bold tracking-tight text-black">FileDrive</h1>
-      </div>
+      </Link>
 
       <div className="w-full max-w-[400px] bg-white p-10 rounded-[24px] shadow-xl border border-[#EDEDED]">
         {!resetLink ? (
