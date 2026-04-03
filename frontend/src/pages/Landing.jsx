@@ -16,6 +16,7 @@ import {
   X
 } from 'lucide-react';
 import { useState } from 'react';
+import logo from '../assets/logo.png';
 
 const Landing = () => {
   const navigate = useNavigate();
@@ -46,9 +47,7 @@ const Landing = () => {
       <nav className="fixed top-0 w-full z-[100] bg-white/80 backdrop-blur-md border-b border-[#F0F0F0]">
         <div className="max-w-7xl mx-auto px-8 h-12 flex items-center justify-between">
           <div className="flex items-center gap-2 group cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-            <div className="w-6 h-6 bg-black rounded flex items-center justify-center transition-transform group-hover:scale-105">
-              <span className="text-white font-bold text-[10px]">F</span>
-            </div>
+            <img src={logo} alt="FileDrive Logo" className="w-6 h-6 object-cover rounded transition-transform group-hover:scale-105" />
             <span className="text-sm font-bold tracking-tight">FileDrive</span>
           </div>
           
@@ -107,13 +106,13 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Comparison Section (Optimized per Image 4) */}
+      {/* Comparison Section (Optimized for perfect alignment) */}
       <section id="features" className="bg-white py-20 border-b border-dashed border-[#F0F0F0]">
         <div className="section-container !py-0">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-black mb-4">Why choose us over others?</h2>
             <p className="text-sm text-gray-400 font-medium max-w-lg mx-auto leading-relaxed">
-              We treat docs like a first-class citizen of your product. Devs notice the difference.
+              We provide the absolute best file management experience for modern, fast-moving teams.
             </p>
           </div>
 
@@ -140,37 +139,38 @@ const Landing = () => {
                     { name: "Live Activity Updates", ours: true, others: false },
                     { name: "Fast & Responsive Interface", ours: true, others: false },
                   ].map((item, id) => (
-                    <div key={id} className="grid grid-cols-10 py-3.5 items-center border-b border-gray-50 last:border-0 group/item">
+                    <div key={id} className="grid grid-cols-10 h-[52px] items-center border-b border-gray-50 last:border-0 group/item">
                       <span className="col-span-7 text-[13px] font-bold text-gray-600 group-hover/item:text-black transition-colors">{item.name}</span>
                       <div className="col-span-3 flex justify-end pr-4">
-                        {item.others ? <Check size={14} className="text-gray-400" /> : <X size={14} className="text-gray-200" />}
+                        {item.others ? <Check size={14} className="text-gray-400" /> : <X size={14} className="text-gray-400" />}
                       </div>
                     </div>
                   ))}
                 </div>
               </div>
 
-              {/* Our Agency Column */}
-              <div className="lg:col-span-4 bg-black p-8 md:p-10 flex flex-col">
-                <div className="text-center mb-10">
-                   <span className="text-[9px] font-bold text-gray-500 uppercase tracking-[0.3em]">Our Agency</span>
+              {/* FileDrive Column */}
+              <div className="lg:col-span-4 bg-black flex flex-col">
+                <div className="p-8 md:p-10 pb-0">
+                   <div className="px-6 py-4 border border-transparent rounded flex justify-center items-center mb-8 h-[54px]">
+                      <div className="text-[10px] font-bold text-white uppercase tracking-[0.2em]">FileDrive</div>
+                   </div>
                 </div>
                 
-                <div className="space-y-7 flex-1 flex flex-col justify-center">
+                <div className="px-8 md:px-10 pb-10 space-y-1 flex-1 flex flex-col">
                   {[
-                    "Custom, Brand-Tailored Design",
-                    "Custom, Brand-Tailored Design",
-                    "Fast Turnaround Time",
-                    "Transparent Communication",
-                    "Ongoing Post-Launch Support",
-                    "SEO & Speed Optimization",
-                    "Modern Tools (Framer, Figma, etc.)",
-                    "Scalable & Maintainable Systems",
-                    "Covers all your needs?"
+                    { name: "Real-Time File Sync", ours: true, others: true },
+                    { name: "Organization-Based Collaboration", ours: true, others: true },
+                    { name: "Instant Updates Without Refresh", ours: true, others: false },
+                    { name: "Secure File Upload & Storage", ours: true, others: true },
+                    { name: "Role-Based Access Control", ours: true, others: false },
+                    { name: "Magic Link Invitations", ours: true, others: false },
+                    { name: "Centralized File Dashboard", ours: true, others: true },
+                    { name: "Live Activity Updates", ours: true, others: false },
+                    { name: "Fast & Responsive Interface", ours: true, others: false },
                   ].map((item, id) => (
-                    <div key={id} className="flex items-center gap-4">
-                      <Check size={11} className="text-white" strokeWidth={4} />
-                      <span className="text-[12px] font-bold text-gray-100 tracking-tight">{item}</span>
+                    <div key={id} className="flex justify-center items-center h-[52px] border-b border-white/5 last:border-0 group/item transition-colors hover:bg-white/[0.02]">
+                      {item.ours ? <Check size={14} className="text-white" strokeWidth={3} /> : <X size={14} className="text-gray-600" />}
                     </div>
                   ))}
                 </div>
@@ -199,7 +199,7 @@ const Landing = () => {
               </div>
               <p className="text-xs text-gray-400 font-medium mb-8 leading-relaxed">Perfect for MVPs, landing pages, or focused docs.</p>
               <div className="space-y-3 mb-10 flex-1">
-                {['One responsive docs page', 'Brand-aligned theme + typography', 'Static export or Framer handoff', 'Light content guidance', 'Single page docs site'].map((feat, i) => (
+                {['Upload & manage files', 'Single organization', 'Limited storage', 'Simple UI access'].map((feat, i) => (
                   <div key={i} className="flex items-center gap-2.5">
                     <Check size={10} className="text-gray-300" strokeWidth={3} />
                     <span className="text-[11px] font-bold text-gray-500">{feat}</span>
@@ -221,7 +221,7 @@ const Landing = () => {
               </div>
               <p className="text-xs text-black font-medium mb-8 leading-relaxed">Full documentation site with a structured system.</p>
               <div className="space-y-3 mb-10 flex-1">
-                {['Multi-page documentation site', 'Content architecture & navigation tree', 'Design tokens & components', 'Dev-ready assets (Figma + MDX export)', 'Support for changelogs, guides, or SDK pages'].map((feat, i) => (
+                {['Real-time file updates', 'Multiple organizations', 'Invite team members', 'Role-based access', 'Cloud storage (Cloudinary)', 'Faster performance', 'Secure file handling'].map((feat, i) => (
                   <div key={i} className="flex items-center gap-2.5">
                     <Check size={10} className="text-black" strokeWidth={3} />
                     <span className="text-[11px] font-bold text-black">{feat}</span>
@@ -241,7 +241,7 @@ const Landing = () => {
               </div>
               <p className="text-xs text-gray-400 font-medium mb-8 leading-relaxed">End-to-end developer portal, fully tailored.</p>
               <div className="space-y-3 mb-10 flex-1">
-                {['Full portal system (docs, onboarding, APIs)', 'Interactive demos & API explorers', 'Custom components + advanced UX', 'Team collaboration & feedback loops', 'Optional build-out in Framer, Astro, or Next.js'].map((feat, i) => (
+                {['Everything in Pro', 'Unlimited organizations', 'Advanced access control', 'Priority performance', 'Scalable infrastructure', 'Team workflow optimization', 'Future integrations (API, analytics)'].map((feat, i) => (
                   <div key={i} className="flex items-center gap-2.5">
                     <Check size={10} className="text-gray-300" strokeWidth={3} />
                     <span className="text-[11px] font-bold text-gray-500">{feat}</span>
@@ -313,9 +313,7 @@ const Landing = () => {
       <footer className="border-t border-dashed border-[#F0F0F0] py-10 bg-[#FAFAFA]">
         <div className="max-w-7xl mx-auto px-8 flex flex-col md:flex-row items-center justify-between gap-8">
           <div className="flex items-center gap-3">
-            <div className="w-6 h-6 bg-black rounded flex items-center justify-center">
-              <span className="text-white font-bold text-[10px]">F</span>
-            </div>
+            <img src={logo} alt="FileDrive Logo" className="w-6 h-6 object-cover rounded" />
             <span className="text-xs font-bold tracking-tight uppercase">FileDrive</span>
           </div>
           

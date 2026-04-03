@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Mail, Lock, Copy, CheckCircle } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import logo from '../assets/logo.png';
 import api from '../services/api';
 
 const ForgotPassword = () => {
@@ -40,9 +41,7 @@ const ForgotPassword = () => {
   return (
     <div className="min-h-screen bg-[#FAFAFA] flex flex-col items-center justify-center px-4">
       <div className="mb-10 text-center">
-        <div className="w-12 h-12 bg-black rounded-xl mx-auto mb-4 shadow-lg flex items-center justify-center text-white">
-          <Lock size={24} strokeWidth={2.5} />
-        </div>
+        <img src={logo} alt="FileDrive Logo" className="w-12 h-12 object-cover rounded-xl mx-auto mb-4 shadow-lg" />
         <h1 className="text-2xl font-bold tracking-tight text-black">FileDrive</h1>
       </div>
 

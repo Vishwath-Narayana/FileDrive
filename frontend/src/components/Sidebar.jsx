@@ -1,5 +1,6 @@
 import { File, Star, Trash2, Settings } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import logo from '../assets/logo.png';
 
 const Sidebar = ({ activeTab, setActiveTab }) => {
   const navigate = useNavigate();
@@ -17,9 +18,7 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
           onClick={() => navigate('/dashboard')}
           className="flex items-center gap-3 cursor-pointer group"
         >
-          <div className="w-9 h-9 bg-black rounded-xl flex items-center justify-center shadow-lg transform group-hover:scale-110 transition-transform duration-300">
-            <span className="text-white font-bold text-lg">F</span>
-          </div>
+          <img src={logo} alt="FileDrive Logo" className="w-9 h-9 object-cover rounded-xl shadow-lg transform group-hover:scale-110 transition-transform duration-300" />
           <h1 className="text-xl font-bold tracking-tight text-black">FileDrive</h1>
         </div>
       </div>

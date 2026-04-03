@@ -3,6 +3,7 @@ import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-hot-toast';
 import { Eye, EyeOff } from 'lucide-react';
+import logo from '../assets/logo.png';
 
 const Register = () => {
   const location = useLocation();
@@ -48,7 +49,7 @@ const Register = () => {
   return (
     <div className="min-h-screen bg-[#FAFAFA] flex flex-col items-center justify-center px-4">
       <div className="mb-10 text-center">
-        <div className="w-12 h-12 bg-black rounded-xl mx-auto mb-4 shadow-lg"></div>
+        <img src={logo} alt="FileDrive Logo" className="w-12 h-12 object-cover rounded-xl mx-auto mb-4 shadow-lg" />
         <h1 className="text-2xl font-bold tracking-tight text-black">FileDrive</h1>
       </div>
 
