@@ -130,15 +130,15 @@ const Landing = () => {
 
                 <div className="px-8 md:px-10 pb-10 space-y-1">
                   {[
-                    { name: "Custom, Brand-Tailored Design", ours: true, others: true },
-                    { name: "Conversion-Focused Layouts", ours: true, others: true },
-                    { name: "Fast Turnaround Time", ours: true, others: false },
-                    { name: "Transparent Communication", ours: true, others: true },
-                    { name: "Ongoing Post-Launch Support", ours: true, others: false },
-                    { name: "SEO & Speed Optimization", ours: true, others: false },
-                    { name: "Modern Tools (Framer, Figma, etc.)", ours: true, others: true },
-                    { name: "Scalable & Maintainable Systems", ours: true, others: false },
-                    { name: "Covers all your needs?", ours: true, others: false },
+                    { name: "Real-Time File Sync", ours: true, others: true },
+                    { name: "Organization-Based Collaboration", ours: true, others: true },
+                    { name: "Instant Updates Without Refresh", ours: true, others: false },
+                    { name: "Secure File Upload & Storage", ours: true, others: true },
+                    { name: "Role-Based Access Control", ours: true, others: false },
+                    { name: "Magic Link Invitations", ours: true, others: false },
+                    { name: "Centralized File Dashboard", ours: true, others: true },
+                    { name: "Live Activity Updates", ours: true, others: false },
+                    { name: "Fast & Responsive Interface", ours: true, others: false },
                   ].map((item, id) => (
                     <div key={id} className="grid grid-cols-10 py-3.5 items-center border-b border-gray-50 last:border-0 group/item">
                       <span className="col-span-7 text-[13px] font-bold text-gray-600 group-hover/item:text-black transition-colors">{item.name}</span>
