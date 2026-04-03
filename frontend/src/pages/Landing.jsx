@@ -54,7 +54,7 @@ const Landing = () => {
           <div className="hidden md:flex items-center gap-6">
             <a href="#features" className="text-[11px] font-bold text-gray-400 uppercase tracking-widest hover:text-black transition-colors">Features</a>
             <a href="#pricing" className="text-[11px] font-bold text-gray-400 uppercase tracking-widest hover:text-black transition-colors">Pricing</a>
-            <a href="#faq" className="text-[11px] font-bold text-gray-400 uppercase tracking-widest hover:text-black transition-colors">Resources</a>
+            <a href="#faq" className="text-[11px] font-bold text-gray-400 uppercase tracking-widest hover:text-black transition-colors">Questions</a>
           </div>
 
           <div className="flex items-center gap-4">
