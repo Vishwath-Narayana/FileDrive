@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Modal, Tab, Tabs, Dropdown } from 'react-bootstrap';
-import { Mail, UserPlus, X, ChevronDown, Trash2 } from 'lucide-react';
+import { Mail, UserPlus, X, ChevronDown, Trash2, Copy, Check, Link2 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -14,10 +14,14 @@ const ManageOrgModal = ({ show, onHide }) => {
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteRole, setInviteRole] = useState('viewer');
   const [sending, setSending] = useState(false);
+  const [inviteSuccess, setInviteSuccess] = useState(null); // {email, link}
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (show && currentOrganization) {
       fetchOrganizationData();
+      setInviteSuccess(null);
+      setCopied(false);
     }
   }, [show, currentOrganization]);
 
@@ -58,11 +62,23 @@ const ManageOrgModal = ({ show, onHide }) => {
 
     try {
       setSending(true);
-      await api.post(`/organizations/${currentOrganization._id}/invitations`, {
+      const response = await api.post(`/organizations/${currentOrganization._id}/invitations`, {
         email: inviteEmail,
         role: inviteRole
       });
-      toast.success('Invitation sent successfully');
+
+      // Build invite link and show success state
+      const link = `${window.location.origin}/accept-invite?token=${response.data.token}`;
+      setInviteSuccess({ email: inviteEmail, link });
+      
+      // Auto-copy to clipboard
+      try {
+        await navigator.clipboard.writeText(link);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 3000);
+      } catch (_) {}
+
+      toast.success('Invitation created!');
       setInviteEmail('');
       setInviteRole('viewer');
       setShowInviteForm(false);
@@ -71,6 +87,17 @@ const ManageOrgModal = ({ show, onHide }) => {
       toast.error(error.response?.data?.message || 'Failed to send invitation');
     } finally {
       setSending(false);
+    }
+  };
+
+  const handleCopyLink = async (link) => {
+    try {
+      await navigator.clipboard.writeText(link);
+      setCopied(true);
+      toast.success('Link copied!', { icon: '📋' });
+      setTimeout(() => setCopied(false), 3000);
+    } catch (_) {
+      toast.error('Failed to copy');
     }
   };
 
@@ -92,23 +119,66 @@ const ManageOrgModal = ({ show, onHide }) => {
             <h2 className="text-xl font-bold text-black mb-1">Manage Organization</h2>
             <p className="text-sm text-gray-400">{currentOrganization?.name}</p>
           </div>
-          <button onClick={onHide} className="p-2 hover:bg-gray-50 rounded-full text-gray-400 hover:text-black transition-colors">
+          <button onClick={onHide} className="p-2 hover:bg-gray-50 rounded-full text-gray-400 hover:text-black transition-all duration-200 hover:rotate-90">
             <X size={20} />
           </button>
         </div>
+
+        {/* Invite Success Banner */}
+        {inviteSuccess && (
+          <div className="mb-6 p-5 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-[20px] animate-in fade-in slide-in-from-top-2 duration-300">
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                <Check size={20} className="text-green-600" strokeWidth={3} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-bold text-green-900 mb-1">Invitation sent to {inviteSuccess.email}</p>
+                <div className="bg-white border border-green-200 rounded-xl p-3 mb-3">
+                  <p className="text-[11px] text-gray-500 font-mono break-all leading-relaxed">{inviteSuccess.link}</p>
+                </div>
+                <button
+                  onClick={() => handleCopyLink(inviteSuccess.link)}
+                  className="flex items-center gap-2 text-xs font-bold text-green-700 hover:text-green-900 transition-colors"
+                >
+                  {copied ? <Check size={14} /> : <Copy size={14} />}
+                  {copied ? 'Copied to clipboard!' : 'Copy invite link'}
+                </button>
+              </div>
+              <button
+                onClick={() => setInviteSuccess(null)}
+                className="p-1 text-green-400 hover:text-green-700 transition-colors"
+              >
+                <X size={16} />
+              </button>
+            </div>
+          </div>
+        )}
 
         <Tabs defaultActiveKey="members" className="premium-tabs mb-8 border-b border-[#EDEDED]">
           <Tab eventKey="members" title="Members" className="pt-2">
             <div className="space-y-3">
               {loading ? (
-                <div className="text-center py-12 text-gray-400 text-sm">Loading members...</div>
+                <div className="space-y-3">
+                  {[...Array(3)].map((_, i) => (
+                    <div key={i} className="flex items-center justify-between p-4 bg-white border border-[#EDEDED] rounded-[16px] animate-pulse">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-full bg-gray-100" />
+                        <div>
+                          <div className="h-3.5 bg-gray-100 rounded w-24 mb-2" />
+                          <div className="h-2.5 bg-gray-50 rounded w-32" />
+                        </div>
+                      </div>
+                      <div className="h-8 bg-gray-50 rounded-full w-20" />
+                    </div>
+                  ))}
+                </div>
               ) : members.length === 0 ? (
                 <div className="text-center py-12 text-gray-400 text-sm">No members found</div>
               ) : (
                 members.filter(m => m.user).map((member) => (
                   <div
                     key={member.user?._id || member.user}
-                    className="flex items-center justify-between p-4 bg-white border border-[#EDEDED] rounded-[16px] hover:border-black transition-all"
+                    className="flex items-center justify-between p-4 bg-white border border-[#EDEDED] rounded-[16px] hover:border-black hover:shadow-sm transition-all duration-200"
                   >
                     <div className="flex items-center gap-4">
                       <div className="w-10 h-10 rounded-full bg-black text-white flex items-center justify-center text-xs font-bold ring-2 ring-gray-50">
@@ -120,7 +190,7 @@ const ManageOrgModal = ({ show, onHide }) => {
                       </div>
                     </div>
                     <Dropdown align="end">
-                      <Dropdown.Toggle variant="light" size="sm" className="flex items-center gap-2 bg-gray-50 border-0 text-[11px] font-bold text-gray-600 px-4 py-2 rounded-full hover:bg-black hover:text-white transition-all">
+                      <Dropdown.Toggle variant="light" size="sm" className="flex items-center gap-2 bg-gray-50 border-0 text-[11px] font-bold text-gray-600 px-4 py-2 rounded-full hover:bg-black hover:text-white transition-all duration-200">
                         {member.role.toUpperCase()}
                         <ChevronDown size={12} />
                       </Dropdown.Toggle>
@@ -142,13 +212,13 @@ const ManageOrgModal = ({ show, onHide }) => {
               {!showInviteForm ? (
                 <button
                   onClick={() => setShowInviteForm(true)}
-                  className="btn-primary"
+                  className="btn-primary hover:scale-[1.02] active:scale-95"
                 >
                   <UserPlus size={16} strokeWidth={2.5} />
                   Invite Member
                 </button>
               ) : (
-                <form onSubmit={handleSendInvitation} className="space-y-5 p-6 bg-gray-50/50 border border-[#EDEDED] rounded-[20px] animate-in fade-in duration-300">
+                <form onSubmit={handleSendInvitation} className="space-y-5 p-6 bg-gray-50/50 border border-[#EDEDED] rounded-[20px] animate-in fade-in slide-in-from-top-2 duration-300">
                   <div>
                     <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">
                       Email Address
@@ -194,7 +264,12 @@ const ManageOrgModal = ({ show, onHide }) => {
                       className="btn-primary"
                       disabled={sending || !inviteEmail.trim()}
                     >
-                      {sending ? 'Sending...' : 'Send Invitation'}
+                      {sending ? (
+                        <span className="flex items-center gap-2">
+                          <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          Sending...
+                        </span>
+                      ) : 'Send Invitation'}
                     </button>
                   </div>
                 </form>
@@ -204,14 +279,18 @@ const ManageOrgModal = ({ show, onHide }) => {
             <div className="space-y-3 mt-8">
               <h4 className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-4">Pending Access Requests</h4>
               {invitations.length === 0 ? (
-                <div className="text-center py-12 bg-white border border-dashed border-[#EDEDED] rounded-[20px] text-gray-300 text-sm">
-                  No active invitations
+                <div className="text-center py-12 bg-white border border-dashed border-[#EDEDED] rounded-[20px]">
+                  <div className="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <Mail size={20} className="text-gray-300" />
+                  </div>
+                  <p className="text-sm font-medium text-gray-400">No active invitations</p>
+                  <p className="text-xs text-gray-300 mt-1">Invite team members to collaborate</p>
                 </div>
               ) : (
                 invitations.map((invitation) => (
                   <div
                     key={invitation._id}
-                    className="flex items-center justify-between p-4 bg-white border border-[#EDEDED] rounded-[16px]"
+                    className="flex items-center justify-between p-4 bg-white border border-[#EDEDED] rounded-[16px] hover:shadow-sm transition-all duration-200"
                   >
                     <div className="flex items-center gap-4">
                       <div className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-400">
@@ -220,7 +299,7 @@ const ManageOrgModal = ({ show, onHide }) => {
                       <div>
                         <div className="text-sm font-bold text-black">{invitation.email}</div>
                         <div className="text-[10px] font-bold text-gray-400 uppercase tracking-tight">
-                          {invitation.role} • {invitation.status}
+                          {invitation.role} • <span className={invitation.status === 'pending' ? 'text-amber-500' : invitation.status === 'accepted' ? 'text-green-500' : 'text-gray-400'}>{invitation.status}</span>
                         </div>
                       </div>
                     </div>
@@ -229,17 +308,17 @@ const ManageOrgModal = ({ show, onHide }) => {
                         <button
                           onClick={() => {
                             const link = `${window.location.origin}/accept-invite?token=${invitation.token}`;
-                            navigator.clipboard.writeText(link);
-                            toast.success('Link copied to clipboard');
+                            handleCopyLink(link);
                           }}
-                          className="text-[10px] font-bold text-black bg-gray-50 hover:bg-black hover:text-white px-4 py-2 rounded-full transition-all uppercase tracking-tighter"
+                          className="flex items-center gap-1.5 text-[10px] font-bold text-black bg-gray-50 hover:bg-black hover:text-white px-4 py-2 rounded-full transition-all duration-200 uppercase tracking-tighter"
                         >
-                          Copy Magic Link
+                          <Link2 size={12} />
+                          Copy Link
                         </button>
                       )}
                       <button
                         onClick={() => handleRevokeInvitation(invitation._id)}
-                        className="p-2 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-full transition-all"
+                        className="p-2 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-full transition-all duration-200"
                         title="Revoke invitation"
                       >
                         <Trash2 size={14} />

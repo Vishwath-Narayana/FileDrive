@@ -1,9 +1,11 @@
-import { File, Star, Trash2, Settings } from 'lucide-react';
+import { File, Star, Trash2, Settings, Zap } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import logo from '../assets/logo.png';
 
 const Sidebar = ({ activeTab, setActiveTab }) => {
   const navigate = useNavigate();
+  const { currentOrganization } = useAuth();
   
   const menuItems = [
     { id: 'all', label: 'All Files', icon: File },
@@ -30,18 +32,24 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
         <div className="space-y-1">
           {menuItems.map((item) => {
             const Icon = item.icon;
+            const isActive = activeTab === item.id;
             return (
               <button
                 key={item.id}
                 onClick={() => setActiveTab(item.id)}
-                className={`w-full sidebar-item ${
-                  activeTab === item.id
+                className={`w-full sidebar-item relative overflow-hidden ${
+                  isActive
                     ? 'sidebar-item-active'
                     : 'sidebar-item-inactive'
                 }`}
               >
-                <Icon size={18} strokeWidth={activeTab === item.id ? 2.5 : 2} className={activeTab === item.id ? 'animate-in zoom-in-75 duration-300' : ''} />
-                <span className="tracking-tight">{item.label}</span>
+                {isActive && (
+                  <div className="absolute inset-0 bg-gradient-to-r from-black to-gray-800 rounded-[12px] animate-in fade-in duration-300" />
+                )}
+                <span className="relative flex items-center gap-3.5">
+                  <Icon size={18} strokeWidth={isActive ? 2.5 : 2} />
+                  <span className="tracking-tight">{item.label}</span>
+                </span>
               </button>
             );
           })}
@@ -49,11 +57,11 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
       </nav>
 
       <div className="p-4 mt-auto">
-        <div className="bg-[#F9F9F9] rounded-[20px] p-4 border border-[#F0F0F0] mb-4">
+        <div className="bg-gradient-to-br from-[#F9F9F9] to-[#F5F5F5] rounded-[20px] p-4 border border-[#F0F0F0] mb-4">
           <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2">Workspace</p>
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-            <span className="text-xs font-semibold text-black">Active Team</span>
+            <span className="text-xs font-semibold text-black truncate">{currentOrganization?.name || 'Active Team'}</span>
           </div>
         </div>
         

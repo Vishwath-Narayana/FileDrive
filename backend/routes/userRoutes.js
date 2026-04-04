@@ -1,8 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
-const path = require('path');
-const { updateProfile, changePassword, requestPasswordReset, resetPasswordByToken, uploadAvatar } = require('../controllers/userController');
+const { updateProfile, uploadAvatar } = require('../controllers/userController');
 const authMiddleware = require('../middlewares/authMiddleware');
 
 const { avatarStorage } = require('../config/cloudinaryConfig');
@@ -19,8 +18,5 @@ const upload = multer({
 
 router.put('/profile', authMiddleware, updateProfile);
 router.post('/avatar', authMiddleware, upload.single('avatar'), uploadAvatar);
-router.put('/change-password', authMiddleware, changePassword);
-router.post('/request-password-reset', requestPasswordReset);
-router.post('/reset-password', resetPasswordByToken);
 
 module.exports = router;

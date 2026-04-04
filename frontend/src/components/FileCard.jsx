@@ -1,6 +1,5 @@
 import { MoreVertical, Download, Star, Trash2, FileText, Image as ImageIcon, FileSpreadsheet, RotateCcw } from 'lucide-react';
 import { Dropdown } from 'react-bootstrap';
-import { useAuth } from '../context/AuthContext';
 
 const FileCard = ({ file, onDownload, onDelete, onToggleFavorite, onRestore, userRole, userId, isTrash }) => {
   const canDelete = userRole === 'admin' || file.uploader._id === userId;
@@ -36,16 +35,16 @@ const FileCard = ({ file, onDownload, onDelete, onToggleFavorite, onRestore, use
   };
 
   return (
-    <div className="card-premium group relative flex flex-col h-full bg-white animate-in zoom-in-95 duration-500">
+    <div className="card-premium group relative flex flex-col h-full bg-white">
       <div className="p-7 flex-1 flex flex-col">
         <div className="flex items-start justify-between mb-8">
-          <div className="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center text-gray-400 group-hover:bg-black group-hover:text-white group-hover:shadow-lg group-hover:shadow-black/10 transition-all duration-500">
+          <div className="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center text-gray-400 group-hover:bg-black group-hover:text-white group-hover:shadow-lg group-hover:shadow-black/10 transition-all duration-300">
             {getFileIcon(file.fileType)}
           </div>
           <Dropdown align="end">
             <Dropdown.Toggle
               variant="link"
-              className="p-1.5 text-gray-400 hover:text-black transition-colors rounded-full hover:bg-gray-50"
+              className="p-1.5 text-gray-300 hover:text-black transition-all duration-200 rounded-full hover:bg-gray-50 opacity-0 group-hover:opacity-100"
               id={`dropdown-${file._id}`}
             >
               <MoreVertical size={16} strokeWidth={2.5} />
@@ -55,18 +54,18 @@ const FileCard = ({ file, onDownload, onDelete, onToggleFavorite, onRestore, use
               <div className="px-4 py-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Actions</div>
               {!isTrash && (
                 <>
-                  <Dropdown.Item onClick={() => onDownload(file)} className="py-2.5 px-4 text-sm font-semibold hover:bg-[#FAFAFA] rounded-[10px] mx-1 flex items-center gap-3 transition-colors">
+                  <Dropdown.Item onClick={() => onDownload(file)} className="py-2.5 px-4 text-sm font-semibold hover:bg-[#FAFAFA] rounded-[10px] mx-1 flex items-center gap-3 transition-all duration-200">
                     <Download size={14} strokeWidth={2.5} className="text-gray-400" />
                     Download
                   </Dropdown.Item>
-                  <Dropdown.Item onClick={() => onToggleFavorite(file)} className="py-2.5 px-4 text-sm font-semibold hover:bg-[#FAFAFA] rounded-[10px] mx-1 flex items-center gap-3 transition-colors">
-                    <Star size={14} strokeWidth={2.5} className={isFavorited ? 'text-black fill-current' : 'text-gray-400'} />
+                  <Dropdown.Item onClick={() => onToggleFavorite(file)} className="py-2.5 px-4 text-sm font-semibold hover:bg-[#FAFAFA] rounded-[10px] mx-1 flex items-center gap-3 transition-all duration-200">
+                    <Star size={14} strokeWidth={2.5} className={isFavorited ? 'text-amber-400 fill-current' : 'text-gray-400'} />
                     {isFavorited ? 'Unfavorite' : 'Favorite'}
                   </Dropdown.Item>
                 </>
               )}
               {isTrash && canDelete && (
-                <Dropdown.Item onClick={() => onRestore(file)} className="py-2.5 px-4 text-sm font-semibold hover:bg-[#FAFAFA] rounded-[10px] mx-1 flex items-center gap-3 transition-colors">
+                <Dropdown.Item onClick={() => onRestore(file)} className="py-2.5 px-4 text-sm font-semibold hover:bg-[#FAFAFA] rounded-[10px] mx-1 flex items-center gap-3 transition-all duration-200">
                   <RotateCcw size={14} strokeWidth={2.5} className="text-gray-400" />
                   Restore
                 </Dropdown.Item>
@@ -74,9 +73,9 @@ const FileCard = ({ file, onDownload, onDelete, onToggleFavorite, onRestore, use
               {canDelete && (
                 <>
                   <div className="h-px bg-[#F5F5F5] my-2" />
-                  <Dropdown.Item onClick={() => onDelete(file)} className="py-2.5 px-4 text-sm font-bold text-red-500 hover:bg-red-50 rounded-[10px] mx-1 flex items-center gap-3 transition-colors">
+                  <Dropdown.Item onClick={() => onDelete(file)} className="py-2.5 px-4 text-sm font-bold text-red-500 hover:bg-red-50 rounded-[10px] mx-1 flex items-center gap-3 transition-all duration-200">
                     <Trash2 size={14} strokeWidth={2.5} />
-                    {isTrash ? 'Permanently Delete' : 'Move to Trash'}
+                    {isTrash ? 'Delete Forever' : 'Move to Trash'}
                   </Dropdown.Item>
                 </>
               )}
@@ -85,7 +84,7 @@ const FileCard = ({ file, onDownload, onDelete, onToggleFavorite, onRestore, use
         </div>
 
         <div className="space-y-1.5 mb-8">
-          <h3 className="text-sm font-bold text-black truncate pr-2 tracking-tight" title={file.originalName}>
+          <h3 className="text-sm font-bold text-black truncate pr-2 tracking-tight group-hover:text-gray-900 transition-colors" title={file.originalName}>
             {file.originalName}
           </h3>
           <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">

@@ -2,7 +2,6 @@ const Organization = require('../models/Organization');
 const Invitation = require('../models/Invitation');
 const User = require('../models/User');
 const crypto = require('crypto');
-const jwt = require('jsonwebtoken');
 
 exports.createOrganization = async (req, res) => {
   try {
@@ -155,31 +154,26 @@ exports.sendInvitation = async (req, res) => {
       return res.status(400).json({ message: 'Invitation already sent to this email' });
     }
 
-    // 🔐 Generate token
-    const jwtToken = jwt.sign(
-      { email: normalizedEmail, organizationId, role },
-      process.env.JWT_SECRET,
-      { expiresIn: '48h' }
-    );
+    // Generate a random token (no JWT)
+    const inviteToken = crypto.randomUUID();
 
-    // 🔗 Invite link
-    const inviteLink = `${process.env.FRONTEND_URL}/accept-invite?token=${jwtToken}`;
+    // Invite link
+    const inviteLink = `${process.env.FRONTEND_URL}/accept-invite?token=${inviteToken}`;
 
-    // 💾 Save invitation
+    // Save invitation with metadata stored in DB
     const invitation = await Invitation.create({
       organization: organizationId,
       email: normalizedEmail,
       role,
       invitedBy: req.user._id,
-      token: jwtToken
+      token: inviteToken
     });
 
-    // 🔍 Populate for frontend
+    // Populate for frontend
     const populatedInvitation = await Invitation.findById(invitation._id)
       .populate('organization', 'name')
       .populate('invitedBy', 'name email');
 
-    // ⚡ SEND RESPONSE (invite link is copied by admin via UI)
     res.status(201).json(populatedInvitation);
 
   } catch (error) {
@@ -351,14 +345,20 @@ exports.acceptInviteByToken = async (req, res) => {
       return res.status(400).json({ message: 'Token is required' });
     }
 
-    let decoded;
-    try {
-      decoded = jwt.verify(token, process.env.JWT_SECRET);
-    } catch (error) {
+    // Look up invitation by token in DB (no JWT verification)
+    const invitation = await Invitation.findOne({ token, status: 'pending' });
+
+    if (!invitation) {
       return res.status(400).json({ message: 'Invalid or expired invitation link' });
     }
 
-    const { email, organizationId, role } = decoded;
+    // Check if invitation is older than 48 hours
+    const hoursSinceCreated = (Date.now() - invitation.createdAt) / (1000 * 60 * 60);
+    if (hoursSinceCreated > 48) {
+      return res.status(400).json({ message: 'Invitation link has expired' });
+    }
+
+    const { email, organization: organizationId, role } = invitation;
 
     const user = await User.findOne({ email: email.toLowerCase() });
 
@@ -393,10 +393,8 @@ exports.acceptInviteByToken = async (req, res) => {
 
     await organization.save();
 
-    await Invitation.updateOne(
-      { organization: organizationId, email: email.toLowerCase(), status: 'pending' },
-      { status: 'accepted' }
-    );
+    invitation.status = 'accepted';
+    await invitation.save();
 
     const updatedOrg = await Organization.findById(organizationId)
       .populate('owner', 'name email')

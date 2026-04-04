@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Modal } from 'react-bootstrap';
 import { toast } from 'react-hot-toast';
 import Sidebar from '../components/Sidebar';
@@ -11,7 +11,39 @@ import CreateOrgModal from '../components/CreateOrgModal';
 import api from '../services/api';
 import socket from '../services/socket';
 import { useAuth } from '../context/AuthContext';
-import { X, File, Plus } from 'lucide-react';
+import { X, File, Plus, Upload, CloudUpload, Sparkles } from 'lucide-react';
+
+/* ── Skeleton shimmer for loading states ─────────────────────── */
+const SkeletonCard = () => (
+  <div className="bg-white border border-[#F2F2F2] rounded-[16px] p-7 animate-pulse">
+    <div className="flex items-start justify-between mb-8">
+      <div className="w-12 h-12 bg-gray-100 rounded-2xl" />
+      <div className="w-6 h-6 bg-gray-50 rounded-full" />
+    </div>
+    <div className="space-y-2 mb-8">
+      <div className="h-4 bg-gray-100 rounded-lg w-3/4" />
+      <div className="h-3 bg-gray-50 rounded-lg w-1/2" />
+    </div>
+    <div className="pt-6 border-t border-[#FAFAFA] flex items-center justify-between">
+      <div className="flex items-center gap-2.5">
+        <div className="w-6 h-6 rounded-full bg-gray-100" />
+        <div className="h-3 bg-gray-50 rounded w-16" />
+      </div>
+      <div className="h-3 bg-gray-50 rounded w-12" />
+    </div>
+  </div>
+);
+
+const SkeletonRow = () => (
+  <tr className="animate-pulse">
+    <td className="py-4 px-6"><div className="flex items-center gap-3"><div className="w-8 h-8 bg-gray-100 rounded-xl" /><div className="h-3.5 bg-gray-100 rounded w-32" /></div></td>
+    <td className="py-4 px-6"><div className="h-3 bg-gray-50 rounded w-12" /></td>
+    <td className="py-4 px-6"><div className="h-3 bg-gray-50 rounded w-20" /></td>
+    <td className="py-4 px-6"><div className="h-3 bg-gray-50 rounded w-16" /></td>
+    <td className="py-4 px-6"><div className="h-3 bg-gray-50 rounded w-12" /></td>
+    <td className="py-4 px-6" />
+  </tr>
+);
 
 const Dashboard = () => {
   const [files, setFiles] = useState([]);
@@ -26,7 +58,10 @@ const Dashboard = () => {
   const [showCreateOrgModal, setShowCreateOrgModal] = useState(false);
   const [uploadFile, setUploadFile] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef(null);
+  const dropZoneRef = useRef(null);
   const { user, currentOrganization } = useAuth();
   
   const userRole = currentOrganization?.members?.find(
@@ -43,34 +78,35 @@ const Dashboard = () => {
     if (!currentOrganization) return;
     const orgId = currentOrganization._id;
 
-    console.log('🔌 Joining org room:', orgId);
     socket.emit('join-org', orgId);
 
     const handleFileNew = (file) => {
-      console.log('📥 Received file:new', file._id);
       setFiles((prev) => {
         if (prev.some((f) => f._id === file._id)) return prev;
         return [file, ...prev];
       });
+      // Show toast for files uploaded by other users
+      if (file.uploader?._id !== user?._id) {
+        toast.success(`${file.uploader?.name || 'Someone'} uploaded "${file.originalName}"`, {
+          icon: '📄',
+          style: { borderRadius: '12px', padding: '12px 16px' }
+        });
+      }
     };
 
     const handleFileTrashed = ({ fileId }) => {
-      console.log('📥 Received file:trashed', fileId);
       setFiles((prev) => prev.filter((f) => f._id !== fileId));
     };
 
     const handleFileDeleted = ({ fileId }) => {
-      console.log('📥 Received file:deleted', fileId);
       setFiles((prev) => prev.filter((f) => f._id !== fileId));
     };
 
     const handleFileRestored = (file) => {
-      console.log('📥 Received file:restored', file._id);
       setFiles((prev) => prev.filter((f) => f._id !== file._id));
     };
 
     const handleFavoriteUpdated = (updatedFile) => {
-      console.log('📥 Received file:favoriteUpdated', updatedFile._id);
       setFiles((prev) =>
         prev.map((f) => (f._id === updatedFile._id ? updatedFile : f))
       );
@@ -90,7 +126,7 @@ const Dashboard = () => {
       socket.off('file:restored', handleFileRestored);
       socket.off('file:favoriteUpdated', handleFavoriteUpdated);
     };
-  }, [currentOrganization]);
+  }, [currentOrganization, user?._id]);
 
   useEffect(() => {
     applyFilters();
@@ -145,6 +181,29 @@ const Dashboard = () => {
     }
   };
 
+  /* ── Drag & Drop handlers ─────────────────────── */
+  const handleDragOver = useCallback((e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  }, []);
+
+  const handleDrop = useCallback((e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    const droppedFile = e.dataTransfer?.files?.[0];
+    if (droppedFile) {
+      setUploadFile(droppedFile);
+    }
+  }, []);
+
   const handleUploadSubmit = async () => {
     if (!uploadFile) {
       toast.error('Please select a file');
@@ -158,6 +217,7 @@ const Dashboard = () => {
 
     try {
       setUploading(true);
+      setUploadProgress(0);
       const formData = new FormData();
       formData.append('file', uploadFile);
       formData.append('organizationId', currentOrganization._id);
@@ -166,12 +226,20 @@ const Dashboard = () => {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
+        onUploadProgress: (progressEvent) => {
+          const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          setUploadProgress(percent);
+        }
       });
 
       setFiles([response.data, ...files]);
-      toast.success('File uploaded successfully');
+      toast.success('File uploaded successfully', {
+        icon: '✅',
+        style: { borderRadius: '12px' }
+      });
       setShowUploadModal(false);
       setUploadFile(null);
+      setUploadProgress(0);
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
@@ -242,6 +310,13 @@ const Dashboard = () => {
     }
   };
 
+  // Recently uploaded (last 24h) for the highlight section
+  const recentFiles = files.filter(f => {
+    const uploadedAt = new Date(f.createdAt);
+    const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    return uploadedAt > dayAgo;
+  });
+
   return (
     <div className="flex h-screen bg-[#FAFAFA]">
       <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
@@ -265,6 +340,34 @@ const Dashboard = () => {
               </p>
             </div>
 
+            {/* Recently Uploaded Highlight */}
+            {activeTab === 'all' && !loading && recentFiles.length > 0 && recentFiles.length < files.length && (
+              <div className="mb-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
+                <div className="flex items-center gap-2 mb-4">
+                  <Sparkles size={14} className="text-amber-400" />
+                  <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Recently uploaded</span>
+                  <span className="text-[10px] bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full font-bold">{recentFiles.length}</span>
+                </div>
+                <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+                  {recentFiles.slice(0, 5).map(file => (
+                    <button
+                      key={file._id}
+                      onClick={() => handleDownload(file)}
+                      className="flex-shrink-0 flex items-center gap-3 bg-white border border-[#F0F0F0] rounded-2xl px-4 py-3 hover:border-black hover:shadow-md transition-all duration-200 group"
+                    >
+                      <div className="w-8 h-8 bg-gray-50 rounded-xl flex items-center justify-center text-gray-400 group-hover:bg-black group-hover:text-white transition-all duration-200">
+                        <File size={14} strokeWidth={2.5} />
+                      </div>
+                      <div className="text-left">
+                        <p className="text-xs font-bold text-black truncate max-w-[120px]">{file.originalName}</p>
+                        <p className="text-[10px] text-gray-400">{file.uploader?.name?.split(' ')[0]}</p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <DashboardControls
               searchQuery={searchQuery}
               setSearchQuery={setSearchQuery}
@@ -278,33 +381,73 @@ const Dashboard = () => {
 
             <div className="mt-8">
               {loading ? (
-                <div className="text-center py-24 text-gray-300 font-medium animate-pulse">Loading workspace...</div>
+                viewMode === 'grid' ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                    {[...Array(8)].map((_, i) => <SkeletonCard key={i} />)}
+                  </div>
+                ) : (
+                  <div className="bg-white border border-[#F0F0F0] rounded-[24px] overflow-hidden shadow-sm">
+                    <table className="w-full">
+                      <thead className="bg-[#FAFAFA] border-b border-[#F0F0F0]">
+                        <tr>
+                          <th className="py-4 px-6 text-left text-[11px] font-bold text-gray-400 uppercase tracking-wider">Name</th>
+                          <th className="py-4 px-6 text-left text-[11px] font-bold text-gray-400 uppercase tracking-wider">Type</th>
+                          <th className="py-4 px-6 text-left text-[11px] font-bold text-gray-400 uppercase tracking-wider">User</th>
+                          <th className="py-4 px-6 text-left text-[11px] font-bold text-gray-400 uppercase tracking-wider">Uploaded</th>
+                          <th className="py-4 px-6 text-left text-[11px] font-bold text-gray-400 uppercase tracking-wider">Size</th>
+                          <th className="py-4 px-6" />
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-[#F5F5F5]">
+                        {[...Array(6)].map((_, i) => <SkeletonRow key={i} />)}
+                      </tbody>
+                    </table>
+                  </div>
+                )
               ) : filteredFiles.length === 0 ? (
                 <div className="text-center py-32 bg-white rounded-[32px] border border-[#F0F0F0] border-dashed">
-                  <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <File size={32} className="text-gray-200" />
+                  <div className="w-20 h-20 bg-gradient-to-br from-gray-50 to-gray-100 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-inner">
+                    {activeTab === 'trash' ? (
+                      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-gray-300">
+                        <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                      </svg>
+                    ) : (
+                      <File size={36} className="text-gray-200" strokeWidth={1.5} />
+                    )}
                   </div>
                   <h3 className="text-lg font-bold text-black mb-2">
-                    {searchQuery || typeFilter !== 'all' ? 'No matches found' : 'Empty workspace'}
+                    {searchQuery || typeFilter !== 'all' ? 'No matches found' : 
+                     activeTab === 'trash' ? 'Trash is empty' : 'Empty workspace'}
                   </h3>
-                  <p className="text-sm text-gray-400 max-w-[240px] mx-auto leading-relaxed">
-                    {searchQuery || typeFilter !== 'all' ? 'Try adjusting your search or filters to find what you\'re looking for.' : 'Start by uploading your first file to this organization.'}
+                  <p className="text-sm text-gray-400 max-w-[280px] mx-auto leading-relaxed mb-6">
+                    {searchQuery || typeFilter !== 'all' 
+                      ? 'Try adjusting your search or filters to find what you\'re looking for.' 
+                      : activeTab === 'trash' 
+                        ? 'Deleted files will appear here for 30 days before being permanently removed.' 
+                        : 'Start by uploading your first file to this organization.'}
                   </p>
+                  {activeTab === 'all' && !searchQuery && typeFilter === 'all' && (userRole === 'admin' || userRole === 'editor') && (
+                    <button onClick={handleUploadClick} className="btn-primary mx-auto">
+                      <Plus size={16} strokeWidth={3} />
+                      Upload your first file
+                    </button>
+                  )}
                 </div>
               ) : viewMode === 'grid' ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-                  {filteredFiles.map((file) => (
-                    <FileCard
-                      key={file._id}
-                      file={file}
-                      onDownload={handleDownload}
-                      onDelete={handleDelete}
-                      onToggleFavorite={handleToggleFavorite}
-                      onRestore={handleRestore}
-                      userRole={userRole}
-                      userId={user?._id}
-                      isTrash={activeTab === 'trash'}
-                    />
+                  {filteredFiles.map((file, index) => (
+                    <div key={file._id} className="animate-in fade-in zoom-in-95 duration-500" style={{ animationDelay: `${Math.min(index * 50, 400)}ms` }}>
+                      <FileCard
+                        file={file}
+                        onDownload={handleDownload}
+                        onDelete={handleDelete}
+                        onToggleFavorite={handleToggleFavorite}
+                        onRestore={handleRestore}
+                        userRole={userRole}
+                        userId={user?._id}
+                        isTrash={activeTab === 'trash'}
+                      />
+                    </div>
                   ))}
                 </div>
               ) : (
@@ -343,27 +486,39 @@ const Dashboard = () => {
         </main>
       </div>
 
-      <Modal show={showUploadModal} onHide={() => setShowUploadModal(false)} centered className="premium-modal">
+      {/* ── Upload Modal with Drag & Drop + Progress ─────────── */}
+      <Modal show={showUploadModal} onHide={() => { if (!uploading) { setShowUploadModal(false); setUploadFile(null); setUploadProgress(0); }}} centered className="premium-modal">
         <div className="bg-white rounded-[32px] p-10 shadow-2xl border border-[#F0F0F0] max-w-lg mx-auto w-full relative">
           <button 
-            onClick={() => setShowUploadModal(false)}
-            className="absolute right-8 top-8 text-gray-300 hover:text-black transition-colors"
+            onClick={() => { if (!uploading) { setShowUploadModal(false); setUploadFile(null); setUploadProgress(0); }}}
+            className="absolute right-8 top-8 text-gray-300 hover:text-black transition-colors duration-200 hover:rotate-90"
+            disabled={uploading}
           >
             <X size={20} />
           </button>
 
           <div className="mb-10">
             <div className="w-14 h-14 bg-black rounded-2xl flex items-center justify-center mb-6 shadow-lg">
-              <Plus size={28} className="text-white" strokeWidth={2.5} />
+              <CloudUpload size={28} className="text-white" strokeWidth={2} />
             </div>
             <h2 className="text-2xl font-bold text-black mb-2 tracking-tight">Upload File</h2>
             <p className="text-sm text-gray-400 font-medium">Select a file to add to <span className="text-black font-bold">{currentOrganization?.name}</span></p>
           </div>
 
-          <div className="space-y-8">
+          <div className="space-y-6">
             <div 
-              onClick={() => fileInputRef.current?.click()}
-              className="group cursor-pointer border-2 border-dashed border-[#EDEDED] rounded-[24px] p-12 text-center hover:border-black hover:bg-gray-50 transition-all duration-300"
+              ref={dropZoneRef}
+              onClick={() => !uploading && fileInputRef.current?.click()}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+              className={`group cursor-pointer border-2 border-dashed rounded-[24px] p-12 text-center transition-all duration-300 ${
+                isDragging 
+                  ? 'border-black bg-gray-50 scale-[1.02]' 
+                  : uploadFile 
+                    ? 'border-green-300 bg-green-50/30' 
+                    : 'border-[#EDEDED] hover:border-black hover:bg-gray-50'
+              } ${uploading ? 'pointer-events-none opacity-60' : ''}`}
             >
               <input
                 id="file-upload"
@@ -371,21 +526,46 @@ const Dashboard = () => {
                 type="file"
                 onChange={handleFileSelect}
                 className="hidden"
+                disabled={uploading}
               />
-              <div className="w-16 h-16 bg-gray-50 group-hover:bg-white rounded-full flex items-center justify-center mx-auto mb-4 transition-colors">
-                <File size={28} className="text-gray-300 group-hover:text-black transition-colors" />
+              <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 transition-all duration-300 ${
+                uploadFile ? 'bg-green-100 text-green-600' : 'bg-gray-50 group-hover:bg-white text-gray-300 group-hover:text-black'
+              }`}>
+                {uploadFile ? (
+                  <File size={28} />
+                ) : isDragging ? (
+                  <Upload size={28} className="animate-bounce" />
+                ) : (
+                  <Upload size={28} />
+                )}
               </div>
               <p className="text-sm font-bold text-black mb-1">
-                {uploadFile ? uploadFile.name : 'Click to browse files'}
+                {uploadFile ? uploadFile.name : isDragging ? 'Drop file here' : 'Drag & drop or click to browse'}
               </p>
               <p className="text-xs text-gray-400">
-                {uploadFile ? `${(uploadFile.size / 1024).toFixed(2)} KB` : 'PDF, Image, Video, or Text'}
+                {uploadFile ? `${(uploadFile.size / 1024).toFixed(1)} KB` : 'PDF, Image, Video, CSV, or any document'}
               </p>
             </div>
 
+            {/* Upload Progress */}
+            {uploading && (
+              <div className="animate-in fade-in duration-300">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Uploading...</span>
+                  <span className="text-[11px] font-bold text-black">{uploadProgress}%</span>
+                </div>
+                <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-black rounded-full transition-all duration-300 ease-out"
+                    style={{ width: `${uploadProgress}%` }}
+                  />
+                </div>
+              </div>
+            )}
+
             <div className="flex gap-3">
               <button
-                onClick={() => setShowUploadModal(false)}
+                onClick={() => { setShowUploadModal(false); setUploadFile(null); setUploadProgress(0); }}
                 className="flex-1 btn-secondary py-3.5 justify-center text-sm"
                 disabled={uploading}
               >
@@ -393,10 +573,15 @@ const Dashboard = () => {
               </button>
               <button
                 onClick={handleUploadSubmit}
-                className="flex-3 btn-primary py-3.5 justify-center text-sm"
+                className="flex-[3] btn-primary py-3.5 justify-center text-sm"
                 disabled={uploading || !uploadFile}
               >
-                {uploading ? 'Processing...' : 'Start Upload'}
+                {uploading ? (
+                  <span className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Uploading...
+                  </span>
+                ) : 'Start Upload'}
               </button>
             </div>
           </div>
