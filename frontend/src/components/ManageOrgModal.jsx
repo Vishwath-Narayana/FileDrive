@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Modal, Tab, Tabs, Dropdown } from 'react-bootstrap';
-import { Mail, UserPlus, X, ChevronDown, Trash2, Copy, Check, Link2 } from 'lucide-react';
+import { Mail, UserPlus, X, ChevronDown, Trash2, Copy, Check, Link2, AlertTriangle } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -147,11 +147,14 @@ const ManageOrgModal = ({ show, onHide }) => {
       <div className="p-8">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h2 className="text-xl font-bold text-black mb-1">Manage Organization</h2>
-            <p className="text-sm text-gray-400">{currentOrganization?.name}</p>
+            <h2 className="text-2xl font-bold text-black mb-1 tracking-tight">Manage Organization</h2>
+            <p className="text-sm font-medium text-gray-400">Workspace Settings & Members</p>
           </div>
-          <button onClick={onHide} className="p-2 hover:bg-gray-50 rounded-full text-gray-400 hover:text-black transition-all duration-200 hover:rotate-90">
-            <X size={20} />
+          <button 
+            onClick={onHide} 
+            className="w-10 h-10 flex items-center justify-center rounded-full border border-gray-200 text-gray-400 hover:text-black hover:border-black transition-all duration-300 group"
+          >
+            <X size={20} className="group-hover:rotate-90 transition-transform duration-300" />
           </button>
         </div>
 
@@ -236,10 +239,10 @@ const ManageOrgModal = ({ show, onHide }) => {
                     {isOwner && member.user?._id !== user?._id && (
                       <button
                         onClick={() => handleRemoveMember(member.user?._id)}
-                        className="ml-2 p-2 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-full transition-all duration-200"
+                        className="ml-2 p-2.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-full transition-all duration-200 group/delete flex items-center justify-center border border-transparent hover:border-red-100"
                         title="Remove member"
                       >
-                        <Trash2 size={14} />
+                        <Trash2 size={16} className="group-hover/delete:scale-110 transition-transform" />
                       </button>
                     )}
                   </div>
@@ -373,19 +376,29 @@ const ManageOrgModal = ({ show, onHide }) => {
 
           {isOwner && !isPersonal && (
             <Tab eventKey="settings" title="Settings" className="pt-2">
-              <div className="p-6 bg-red-50 border border-red-100 rounded-[20px]">
-                <h4 className="text-[13px] font-bold text-red-600 mb-2">Danger Zone</h4>
-                <p className="text-sm text-red-500 mb-6">
-                  Deleting this organization will permanently remove all associated files, folders, and member access. This action cannot be recovered.
-                </p>
-                <div className="flex justify-end">
-                  <button
-                    onClick={handleDeleteOrganization}
-                    disabled={deletingOrg}
-                    className="bg-red-600 text-white text-xs font-bold py-2.5 px-5 rounded-[8px] hover:bg-red-700 transition-colors"
-                  >
-                    {deletingOrg ? 'Deleting...' : 'Delete Organization'}
-                  </button>
+              <div className="relative overflow-hidden p-8 bg-gradient-to-br from-red-50 via-white to-[#FFF5F5] border border-red-100 rounded-[28px] shadow-sm">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-red-100/20 rounded-full blur-3xl -translate-y-12 translate-x-12" />
+                
+                <div className="relative flex items-start gap-5">
+                  <div className="w-12 h-12 bg-red-100 rounded-2xl flex items-center justify-center flex-shrink-0 text-red-600 shadow-inner">
+                    <AlertTriangle size={24} strokeWidth={2.5} />
+                  </div>
+                  
+                  <div className="flex-1">
+                    <h4 className="text-[15px] font-bold text-red-600 mb-2">Danger Zone</h4>
+                    <p className="text-sm text-gray-600 leading-relaxed max-w-[480px] mb-8">
+                      Deleting this organization will permanently remove all associated files, folders, and member access. This action <span className="font-bold text-red-600 underline underline-offset-4">cannot be recovered</span>.
+                    </p>
+                    <div className="flex justify-end pt-4 border-t border-red-100/50">
+                      <button
+                        onClick={handleDeleteOrganization}
+                        disabled={deletingOrg}
+                        className="bg-red-600 text-white text-xs font-bold py-3 px-8 rounded-full hover:bg-red-700 hover:shadow-lg hover:shadow-red-200 active:scale-95 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-wider"
+                      >
+                        {deletingOrg ? 'Processing...' : 'Delete Organization'}
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </Tab>
