@@ -6,12 +6,13 @@ import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
 const ManageOrgModal = ({ show, onHide }) => {
-  const { currentOrganization, refreshOrganizations } = useAuth();
+  const { user, currentOrganization, refreshOrganizations } = useAuth();
   const [members, setMembers] = useState([]);
   const [invitations, setInvitations] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showInviteForm, setShowInviteForm] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
+  const [deletingOrg, setDeletingOrg] = useState(false);
   const [inviteRole, setInviteRole] = useState('viewer');
   const [sending, setSending] = useState(false);
   const [inviteSuccess, setInviteSuccess] = useState(null); // {email, link}
@@ -110,6 +111,23 @@ const ManageOrgModal = ({ show, onHide }) => {
       toast.error(error.response?.data?.message || 'Failed to revoke invitation');
     }
   };
+
+  const handleDeleteOrganization = async () => {
+    if (!window.confirm('Are you sure you want to delete this organization? This action is permanent and cannot be undone.')) return;
+    try {
+      setDeletingOrg(true);
+      await api.delete(`/organizations/${currentOrganization._id}`);
+      toast.success('Organization deleted successfully');
+      setTimeout(() => window.location.reload(), 1000);
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to delete organization');
+    } finally {
+      setDeletingOrg(false);
+    }
+  };
+
+  const isOwner = currentOrganization?.owner === user?._id || currentOrganization?.owner?._id === user?._id;
+  const isPersonal = user?.personalOrganization === currentOrganization?._id;
 
   return (
     <Modal show={show} onHide={onHide} size="lg" centered className="premium-modal">
@@ -329,6 +347,26 @@ const ManageOrgModal = ({ show, onHide }) => {
               )}
             </div>
           </Tab>
+
+          {isOwner && !isPersonal && (
+            <Tab eventKey="settings" title="Settings" className="pt-2">
+              <div className="p-6 bg-red-50 border border-red-100 rounded-[20px]">
+                <h4 className="text-[13px] font-bold text-red-600 mb-2">Danger Zone</h4>
+                <p className="text-sm text-red-500 mb-6">
+                  Deleting this organization will permanently remove all associated files, folders, and member access. This action cannot be recovered.
+                </p>
+                <div className="flex justify-end">
+                  <button
+                    onClick={handleDeleteOrganization}
+                    disabled={deletingOrg}
+                    className="bg-red-600 text-white text-xs font-bold py-2.5 px-5 rounded-[8px] hover:bg-red-700 transition-colors"
+                  >
+                    {deletingOrg ? 'Deleting...' : 'Delete Organization'}
+                  </button>
+                </div>
+              </div>
+            </Tab>
+          )}
         </Tabs>
       </div>
     </Modal>

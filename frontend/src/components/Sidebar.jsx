@@ -64,18 +64,6 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
             <span className="text-xs font-semibold text-black truncate">{currentOrganization?.name || 'Active Team'}</span>
           </div>
         </div>
-        
-        <button
-          onClick={() => navigate('/settings')}
-          className={`w-full sidebar-item ${
-            activeTab === 'settings'
-              ? 'sidebar-item-active'
-              : 'sidebar-item-inactive'
-          }`}
-        >
-          <Settings size={18} strokeWidth={activeTab === 'settings' ? 2.5 : 2} />
-          <span className="tracking-tight">Settings</span>
-        </button>
       </div>
     </div>
   );

@@ -200,7 +200,7 @@ const Topbar = ({ onOpenAdminModal, onOpenCreateOrgModal }) => {
               className="py-2.5 px-4 text-sm text-gray-600 hover:bg-gray-50 hover:text-black flex items-center transition-all duration-200 mx-1 rounded-[8px]"
             >
               <User size={16} className="mr-3 text-gray-400" />
-              Profile Settings
+              Account Settings
             </Dropdown.Item>
             
             <Dropdown.Divider className="my-2 border-[#EDEDED]" />

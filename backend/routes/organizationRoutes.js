@@ -11,7 +11,8 @@ const {
   acceptInvitation,
   rejectInvitation,
   revokeInvitation,
-  acceptInviteByToken
+  acceptInviteByToken,
+  deleteOrganization
 } = require('../controllers/organizationController');
 const authMiddleware = require('../middlewares/authMiddleware');
 
@@ -22,6 +23,7 @@ router.get('/:id', authMiddleware, getOrganizationById);
 router.put('/:organizationId/members/:userId/role', authMiddleware, updateMemberRole);
 router.post('/:organizationId/invitations', authMiddleware, sendInvitation);
 router.get('/:organizationId/invitations', authMiddleware, getOrganizationInvitations);
+router.delete('/:id', authMiddleware, deleteOrganization);
 router.delete('/:organizationId/invitations/:invitationId', authMiddleware, revokeInvitation);
 router.post('/invitations/:invitationId/accept', authMiddleware, acceptInvitation);
 router.post('/invitations/:invitationId/reject', authMiddleware, rejectInvitation);

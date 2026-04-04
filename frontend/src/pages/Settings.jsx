@@ -124,15 +124,15 @@ const Settings = () => {
                 <ArrowLeft size={16} strokeWidth={2.5} />
                 Back to Dashboard
               </button>
-              <h1 className="text-3xl font-bold tracking-tight text-black mb-1">Settings</h1>
-              <p className="text-sm text-gray-500">Manage your profile preferences</p>
+              <h1 className="text-3xl font-bold tracking-tight text-black mb-1">Account Settings</h1>
+              <p className="text-sm text-gray-500">Manage your account preferences</p>
             </div>
 
             <div className="card-premium overflow-hidden bg-white">
               <div className="px-6 pt-4 pb-0 border-b border-[#EDEDED]">
                 <span className="flex items-center gap-2 px-2 py-4 text-sm font-bold text-black">
                   <User size={16} />
-                  Profile
+                  Account Settings
                 </span>
               </div>
 

@@ -409,3 +409,34 @@ exports.acceptInviteByToken = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+exports.deleteOrganization = async (req, res) => {
+  try {
+    const orgId = req.params.id;
+    const organization = await Organization.findById(orgId);
+
+    if (!organization) {
+      return res.status(404).json({ message: 'Organization not found' });
+    }
+
+    if (organization.owner.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Only the owner can delete the organization' });
+    }
+
+    if (req.user.personalOrganization && req.user.personalOrganization.toString() === orgId) {
+      return res.status(400).json({ message: 'Cannot delete your personal organization' });
+    }
+
+    // Delete all files associated with this organization
+    const File = require('../models/File');
+    await File.deleteMany({ organization: orgId });
+    
+    await Organization.findByIdAndDelete(orgId);
+    await Invitation.deleteMany({ organization: orgId });
+
+    res.json({ message: 'Organization deleted successfully' });
+  } catch (error) {
+    console.error('Delete organization error:', error);
+    res.status(500).json({ message: error.message });
+  }
+};
