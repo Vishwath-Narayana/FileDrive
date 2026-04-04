@@ -1,6 +1,6 @@
-import { createContext, useState, useEffect, useContext } from 'react';
+import { createContext, useState, useEffect, useContext, useRef } from 'react';
 import { supabase } from '../services/supabaseClient';
-import api from '../services/api';
+import api, { setAuthToken } from '../services/api';
 
 const AuthContext = createContext();
 
@@ -18,11 +18,16 @@ export const AuthProvider = ({ children }) => {
   const [currentOrganization, setCurrentOrganization] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Prevent double-fetch when login() and onAuthStateChange both fire
+  const isHandlingAuth = useRef(false);
+
   // Fetch MongoDB user data via backend
   const fetchUserData = async () => {
     try {
+      console.log('📡 Fetching /auth/me...');
       const response = await api.get('/auth/me');
       const userData = response.data;
+      console.log('✅ Got user data:', userData.email);
 
       setUser({
         _id: userData._id,
@@ -49,7 +54,6 @@ export const AuthProvider = ({ children }) => {
             localStorage.setItem('currentOrganization', JSON.stringify(userData.organizations[0]));
           }
         } catch (_) {
-          // Corrupted localStorage — fall back to first org
           localStorage.removeItem('currentOrganization');
           if (userData.organizations && userData.organizations.length > 0) {
             setCurrentOrganization(userData.organizations[0]);
@@ -63,7 +67,7 @@ export const AuthProvider = ({ children }) => {
 
       return userData;
     } catch (error) {
-      console.error('Failed to fetch user data:', error);
+      console.error('❌ Failed to fetch user data:', error);
       setUser(null);
       setOrganizations([]);
       setCurrentOrganization(null);
@@ -77,6 +81,7 @@ export const AuthProvider = ({ children }) => {
       try {
         const { data } = await supabase.auth.getSession();
         const session = data?.session;
+        console.log('🔐 INIT SESSION:', session ? 'exists' : 'null');
 
         if (!session) {
           setUser(null);
@@ -84,6 +89,8 @@ export const AuthProvider = ({ children }) => {
           return;
         }
 
+        // Cache token BEFORE fetching user data
+        setAuthToken(session.access_token);
         await fetchUserData();
       } catch (error) {
         console.error('Auth init error:', error);
@@ -95,10 +102,26 @@ export const AuthProvider = ({ children }) => {
 
     initAuth();
 
-    // Listen for auth state changes (login, logout, token refresh)
+    // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('🔄 AUTH EVENT:', event, session ? '(session exists)' : '(no session)');
+
+        // Skip if login() or register() is already handling this
+        if (isHandlingAuth.current) {
+          console.log('⏭️ Skipping — login/register is handling auth');
+          return;
+        }
+
+        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+          if (session) {
+            setAuthToken(session.access_token);
+            await fetchUserData();
+          }
+        }
+
         if (event === 'SIGNED_OUT') {
+          setAuthToken(null);
           setUser(null);
           setOrganizations([]);
           setCurrentOrganization(null);
@@ -111,36 +134,63 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async (email, password) => {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password
-    });
+    isHandlingAuth.current = true; // Block listener from double-fetching
 
-    if (error) throw error;
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
 
-    // Fetch/create MongoDB user via backend
-    const userData = await fetchUserData();
-    return userData;
+      console.log('🔑 LOGIN DATA:', data);
+      console.log('🔑 LOGIN ERROR:', error);
+
+      if (error) throw error;
+
+      if (!data.session) {
+        throw new Error('No session returned from Supabase');
+      }
+
+      // Cache token, then fetch user data
+      setAuthToken(data.session.access_token);
+      const userData = await fetchUserData();
+      
+      if (!userData) {
+        throw new Error('Failed to fetch user data from backend');
+      }
+
+      console.log('✅ Login complete, user:', userData.email);
+      return userData;
+    } finally {
+      isHandlingAuth.current = false; // Unblock listener
+    }
   };
 
   const register = async (name, email, password) => {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: { name },
-        emailRedirectTo: `${window.location.origin}/dashboard`
+    isHandlingAuth.current = true;
+
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: { name },
+          emailRedirectTo: `${window.location.origin}/dashboard`
+        }
+      });
+
+      if (error) throw error;
+
+      // If Supabase auto-confirms (no email verification), fetch user data
+      if (data.session) {
+        setAuthToken(data.session.access_token);
+        await fetchUserData();
       }
-    });
 
-    if (error) throw error;
-
-    // If Supabase auto-confirms (no email verification), fetch user data
-    if (data.session) {
-      await fetchUserData();
+      return data;
+    } finally {
+      isHandlingAuth.current = false;
     }
-
-    return data;
   };
 
   const logout = async () => {
@@ -149,7 +199,7 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       console.error('Sign out error:', error);
     }
-    // Always clear local state, even if signOut fails
+    setAuthToken(null);
     setUser(null);
     setOrganizations([]);
     setCurrentOrganization(null);

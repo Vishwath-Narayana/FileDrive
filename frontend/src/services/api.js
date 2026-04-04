@@ -1,5 +1,11 @@
 import axios from 'axios';
-import { supabase } from './supabaseClient';
+
+// Token cache — set by AuthContext, read by interceptor (no await needed)
+let cachedToken = null;
+
+export const setAuthToken = (token) => {
+  cachedToken = token;
+};
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
@@ -8,18 +14,11 @@ const api = axios.create({
   },
 });
 
+// Synchronous — never hangs
 api.interceptors.request.use(
-  async (config) => {
-    try {
-      const { data } = await supabase.auth.getSession();
-      const token = data?.session?.access_token;
-
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
-    } catch (err) {
-      // Session fetch failed — continue without token
-      console.error('Failed to get session:', err);
+  (config) => {
+    if (cachedToken) {
+      config.headers.Authorization = `Bearer ${cachedToken}`;
     }
     return config;
   },
@@ -30,13 +29,9 @@ api.interceptors.request.use(
 
 api.interceptors.response.use(
   (response) => response,
-  async (error) => {
+  (error) => {
     if (error.response?.status === 401) {
-      try {
-        await supabase.auth.signOut();
-      } catch (_) {
-        // Ignore signOut errors
-      }
+      cachedToken = null;
       window.location.href = '/login';
     }
     return Promise.reject(error);
