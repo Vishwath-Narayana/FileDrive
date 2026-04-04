@@ -21,6 +21,7 @@ const Settings = () => {
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [savingProfile, setSavingProfile] = useState(false);
 
+  const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -82,8 +83,12 @@ const Settings = () => {
 
   const handleUpdatePassword = async (e) => {
     e.preventDefault();
+    if (!currentPassword) {
+      toast.error('Current password is required');
+      return;
+    }
     if (newPassword.length < 6) {
-      toast.error('Password must be at least 6 characters');
+      toast.error('New password must be at least 6 characters');
       return;
     }
     if (newPassword !== confirmPassword) {
@@ -93,8 +98,22 @@ const Settings = () => {
 
     try {
       setUpdatingPassword(true);
+      
+      // Step 1: Re-authenticate to verify current password
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: currentPassword
+      });
+
+      if (signInError) {
+        throw new Error('Incorrect current password');
+      }
+
+      // Step 2: Update password
       await updatePassword(newPassword);
+      
       toast.success('Password updated successfully');
+      setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
     } catch (error) {
@@ -254,7 +273,29 @@ const Settings = () => {
 
               <div className="p-10">
                 <form onSubmit={handleUpdatePassword} className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div>
+                      <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">
+                        Current Password
+                      </label>
+                      <div className="relative">
+                        <input
+                          type={showPassword ? "text" : "password"}
+                          value={currentPassword}
+                          onChange={(e) => setCurrentPassword(e.target.value)}
+                          className="input-field pr-12"
+                          placeholder="••••••••"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black transition-colors focus:outline-none border-none bg-transparent p-0"
+                        >
+                          {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                        </button>
+                      </div>
+                    </div>
+
                     <div>
                       <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">
                         New Password
@@ -267,13 +308,6 @@ const Settings = () => {
                           className="input-field pr-12"
                           placeholder="••••••••"
                         />
-                        <button
-                          type="button"
-                          onClick={() => setShowPassword(!showPassword)}
-                          className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black transition-colors focus:outline-none border-none bg-transparent p-0"
-                        >
-                          {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                        </button>
                       </div>
                       <p className="text-[10px] text-gray-300 mt-2 font-medium">Minimum 6 characters</p>
                     </div>
@@ -295,7 +329,7 @@ const Settings = () => {
                   <div className="flex gap-4 pt-4 border-t border-[#FAFAFA]">
                     <button
                       type="submit"
-                      disabled={updatingPassword || !newPassword || !confirmPassword}
+                      disabled={updatingPassword || !currentPassword || !newPassword || !confirmPassword}
                       className="btn-primary"
                     >
                       {updatingPassword ? 'Updating...' : 'Update Password'}

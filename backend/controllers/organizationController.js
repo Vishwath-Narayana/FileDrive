@@ -440,3 +440,55 @@ exports.deleteOrganization = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+exports.removeMember = async (req, res) => {
+  try {
+    const { organizationId, userId } = req.params;
+
+    const organization = await Organization.findById(organizationId);
+
+    if (!organization) {
+      return res.status(404).json({ message: 'Organization not found' });
+    }
+
+    // Check if the requester is an admin or owner
+    const requesterMember = organization.members.find(
+      m => m.user.toString() === req.user._id.toString()
+    );
+
+    if (!requesterMember || requesterMember.role !== 'admin') {
+      return res.status(403).json({ message: 'Only admins/owners can remove members' });
+    }
+
+    // Prevent removing the owner
+    if (organization.owner.toString() === userId) {
+      return res.status(400).json({ message: 'The organization owner cannot be removed' });
+    }
+
+    // Prevent removing yourself (if you're an admin but not the owner, use a separate 'Leave' flow if needed, but for now we follow the 'remove' admin logic)
+    // Actually, usually admins can remove others. If you want to remove yourself, it's 'Leave'.
+    if (req.user._id.toString() === userId) {
+      return res.status(400).json({ message: 'You cannot remove yourself. Use "Leave Organization" instead if available.' });
+    }
+
+    const memberIndex = organization.members.findIndex(
+      m => m.user.toString() === userId
+    );
+
+    if (memberIndex === -1) {
+      return res.status(404).json({ message: 'User is not a member' });
+    }
+
+    organization.members.splice(memberIndex, 1);
+    organization.markModified('members');
+    await organization.save();
+
+    const updatedOrg = await Organization.findById(organizationId)
+      .populate('owner', 'name email')
+      .populate('members.user', 'name email');
+
+    res.json(updatedOrg);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

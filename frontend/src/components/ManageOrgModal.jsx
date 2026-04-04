@@ -42,6 +42,19 @@ const ManageOrgModal = ({ show, onHide }) => {
     }
   };
 
+  const handleRemoveMember = async (userId) => {
+    if (!window.confirm('Are you sure you want to remove this member from the organization?')) return;
+    
+    try {
+      await api.delete(`/organizations/${currentOrganization._id}/members/${userId}`);
+      toast.success('Member removed successfully');
+      await fetchOrganizationData();
+      await refreshOrganizations();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to remove member');
+    }
+  };
+
   const handleRoleChange = async (userId, newRole) => {
     try {
       await api.put(`/organizations/${currentOrganization._id}/members/${userId}/role`, { role: newRole });
@@ -219,6 +232,16 @@ const ManageOrgModal = ({ show, onHide }) => {
                         <Dropdown.Item onClick={() => handleRoleChange(member.user?._id || member.user, 'viewer')} className="py-2 px-4 text-xs font-bold hover:bg-gray-50 rounded-[8px] mx-1">VIEWER</Dropdown.Item>
                       </Dropdown.Menu>
                     </Dropdown>
+
+                    {isOwner && member.user?._id !== user?._id && (
+                      <button
+                        onClick={() => handleRemoveMember(member.user?._id)}
+                        className="ml-2 p-2 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-full transition-all duration-200"
+                        title="Remove member"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    )}
                   </div>
                 ))
               )}
