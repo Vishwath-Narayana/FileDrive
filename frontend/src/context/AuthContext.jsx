@@ -113,10 +113,21 @@ export const AuthProvider = ({ children }) => {
           return;
         }
 
+        if (event === 'PASSWORD_RECOVERY') {
+          console.log('🔐 Recovery session detected');
+          if (window.location.pathname !== '/reset-password') {
+            window.location.href = '/reset-password';
+          }
+          return;
+        }
+
         if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
           if (session) {
             setAuthToken(session.access_token);
-            await fetchUserData();
+            // Skip fetching backend data if on reset password page
+            if (window.location.pathname !== '/reset-password') {
+              await fetchUserData();
+            }
           }
         }
 
@@ -193,6 +204,20 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const resetPassword = async (email) => {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    if (error) throw error;
+  };
+
+  const updatePassword = async (newPassword) => {
+    const { error } = await supabase.auth.updateUser({
+      password: newPassword
+    });
+    if (error) throw error;
+  };
+
   const logout = async () => {
     try {
       await supabase.auth.signOut();
@@ -239,6 +264,8 @@ export const AuthProvider = ({ children }) => {
     login,
     register,
     logout,
+    resetPassword,
+    updatePassword,
     switchOrganization,
     refreshOrganizations,
     updateAvatar,

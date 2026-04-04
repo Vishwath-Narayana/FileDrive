@@ -7,6 +7,8 @@ import Dashboard from './pages/Dashboard';
 import AcceptInvite from './pages/AcceptInvite';
 import Settings from './pages/Settings';
 import Landing from './pages/Landing';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
@@ -33,7 +35,11 @@ const PublicRoute = ({ children }) => {
     );
   }
 
-  return !isAuthenticated ? children : <Navigate to="/dashboard" />;
+  if (isAuthenticated && window.location.pathname !== '/reset-password') {
+    return <Navigate to="/dashboard" />;
+  }
+
+  return children;
 };
 
 function App() {
@@ -65,6 +71,18 @@ function App() {
                 <Register />
               </PublicRoute>
             }
+          />
+          <Route
+            path="/forgot-password"
+            element={
+              <PublicRoute>
+                <ForgotPassword />
+              </PublicRoute>
+            }
+          />
+          <Route
+            path="/reset-password"
+            element={<ResetPassword />}
           />
           <Route
             path="/dashboard"

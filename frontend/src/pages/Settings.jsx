@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { User, ArrowLeft, Camera } from 'lucide-react';
+import { User, ArrowLeft, Camera, Lock, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import Sidebar from '../components/Sidebar';
 import Topbar from '../components/Topbar';
@@ -9,7 +9,7 @@ import { useAuth } from '../context/AuthContext';
 
 const Settings = () => {
   const navigate = useNavigate();
-  const { user, updateAvatar } = useAuth();
+  const { user, updateAvatar, updatePassword } = useAuth();
   
   const [name, setName] = useState(user?.name || '');
   const [email] = useState(user?.email || '');
@@ -20,6 +20,11 @@ const Settings = () => {
   const [avatarFile, setAvatarFile] = useState(null);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [savingProfile, setSavingProfile] = useState(false);
+
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [updatingPassword, setUpdatingPassword] = useState(false);
 
   const handleAvatarChange = async (e) => {
     const file = e.target.files[0];
@@ -72,6 +77,30 @@ const Settings = () => {
       toast.error(error.response?.data?.message || 'Failed to update profile');
     } finally {
       setSavingProfile(false);
+    }
+  };
+
+  const handleUpdatePassword = async (e) => {
+    e.preventDefault();
+    if (newPassword.length < 6) {
+      toast.error('Password must be at least 6 characters');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      toast.error('Passwords do not match');
+      return;
+    }
+
+    try {
+      setUpdatingPassword(true);
+      await updatePassword(newPassword);
+      toast.success('Password updated successfully');
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (error) {
+      toast.error(error.message || 'Failed to update password');
+    } finally {
+      setUpdatingPassword(false);
     }
   };
 
@@ -208,6 +237,68 @@ const Settings = () => {
                       className="btn-primary"
                     >
                       {savingProfile ? 'Saving...' : 'Update Details'}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+
+            {/* Security Section */}
+            <div className="card-premium overflow-hidden bg-white mt-8">
+              <div className="px-6 pt-4 pb-0 border-b border-[#EDEDED]">
+                <span className="flex items-center gap-2 px-2 py-4 text-sm font-bold text-black">
+                  <Lock size={16} />
+                  Security
+                </span>
+              </div>
+
+              <div className="p-10">
+                <form onSubmit={handleUpdatePassword} className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                      <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">
+                        New Password
+                      </label>
+                      <div className="relative">
+                        <input
+                          type={showPassword ? "text" : "password"}
+                          value={newPassword}
+                          onChange={(e) => setNewPassword(e.target.value)}
+                          className="input-field pr-12"
+                          placeholder="••••••••"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black transition-colors focus:outline-none border-none bg-transparent p-0"
+                        >
+                          {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                        </button>
+                      </div>
+                      <p className="text-[10px] text-gray-300 mt-2 font-medium">Minimum 6 characters</p>
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">
+                        Confirm New Password
+                      </label>
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        className="input-field"
+                        placeholder="••••••••"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex gap-4 pt-4 border-t border-[#FAFAFA]">
+                    <button
+                      type="submit"
+                      disabled={updatingPassword || !newPassword || !confirmPassword}
+                      className="btn-primary"
+                    >
+                      {updatingPassword ? 'Updating...' : 'Update Password'}
                     </button>
                   </div>
                 </form>
