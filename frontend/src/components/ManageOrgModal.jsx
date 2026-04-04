@@ -223,28 +223,30 @@ const ManageOrgModal = ({ show, onHide }) => {
                         <div className="text-[11px] font-medium text-gray-400 uppercase tracking-tight">{member.user?.email || ''}</div>
                       </div>
                     </div>
-                    <Dropdown align="end">
-                      <Dropdown.Toggle variant="light" size="sm" className="flex items-center gap-2 bg-gray-50 border-0 text-[11px] font-bold text-gray-600 px-4 py-2 rounded-full hover:bg-black hover:text-white transition-all duration-200">
-                        {member.role.toUpperCase()}
-                        <ChevronDown size={12} />
-                      </Dropdown.Toggle>
+                    <div className="flex items-center gap-3">
+                      <Dropdown align="end">
+                        <Dropdown.Toggle variant="light" size="sm" className="flex items-center gap-2 bg-gray-50 border-0 text-[11px] font-bold text-gray-600 px-4 py-2 rounded-full hover:bg-black hover:text-white transition-all duration-200">
+                          {member.role.toUpperCase()}
+                          <ChevronDown size={12} />
+                        </Dropdown.Toggle>
 
-                      <Dropdown.Menu className="shadow-2xl border border-[#EDEDED] py-2 rounded-[12px] min-w-[140px] mt-1">
-                        <Dropdown.Item onClick={() => handleRoleChange(member.user?._id || member.user, 'admin')} className="py-2 px-4 text-xs font-bold hover:bg-gray-50 rounded-[8px] mx-1">ADMIN</Dropdown.Item>
-                        <Dropdown.Item onClick={() => handleRoleChange(member.user?._id || member.user, 'editor')} className="py-2 px-4 text-xs font-bold hover:bg-gray-50 rounded-[8px] mx-1">EDITOR</Dropdown.Item>
-                        <Dropdown.Item onClick={() => handleRoleChange(member.user?._id || member.user, 'viewer')} className="py-2 px-4 text-xs font-bold hover:bg-gray-50 rounded-[8px] mx-1">VIEWER</Dropdown.Item>
-                      </Dropdown.Menu>
-                    </Dropdown>
+                        <Dropdown.Menu className="shadow-2xl border border-[#EDEDED] py-2 rounded-[12px] min-w-[140px] mt-1">
+                          <Dropdown.Item onClick={() => handleRoleChange(member.user?._id || member.user, 'admin')} className="py-2 px-4 text-xs font-bold hover:bg-gray-50 rounded-[8px] mx-1">ADMIN</Dropdown.Item>
+                          <Dropdown.Item onClick={() => handleRoleChange(member.user?._id || member.user, 'editor')} className="py-2 px-4 text-xs font-bold hover:bg-gray-50 rounded-[8px] mx-1">EDITOR</Dropdown.Item>
+                          <Dropdown.Item onClick={() => handleRoleChange(member.user?._id || member.user, 'viewer')} className="py-2 px-4 text-xs font-bold hover:bg-gray-50 rounded-[8px] mx-1">VIEWER</Dropdown.Item>
+                        </Dropdown.Menu>
+                      </Dropdown>
 
-                    {isOwner && member.user?._id !== user?._id && (
-                      <button
-                        onClick={() => handleRemoveMember(member.user?._id)}
-                        className="ml-2 p-2.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-full transition-all duration-200 group/delete flex items-center justify-center border border-transparent hover:border-red-100"
-                        title="Remove member"
-                      >
-                        <Trash2 size={16} className="group-hover/delete:scale-110 transition-transform" />
-                      </button>
-                    )}
+                      {isOwner && member.user?._id !== user?._id && (
+                        <button
+                          onClick={() => handleRemoveMember(member.user?._id)}
+                          className="w-9 h-9 flex items-center justify-center text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-full transition-all duration-200 group/delete border border-transparent hover:border-red-100"
+                          title="Remove member"
+                        >
+                          <Trash2 size={16} className="group-hover/delete:scale-110 transition-transform" />
+                        </button>
+                      )}
+                    </div>
                   </div>
                 ))
               )}
