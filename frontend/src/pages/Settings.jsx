@@ -1,11 +1,12 @@
-import { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { User, ArrowLeft, Camera, Lock, Eye, EyeOff } from 'lucide-react';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { User, ArrowLeft, Camera, Lock, Eye, EyeOff, ShieldCheck } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import Sidebar from '../components/Sidebar';
 import Topbar from '../components/Topbar';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { supabase } from '../services/supabaseClient';
 
 const Settings = () => {
   const navigate = useNavigate();
@@ -21,13 +22,15 @@ const Settings = () => {
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [savingProfile, setSavingProfile] = useState(false);
 
-  const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [updatingPassword, setUpdatingPassword] = useState(false);
+  // Password strength
+  const passwordStrength = newPassword.length === 0 ? 0 : newPassword.length < 6 ? 1 : newPassword.length < 10 ? 2 : 3;
+  const strengthLabels = ['', 'Weak', 'Good', 'Strong'];
+  const strengthColors = ['', 'bg-red-400', 'bg-amber-400', 'bg-green-500'];
 
   const handleAvatarChange = async (e) => {
     const file = e.target.files[0];
@@ -85,12 +88,13 @@ const Settings = () => {
 
   const handleUpdatePassword = async (e) => {
     e.preventDefault();
-    if (!currentPassword) {
-      toast.error('Current password is required');
+
+    if (!newPassword || !confirmPassword) {
+      toast.error('Please fill in all password fields');
       return;
     }
     if (newPassword.length < 6) {
-      toast.error('New password must be at least 6 characters');
+      toast.error('Password must be at least 6 characters');
       return;
     }
     if (newPassword !== confirmPassword) {
@@ -100,22 +104,10 @@ const Settings = () => {
 
     try {
       setUpdatingPassword(true);
-      
-      // Step 1: Re-authenticate to verify current password
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: user.email,
-        password: currentPassword
-      });
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) throw error;
 
-      if (signInError) {
-        throw new Error('Incorrect current password');
-      }
-
-      // Step 2: Update password
-      await updatePassword(newPassword);
-      
-      toast.success('Password updated successfully');
-      setCurrentPassword('');
+      toast.success('Password updated successfully!');
       setNewPassword('');
       setConfirmPassword('');
     } catch (error) {
@@ -275,40 +267,20 @@ const Settings = () => {
 
               <div className="p-10">
                 <form onSubmit={handleUpdatePassword} className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    <div>
-                      <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">
-                        Current Password
-                      </label>
-                      <div className="relative">
-                        <input
-                          type={showCurrentPassword ? "text" : "password"}
-                          value={currentPassword}
-                          onChange={(e) => setCurrentPassword(e.target.value)}
-                          className="input-field pr-12"
-                          placeholder="••••••••"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                          className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black transition-colors focus:outline-none border-none bg-transparent p-0"
-                        >
-                          {showCurrentPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                        </button>
-                      </div>
-                    </div>
-
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div>
                       <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">
                         New Password
                       </label>
                       <div className="relative">
                         <input
+                          id="new-password"
                           type={showNewPassword ? "text" : "password"}
                           value={newPassword}
                           onChange={(e) => setNewPassword(e.target.value)}
                           className="input-field pr-12"
                           placeholder="••••••••"
+                          autoComplete="new-password"
                         />
                         <button
                           type="button"
@@ -318,7 +290,28 @@ const Settings = () => {
                           {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                         </button>
                       </div>
-                      <p className="text-[10px] text-gray-300 mt-2 font-medium">Minimum 6 characters</p>
+                      {/* Password strength bar */}
+                      {newPassword.length > 0 && (
+                        <div className="mt-2 space-y-1">
+                          <div className="flex gap-1">
+                            {[1, 2, 3].map(i => (
+                              <div
+                                key={i}
+                                className={`h-1 flex-1 rounded-full transition-all duration-300 ${
+                                  i <= passwordStrength ? strengthColors[passwordStrength] : 'bg-gray-100'
+                                }`}
+                              />
+                            ))}
+                          </div>
+                          <p className={`text-[10px] font-bold ${
+                            passwordStrength === 1 ? 'text-red-400' :
+                            passwordStrength === 2 ? 'text-amber-500' : 'text-green-500'
+                          }`}>{strengthLabels[passwordStrength]}</p>
+                        </div>
+                      )}
+                      {!newPassword && (
+                        <p className="text-[10px] text-gray-300 mt-2 font-medium">Minimum 6 characters</p>
+                      )}
                     </div>
 
                     <div>
@@ -327,11 +320,19 @@ const Settings = () => {
                       </label>
                       <div className="relative">
                         <input
+                          id="confirm-password"
                           type={showConfirmPassword ? "text" : "password"}
                           value={confirmPassword}
                           onChange={(e) => setConfirmPassword(e.target.value)}
-                          className="input-field pr-12"
+                          className={`input-field pr-12 transition-all duration-200 ${
+                            confirmPassword && confirmPassword !== newPassword
+                              ? 'border-red-300 focus:border-red-400'
+                              : confirmPassword && confirmPassword === newPassword
+                              ? 'border-green-300 focus:border-green-400'
+                              : ''
+                          }`}
                           placeholder="••••••••"
+                          autoComplete="new-password"
                         />
                         <button
                           type="button"
@@ -341,16 +342,29 @@ const Settings = () => {
                           {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                         </button>
                       </div>
+                      {confirmPassword && confirmPassword !== newPassword && (
+                        <p className="text-[10px] text-red-400 mt-2 font-bold">Passwords do not match</p>
+                      )}
+                      {confirmPassword && confirmPassword === newPassword && (
+                        <p className="text-[10px] text-green-500 mt-2 font-bold flex items-center gap-1">
+                          <ShieldCheck size={11} /> Passwords match
+                        </p>
+                      )}
                     </div>
                   </div>
 
                   <div className="flex gap-4 pt-4 border-t border-[#FAFAFA]">
                     <button
                       type="submit"
-                      disabled={updatingPassword || !currentPassword || !newPassword || !confirmPassword}
+                      disabled={updatingPassword || !newPassword || !confirmPassword}
                       className="btn-primary"
                     >
-                      {updatingPassword ? 'Updating...' : 'Update Password'}
+                      {updatingPassword ? (
+                        <span className="flex items-center gap-2">
+                          <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          Updating...
+                        </span>
+                      ) : 'Change Password'}
                     </button>
                   </div>
                 </form>
