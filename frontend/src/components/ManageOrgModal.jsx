@@ -17,6 +17,12 @@ const ManageOrgModal = ({ show, onHide }) => {
   const [inviteRole, setInviteRole] = useState('viewer');
   const [sending, setSending] = useState(false);
   const [inviteSuccess, setInviteSuccess] = useState(null); // {email}
+  
+  // Custom confirmation modal states
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [confirmOrgName, setConfirmOrgName] = useState('');
+  const [memberToRemove, setMemberToRemove] = useState(null);
+  const [showRemoveMemberConfirm, setShowRemoveMemberConfirm] = useState(false);
 
   useEffect(() => {
     if (show && currentOrganization) {
@@ -41,12 +47,19 @@ const ManageOrgModal = ({ show, onHide }) => {
     }
   };
 
-  const handleRemoveMember = async (userId) => {
-    if (!window.confirm('Are you sure you want to remove this member from the organization?')) return;
+  const handleRemoveMember = (member) => {
+    setMemberToRemove(member);
+    setShowRemoveMemberConfirm(true);
+  };
+
+  const confirmRemoveMember = async () => {
+    if (!memberToRemove) return;
     
     try {
-      await api.delete(`/organizations/${currentOrganization._id}/members/${userId}`);
+      await api.delete(`/organizations/${currentOrganization._id}/members/${memberToRemove.user?._id || memberToRemove.user}`);
       toast.success('Member removed successfully');
+      setShowRemoveMemberConfirm(false);
+      setMemberToRemove(null);
       await fetchOrganizationData();
       await refreshOrganizations();
     } catch (error) {
@@ -120,12 +133,21 @@ const ManageOrgModal = ({ show, onHide }) => {
     }
   };
 
-  const handleDeleteOrganization = async () => {
-    if (!window.confirm('Are you sure you want to delete this organization? This action is permanent and cannot be undone.')) return;
+  const handleDeleteOrganization = () => {
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDeleteOrganization = async () => {
+    if (confirmOrgName !== currentOrganization.name) {
+      toast.error('Organization name does not match');
+      return;
+    }
+
     try {
       setDeletingOrg(true);
       await api.delete(`/organizations/${currentOrganization._id}`);
       toast.success('Organization deleted successfully');
+      setShowDeleteConfirm(false);
       setTimeout(() => window.location.reload(), 1000);
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to delete organization');
@@ -222,7 +244,7 @@ const ManageOrgModal = ({ show, onHide }) => {
 
                       {isOwner && member.user?._id !== user?._id && (
                         <button
-                          onClick={() => handleRemoveMember(member.user?._id)}
+                          onClick={() => handleRemoveMember(member)}
                           className="w-9 h-9 flex items-center justify-center text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-full transition-all duration-200 group/delete border border-transparent hover:border-red-100"
                           title="Remove member"
                         >
@@ -380,6 +402,93 @@ const ManageOrgModal = ({ show, onHide }) => {
             </Tab>
           )}
         </Tabs>
+
+        {/* Custom Confirmation Modals */}
+        <Modal 
+          show={showRemoveMemberConfirm} 
+          onHide={() => setShowRemoveMemberConfirm(false)}
+          centered
+          className="confirmation-modal"
+          backdropClassName="confirmation-backdrop"
+        >
+          <div className="p-8 text-center bg-white rounded-[28px] overflow-hidden">
+            <div className="w-16 h-16 bg-red-50 rounded-2xl flex items-center justify-center mx-auto mb-6 text-red-500 shadow-inner">
+              <AlertTriangle size={32} strokeWidth={2.5} />
+            </div>
+            <h3 className="text-xl font-bold text-black mb-3">Remove Member?</h3>
+            <p className="text-sm text-gray-500 mb-8 px-4 leading-relaxed">
+              Are you sure you want to remove <span className="font-bold text-black">{memberToRemove?.user?.name || 'this member'}</span>? They will lose access to all files and shared resources immediately.
+            </p>
+            <div className="flex gap-3">
+              <button 
+                onClick={() => setShowRemoveMemberConfirm(false)}
+                className="flex-1 btn-secondary text-sm font-bold py-3"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={confirmRemoveMember}
+                className="flex-1 bg-red-600 text-white text-sm font-bold py-3 rounded-full hover:bg-red-700 transition-all active:scale-95 shadow-lg shadow-red-100"
+              >
+                Remove Access
+              </button>
+            </div>
+          </div>
+        </Modal>
+
+        <Modal 
+          show={showDeleteConfirm} 
+          onHide={() => {
+            setShowDeleteConfirm(false);
+            setConfirmOrgName('');
+          }}
+          centered
+          className="confirmation-modal"
+          backdropClassName="confirmation-backdrop"
+        >
+          <div className="p-10 text-center bg-white rounded-[32px] overflow-hidden border border-red-50 shadow-2xl">
+            <div className="w-20 h-20 bg-red-100/50 rounded-3xl flex items-center justify-center mx-auto mb-8 text-red-600 shadow-inner group">
+              <AlertTriangle size={40} className="group-hover:scale-110 transition-transform duration-300" strokeWidth={2.5} />
+            </div>
+            
+            <h3 className="text-2xl font-bold text-black mb-3 tracking-tight">Delete Organization?</h3>
+            <p className="text-sm text-gray-500 mb-8 px-6 leading-relaxed">
+              This action is <span className="font-bold text-red-600">permanent</span> and cannot be undone. All data, files, and member permissions will be <span className="font-bold text-black uppercase tracking-wider text-xs">permanently deleted</span>.
+            </p>
+
+            <div className="mb-8 text-left bg-red-50/50 p-6 rounded-[20px] border border-red-100">
+              <label className="block text-[11px] font-bold text-red-600/70 uppercase tracking-widest mb-3">
+                Type organization name to confirm
+              </label>
+              <input
+                type="text"
+                value={confirmOrgName}
+                onChange={(e) => setConfirmOrgName(e.target.value)}
+                placeholder={currentOrganization?.name}
+                className="w-full bg-white border-2 border-red-100 rounded-xl px-4 py-3.5 text-sm font-bold text-black placeholder:text-red-200 outline-none focus:border-red-300 transition-all"
+              />
+            </div>
+
+            <div className="flex gap-4">
+              <button 
+                onClick={() => {
+                  setShowDeleteConfirm(false);
+                  setConfirmOrgName('');
+                }}
+                className="flex-1 btn-secondary text-base font-bold py-4 hover:bg-gray-100"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={confirmDeleteOrganization}
+                disabled={confirmOrgName !== currentOrganization?.name || deletingOrg}
+                className="flex-[1.5] bg-red-600 text-white text-base font-bold py-4 rounded-full hover:bg-red-700 disabled:opacity-30 disabled:cursor-not-allowed hover:shadow-xl hover:shadow-red-200 transition-all active:scale-95 shadow-lg shadow-red-100"
+              >
+                {deletingOrg ? 'Deleting...' : 'Delete Permanently'}
+              </button>
+            </div>
+          </div>
+        </Modal>
       </div>
     </Modal>
   );
