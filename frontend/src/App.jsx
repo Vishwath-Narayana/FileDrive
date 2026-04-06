@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -43,6 +44,14 @@ const PublicRoute = ({ children }) => {
 };
 
 function App() {
+  // 🔴 FIX 1: Capture invite token at the top level before any auth redirects
+  useEffect(() => {
+    const token = new URLSearchParams(window.location.search).get('token');
+    if (token) {
+      localStorage.setItem('inviteToken', token);
+    }
+  }, []);
+
   return (
     <AuthProvider>
       <Router>

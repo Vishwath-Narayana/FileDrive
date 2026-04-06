@@ -13,12 +13,16 @@ const {
   revokeInvitation,
   acceptInviteByToken,
   deleteOrganization,
-  removeMember
+  removeMember,
+  getMyNotifications,
+  markNotificationAsRead
 } = require('../controllers/organizationController');
 const authMiddleware = require('../middlewares/authMiddleware');
 
 router.post('/', authMiddleware, createOrganization);
 router.get('/', authMiddleware, getMyOrganizations);
+router.get('/notifications', authMiddleware, getMyNotifications);
+router.put('/notifications/:notificationId/read', authMiddleware, markNotificationAsRead);
 router.get('/invitations/me', authMiddleware, getMyInvitations);
 router.get('/:id', authMiddleware, getOrganizationById);
 router.put('/:organizationId/members/:userId/role', authMiddleware, updateMemberRole);

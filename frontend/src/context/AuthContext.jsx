@@ -127,6 +127,30 @@ export const AuthProvider = ({ children }) => {
             // Skip fetching backend data if on reset password page
             if (window.location.pathname !== '/reset-password') {
               await fetchUserData();
+
+              // 🔥 Auto-join: check if an invite token was stored (from magic link)
+              const inviteToken = localStorage.getItem('inviteToken');
+              if (inviteToken && event === 'SIGNED_IN') {
+                try {
+                  await api.post('/organizations/accept-invite', { token: inviteToken });
+                  localStorage.removeItem('inviteToken');
+                  // Refresh orgs so the new one appears in sidebar
+                  const orgRes = await api.get('/organizations');
+                  setOrganizations(orgRes.data);
+                  if (orgRes.data.length > 0) {
+                    const saved = localStorage.getItem('currentOrganization');
+                    const parsedSaved = saved ? JSON.parse(saved) : null;
+                    const match = parsedSaved ? orgRes.data.find(o => o._id === parsedSaved._id) : null;
+                    const active = match || orgRes.data[0];
+                    setCurrentOrganization(active);
+                    localStorage.setItem('currentOrganization', JSON.stringify(active));
+                  }
+                } catch (err) {
+                  // If already a member or invalid token, silently clear
+                  localStorage.removeItem('inviteToken');
+                  console.warn('Auto-join invite failed:', err.response?.data?.message);
+                }
+              }
             }
           }
         }

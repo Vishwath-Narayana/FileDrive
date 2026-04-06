@@ -1,49 +1,14 @@
-import { useState, useEffect } from 'react';
-import { ChevronDown, LogOut, Plus, User, Bell, Check, X } from 'lucide-react';
+import { useState } from 'react';
+import { ChevronDown, LogOut, Plus, User } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Dropdown } from 'react-bootstrap';
 import { toast } from 'react-hot-toast';
-import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import NotificationBell from './NotificationBell';
 
-const Topbar = ({ onOpenAdminModal, onOpenCreateOrgModal }) => {
-  const { user, logout, organizations, currentOrganization, switchOrganization, refreshOrganizations } = useAuth();
+const Topbar = ({ onOpenAdminModal, onOpenCreateOrgModal, socket }) => {
+  const { user, logout, organizations, currentOrganization, switchOrganization } = useAuth();
   const navigate = useNavigate();
-  const [invitations, setInvitations] = useState([]);
-  
-  useEffect(() => {
-    fetchMyInvitations();
-  }, []);
-
-  const fetchMyInvitations = async () => {
-    try {
-      const response = await api.get('/organizations/invitations/me');
-      setInvitations(response.data || []);
-    } catch (error) {
-      console.error('Failed to fetch invitations', error);
-    }
-  };
-
-  const handleAcceptInvite = async (invitationId) => {
-    try {
-      await api.post(`/organizations/invitations/${invitationId}/accept`);
-      toast.success('Invitation accepted!');
-      setInvitations(invitations.filter((inv) => inv._id !== invitationId));
-      await refreshOrganizations();
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to accept invite');
-    }
-  };
-
-  const handleRejectInvite = async (invitationId) => {
-    try {
-      await api.post(`/organizations/invitations/${invitationId}/reject`);
-      toast.success('Invitation rejected!');
-      setInvitations(invitations.filter((inv) => inv._id !== invitationId));
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to reject invite');
-    }
-  };
 
   const handleLogout = async () => {
     await logout();
@@ -108,62 +73,8 @@ const Topbar = ({ onOpenAdminModal, onOpenCreateOrgModal }) => {
           </button>
         )}
         
-        {/* Notifications */}
-        <Dropdown align="end">
-          <Dropdown.Toggle
-            variant="light"
-            className="p-2.5 border-0 bg-transparent text-gray-400 hover:text-black rounded-full transition-all duration-200 relative flex items-center justify-center hover:bg-gray-100"
-            id="notifications-dropdown"
-          >
-            <Bell size={20} strokeWidth={2} />
-            {invitations.length > 0 && (
-              <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white animate-pulse" />
-            )}
-          </Dropdown.Toggle>
-
-          <Dropdown.Menu className="shadow-2xl border border-[#EDEDED] py-0 rounded-[16px] min-w-[340px] mt-2 overflow-hidden">
-            <div className="px-5 py-4 bg-gray-50/50 border-b border-[#EDEDED] flex items-center justify-between">
-              <span className="font-bold text-black text-sm">Notifications</span>
-              {invitations.length > 0 && (
-                <span className="text-[10px] bg-black text-white px-2.5 py-0.5 rounded-full font-bold">{invitations.length}</span>
-              )}
-            </div>
-            
-            <div className="max-h-[400px] overflow-y-auto">
-              {invitations.length === 0 ? (
-                <div className="px-5 py-10 text-center">
-                  <div className="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-3">
-                    <Bell size={20} className="text-gray-300" />
-                  </div>
-                  <p className="text-sm font-medium text-gray-400">All caught up</p>
-                  <p className="text-xs text-gray-300 mt-1">No pending invitations</p>
-                </div>
-              ) : (
-                invitations.map((inv) => (
-                  <div key={inv._id} className="px-5 py-4 border-b border-[#EDEDED] hover:bg-gray-50 transition-all duration-200">
-                    <p className="text-xs text-gray-600 leading-relaxed mb-3">
-                      <span className="font-bold text-black">{inv.invitedBy?.name || 'Someone'}</span> invited you to join <span className="font-bold text-black">{inv.organization?.name}</span>
-                    </p>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={(e) => { e.stopPropagation(); handleAcceptInvite(inv._id); }}
-                        className="flex-1 bg-black text-white text-[11px] font-bold py-2 rounded-[8px] hover:bg-gray-800 transition-all duration-200 hover:scale-[1.02] active:scale-95"
-                      >
-                        Accept
-                      </button>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); handleRejectInvite(inv._id); }}
-                        className="flex-1 bg-white border border-[#EDEDED] text-gray-600 text-[11px] font-bold py-2 rounded-[8px] hover:bg-gray-50 transition-all duration-200"
-                      >
-                        Decline
-                      </button>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </Dropdown.Menu>
-        </Dropdown>
+        {/* Notification Bell */}
+        <NotificationBell socket={socket} />
         
         {/* User Avatar + Dropdown */}
         <Dropdown align="end">

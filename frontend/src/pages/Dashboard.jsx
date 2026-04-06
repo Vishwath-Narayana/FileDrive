@@ -339,6 +339,7 @@ const Dashboard = () => {
         <Topbar 
           onOpenAdminModal={() => setShowManageOrgModal(true)} 
           onOpenCreateOrgModal={() => setShowCreateOrgModal(true)}
+          socket={socket}
         />
         
         <main className="flex-1 overflow-y-auto p-12 ml-64">

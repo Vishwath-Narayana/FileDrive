@@ -1,6 +1,8 @@
 const Organization = require('../models/Organization');
 const Invitation = require('../models/Invitation');
 const User = require('../models/User');
+const Notification = require('../models/Notification');
+const { getIO } = require('../socket');
 const crypto = require('crypto');
 
 exports.createOrganization = async (req, res) => {
@@ -168,6 +170,26 @@ exports.sendInvitation = async (req, res) => {
       invitedBy: req.user._id,
       token: inviteToken
     });
+
+    // 🔴 Real-time: check if user exists in MongoDB to notify them in-app
+    const invitedUser = await User.findOne({ email: normalizedEmail });
+    if (invitedUser) {
+      const notification = await Notification.create({
+        recipient: invitedUser._id,
+        sender: req.user._id,
+        message: `You've been invited to join ${organization.name}`,
+        type: 'invite',
+        orgId: organizationId,
+        token: inviteToken
+      });
+
+      // Emit real-time notification
+      const io = getIO();
+      if (io) {
+        console.log(`📡 Emitting notification:new to user ${invitedUser._id}`);
+        io.emit(`notification:new:${invitedUser._id.toString()}`, notification);
+      }
+    }
 
     // Populate for frontend
     const populatedInvitation = await Invitation.findById(invitation._id)
@@ -378,23 +400,22 @@ exports.acceptInviteByToken = async (req, res) => {
       return res.status(404).json({ message: 'Organization not found' });
     }
 
-    const alreadyMember = organization.members.some(
-      m => m.user.toString() === user._id.toString()
-    );
-
-    if (alreadyMember) {
-      return res.status(400).json({ message: 'You are already a member of this organization' });
-    }
-
-    organization.members.push({
-      user: user._id,
-      role
+    // Use $addToSet to prevent duplicates
+    await Organization.findByIdAndUpdate(organizationId, {
+      $addToSet: {
+        members: {
+          user: user._id,
+          role
+        }
+      }
     });
 
-    await organization.save();
-
+    // Mark as accepted and cleanup
     invitation.status = 'accepted';
     await invitation.save();
+    
+    // Optionally remove invite to prevent security issues on reuse
+    // await Invitation.deleteOne({ token });
 
     const updatedOrg = await Organization.findById(organizationId)
       .populate('owner', 'name email')
@@ -488,6 +509,31 @@ exports.removeMember = async (req, res) => {
       .populate('members.user', 'name email');
 
     res.json(updatedOrg);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.getMyNotifications = async (req, res) => {
+  try {
+    const notifications = await Notification.find({ recipient: req.user._id })
+      .populate('sender', 'name email avatar')
+      .sort({ createdAt: -1 })
+      .limit(20);
+    res.json(notifications);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.markNotificationAsRead = async (req, res) => {
+  try {
+    const { notificationId } = req.params;
+    await Notification.findOneAndUpdate(
+      { _id: notificationId, recipient: req.user._id },
+      { status: 'read' }
+    );
+    res.json({ message: 'Notification marked as read' });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

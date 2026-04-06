@@ -36,4 +36,7 @@ const invitationSchema = new mongoose.Schema({
   timestamps: true
 });
 
+// Auto-expire invitation after 24 hours (86400 seconds)
+invitationSchema.index({ createdAt: 1 }, { expireAfterSeconds: 86400 });
+
 module.exports = mongoose.model('Invitation', invitationSchema);

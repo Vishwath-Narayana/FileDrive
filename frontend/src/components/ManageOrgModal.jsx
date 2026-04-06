@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Modal, Tab, Tabs, Dropdown } from 'react-bootstrap';
-import { Mail, UserPlus, X, ChevronDown, Trash2, Copy, Check, Link2, AlertTriangle } from 'lucide-react';
+import { Mail, UserPlus, X, ChevronDown, Trash2, Check, AlertTriangle } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { supabase } from '../services/supabaseClient';
 
 const ManageOrgModal = ({ show, onHide }) => {
   const { user, currentOrganization, refreshOrganizations } = useAuth();
@@ -15,14 +16,12 @@ const ManageOrgModal = ({ show, onHide }) => {
   const [deletingOrg, setDeletingOrg] = useState(false);
   const [inviteRole, setInviteRole] = useState('viewer');
   const [sending, setSending] = useState(false);
-  const [inviteSuccess, setInviteSuccess] = useState(null); // {email, link}
-  const [copied, setCopied] = useState(false);
+  const [inviteSuccess, setInviteSuccess] = useState(null); // {email}
 
   useEffect(() => {
     if (show && currentOrganization) {
       fetchOrganizationData();
       setInviteSuccess(null);
-      setCopied(false);
     }
   }, [show, currentOrganization]);
 
@@ -76,23 +75,30 @@ const ManageOrgModal = ({ show, onHide }) => {
 
     try {
       setSending(true);
+      // 1. Create invitation in MongoDB → get token
       const response = await api.post(`/organizations/${currentOrganization._id}/invitations`, {
         email: inviteEmail,
         role: inviteRole
       });
 
-      // Build invite link and show success state
-      const link = `${window.location.origin}/accept-invite?token=${response.data.token}`;
-      setInviteSuccess({ email: inviteEmail, link });
-      
-      // Auto-copy to clipboard
-      try {
-        await navigator.clipboard.writeText(link);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 3000);
-      } catch (_) {}
+      const token = response.data.token;
+      const inviteLink = `${window.location.origin}/accept-invite?token=${token}`;
 
-      toast.success('Invitation created!');
+      // 2. Send Supabase Magic Link with invite token embedded in redirect URL
+      const { error: otpError } = await supabase.auth.signInWithOtp({
+        email: inviteEmail,
+        options: {
+          emailRedirectTo: inviteLink,
+          shouldCreateUser: true  // handles both new + existing users
+        }
+      });
+
+      if (otpError) {
+        console.warn('Supabase OTP error (non-fatal):', otpError.message);
+      }
+
+      setInviteSuccess({ email: inviteEmail });
+      toast.success('Invitation email sent!');
       setInviteEmail('');
       setInviteRole('viewer');
       setShowInviteForm(false);
@@ -101,17 +107,6 @@ const ManageOrgModal = ({ show, onHide }) => {
       toast.error(error.response?.data?.message || 'Failed to send invitation');
     } finally {
       setSending(false);
-    }
-  };
-
-  const handleCopyLink = async (link) => {
-    try {
-      await navigator.clipboard.writeText(link);
-      setCopied(true);
-      toast.success('Link copied!', { icon: '📋' });
-      setTimeout(() => setCopied(false), 3000);
-    } catch (_) {
-      toast.error('Failed to copy');
     }
   };
 
@@ -158,30 +153,18 @@ const ManageOrgModal = ({ show, onHide }) => {
           </button>
         </div>
 
-        {/* Invite Success Banner */}
+        {/* Email Sent Success Banner — no raw link */}
         {inviteSuccess && (
           <div className="mb-6 p-5 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-[20px] animate-in fade-in slide-in-from-top-2 duration-300">
             <div className="flex items-start gap-4">
               <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
-                <Check size={20} className="text-green-600" strokeWidth={3} />
+                <Mail size={18} className="text-green-600" />
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold text-green-900 mb-1">Invitation sent to {inviteSuccess.email}</p>
-                <div className="bg-white border border-green-200 rounded-xl p-3 mb-3">
-                  <p className="text-[11px] text-gray-500 font-mono break-all leading-relaxed">{inviteSuccess.link}</p>
-                </div>
-                <button
-                  onClick={() => handleCopyLink(inviteSuccess.link)}
-                  className="flex items-center gap-2 text-xs font-bold text-green-700 hover:text-green-900 transition-colors"
-                >
-                  {copied ? <Check size={14} /> : <Copy size={14} />}
-                  {copied ? 'Copied to clipboard!' : 'Copy invite link'}
-                </button>
+              <div className="flex-1">
+                <p className="text-sm font-bold text-green-900 mb-0.5">Invitation sent!</p>
+                <p className="text-xs text-green-700">A magic link was emailed to <span className="font-bold">{inviteSuccess.email}</span>. They'll join automatically after clicking it.</p>
               </div>
-              <button
-                onClick={() => setInviteSuccess(null)}
-                className="p-1 text-green-400 hover:text-green-700 transition-colors"
-              >
+              <button onClick={() => setInviteSuccess(null)} className="p-1 text-green-400 hover:text-green-700">
                 <X size={16} />
               </button>
             </div>
@@ -351,16 +334,7 @@ const ManageOrgModal = ({ show, onHide }) => {
                     </div>
                     <div className="flex items-center gap-2">
                       {invitation.status === 'pending' && (
-                        <button
-                          onClick={() => {
-                            const link = `${window.location.origin}/accept-invite?token=${invitation.token}`;
-                            handleCopyLink(link);
-                          }}
-                          className="flex items-center gap-1.5 text-[10px] font-bold text-black bg-gray-50 hover:bg-black hover:text-white px-4 py-2 rounded-full transition-all duration-200 uppercase tracking-tighter"
-                        >
-                          <Link2 size={12} />
-                          Copy Link
-                        </button>
+                        <span className="text-[10px] font-bold text-amber-500 bg-amber-50 px-3 py-1 rounded-full uppercase tracking-wide">Pending</span>
                       )}
                       <button
                         onClick={() => handleRevokeInvitation(invitation._id)}
