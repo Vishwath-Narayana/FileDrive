@@ -40,8 +40,10 @@ exports.uploadFile = async (req, res) => {
     const file = await File.create({
       filename: req.file.filename,
       originalName: req.file.originalname,
-      path: req.file.path, // Cloudinary URL
-      cloudinaryPublicId: req.file.filename, // Multer-storage-cloudinary uses filename as public_id
+      path: req.file.path,
+      cloudinaryPublicId: req.file.filename,
+      resourceType: req.file.resource_type || 'auto',
+      format: req.file.format || req.file.originalname.split('.').pop().toLowerCase(),
       size: req.file.size,
       fileType: fileType,
       uploader: req.user._id,
@@ -122,10 +124,35 @@ exports.downloadFile = async (req, res) => {
       return res.status(404).json({ message: 'File not found' });
     }
 
-    // For Cloudinary, we can redirect to the secure URL
-    // Or we could fetch and stream, but redirect is more efficient for cloud storage
-    res.redirect(file.path);
+    // Determine actual resource type from stored path if needed
+    let resourceType = file.resourceType;
+    if (!resourceType || resourceType === 'auto') {
+      if (file.path.includes('/image/upload/')) resourceType = 'image';
+      else if (file.path.includes('/raw/upload/')) resourceType = 'raw';
+      else if (file.path.includes('/video/upload/')) resourceType = 'video';
+    }
+
+    // Get format (extension) - use stored format or extract from originalName as fallback
+    const format = file.format || file.originalName.split('.').pop().toLowerCase();
+
+    // Generate a signed download URL using Cloudinary's specialized private_download_url
+    const downloadUrl = cloudinary.utils.private_download_url(file.cloudinaryPublicId, format, {
+      resource_type: resourceType || 'auto',
+      type: 'upload',
+      attachment: true
+    });
+    
+    console.log("DEBUG DOWNLOAD:", {
+      fileType: file.fileType,
+      resourceType,
+      format,
+      publicId: file.cloudinaryPublicId,
+      finalUrl: downloadUrl
+    });
+
+    res.json({ downloadUrl });
   } catch (error) {
+    console.error("DOWNLOAD ERROR:", error);
     res.status(500).json({ message: error.message });
   }
 };

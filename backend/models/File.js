@@ -16,6 +16,13 @@ const fileSchema = new mongoose.Schema({
   cloudinaryPublicId: {
     type: String
   },
+  resourceType: {
+    type: String,
+    default: 'auto'
+  },
+  format: {
+    type: String
+  },
   size: {
     type: Number,
     required: true

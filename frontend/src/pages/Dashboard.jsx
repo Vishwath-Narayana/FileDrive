@@ -252,20 +252,11 @@ const Dashboard = () => {
 
   const handleDownload = async (file) => {
     try {
-      const response = await api.get(`/files/download/${file._id}`, {
-        responseType: 'blob',
-      });
-
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', file.originalName);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
+      const response = await api.get(`/files/download/${file._id}`);
+      const { downloadUrl } = response.data;
 
       toast.success('Download started');
+      window.open(downloadUrl, '_blank');
     } catch (error) {
       toast.error('Download failed');
     }
