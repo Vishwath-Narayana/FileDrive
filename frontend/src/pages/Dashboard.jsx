@@ -56,6 +56,9 @@ const Dashboard = () => {
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [showManageOrgModal, setShowManageOrgModal] = useState(false);
   const [showCreateOrgModal, setShowCreateOrgModal] = useState(false);
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState('');
   const [uploadFile, setUploadFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -249,6 +252,26 @@ const Dashboard = () => {
       setUploading(false);
     }
   };
+  
+  const handleView = async (file) => {
+    try {
+      // For images and PDFs, we need a signed VIEW url to avoid 401s in Strict mode
+      if (file.fileType === 'pdf' || file.fileType === 'image') {
+        setSelectedFile(file);
+        setPreviewUrl(''); // Reset while loading
+        setShowPreviewModal(true);
+        
+        const response = await api.get(`/files/view/${file._id}`);
+        setPreviewUrl(response.data.viewUrl);
+      } else {
+        // Fallback for other types
+        window.open(file.path, '_blank', 'noopener,noreferrer');
+      }
+    } catch (error) {
+      toast.error('Failed to open preview');
+      setShowPreviewModal(false);
+    }
+  };
 
   const handleDownload = async (file) => {
     try {
@@ -431,6 +454,7 @@ const Dashboard = () => {
                       <FileCard
                         file={file}
                         onDownload={handleDownload}
+                        onView={handleView}
                         onDelete={handleDelete}
                         onToggleFavorite={handleToggleFavorite}
                         onRestore={handleRestore}
@@ -460,6 +484,7 @@ const Dashboard = () => {
                           key={file._id}
                           file={file}
                           onDownload={handleDownload}
+                          onView={handleView}
                           onDelete={handleDelete}
                           onToggleFavorite={handleToggleFavorite}
                           onRestore={handleRestore}
@@ -581,6 +606,80 @@ const Dashboard = () => {
 
       <ManageOrgModal show={showManageOrgModal} onHide={() => setShowManageOrgModal(false)} />
       <CreateOrgModal show={showCreateOrgModal} onHide={() => setShowCreateOrgModal(false)} />
+
+      {/* ── Preview Modal ────────────────────────────────────── */}
+      <Modal 
+        show={showPreviewModal} 
+        onHide={() => { setShowPreviewModal(false); setSelectedFile(null); }} 
+        centered 
+        size="lg"
+        className="premium-modal preview-modal"
+      >
+        <div className="bg-white rounded-[32px] overflow-hidden shadow-2xl border border-[#F0F0F0] flex flex-col max-h-[90vh]">
+          <div className="p-6 border-b border-[#F5F5F5] flex items-center justify-between bg-white/80 backdrop-blur-md sticky top-0 z-10">
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 bg-black rounded-xl flex items-center justify-center text-white shadow-lg shadow-black/10">
+                <File size={18} strokeWidth={2.5} />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-black tracking-tight leading-none mb-1">{selectedFile?.originalName}</h3>
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{selectedFile?.fileType} • {(selectedFile?.size / (1024 * 1024)).toFixed(1)} MB</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <button 
+                onClick={() => handleDownload(selectedFile)}
+                className="p-2.5 text-gray-400 hover:text-black hover:bg-gray-50 rounded-xl transition-all duration-200"
+                title="Download"
+              >
+                <CloudUpload size={20} />
+              </button>
+              <button 
+                onClick={() => { setShowPreviewModal(false); setSelectedFile(null); }}
+                className="p-2.5 text-gray-400 hover:text-black hover:bg-gray-50 rounded-xl transition-all duration-200"
+              >
+                <X size={20} />
+              </button>
+            </div>
+          </div>
+
+          <div className="flex-1 overflow-auto bg-[#FBFBFB] p-8 flex items-center justify-center min-h-[500px]">
+            {!previewUrl ? (
+              <div className="flex flex-col items-center gap-4">
+                <div className="w-12 h-12 border-4 border-black border-t-transparent rounded-full animate-spin" />
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Securing preview...</p>
+              </div>
+            ) : selectedFile?.fileType === 'image' ? (
+              <div className="relative group">
+                <img 
+                  src={previewUrl} 
+                  alt={selectedFile.originalName} 
+                  className="max-w-full max-h-[70vh] rounded-2xl shadow-2xl border border-white/50 object-contain animate-in fade-in zoom-in duration-500"
+                />
+              </div>
+            ) : selectedFile?.fileType === 'pdf' ? (
+              <iframe
+                src={`${previewUrl}#toolbar=0`}
+                className="w-full h-[70vh] rounded-2xl shadow-inner border border-[#F0F0F0] bg-white animate-in fade-in slide-in-from-bottom-4 duration-700"
+                title="PDF Preview"
+              />
+            ) : (
+              <div className="text-center py-20">
+                <div className="w-20 h-20 bg-gray-100 rounded-3xl flex items-center justify-center mx-auto mb-6">
+                  <File size={32} className="text-gray-300" />
+                </div>
+                <p className="text-sm font-bold text-gray-400 mb-8">Preview not available for this file type</p>
+                <button 
+                  onClick={() => window.open(selectedFile.path, '_blank')}
+                  className="btn-primary mx-auto"
+                >
+                  Open in New Tab
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

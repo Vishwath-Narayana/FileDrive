@@ -157,6 +157,38 @@ exports.downloadFile = async (req, res) => {
   }
 };
 
+exports.viewFile = async (req, res) => {
+  try {
+    const file = await File.findById(req.params.id);
+
+    if (!file) {
+      return res.status(404).json({ message: 'File not found' });
+    }
+
+    // Determine actual resource type from stored path
+    let resourceType = file.resourceType;
+    if (!resourceType || resourceType === 'auto') {
+      if (file.path.includes('/image/upload/')) resourceType = 'image';
+      else if (file.path.includes('/raw/upload/')) resourceType = 'raw';
+      else if (file.path.includes('/video/upload/')) resourceType = 'video';
+    }
+
+    const format = file.format || file.originalName.split('.').pop().toLowerCase();
+
+    // Generate a signed URL for INLINE viewing (attachment: false)
+    const viewUrl = cloudinary.utils.private_download_url(file.cloudinaryPublicId, format, {
+      resource_type: resourceType || 'auto',
+      type: 'upload',
+      attachment: false // 🔥 Key difference: no forced download
+    });
+
+    res.json({ viewUrl });
+  } catch (error) {
+    console.error("VIEW ERROR:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
 exports.deleteFile = async (req, res) => {
   try {
     const file = await File.findById(req.params.id);

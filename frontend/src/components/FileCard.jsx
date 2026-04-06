@@ -1,7 +1,7 @@
-import { MoreVertical, Download, Star, Trash2, FileText, Image as ImageIcon, FileSpreadsheet, RotateCcw } from 'lucide-react';
+import { MoreVertical, Download, Star, Trash2, FileText, Image as ImageIcon, FileSpreadsheet, RotateCcw, Eye } from 'lucide-react';
 import { Dropdown } from 'react-bootstrap';
 
-const FileCard = ({ file, onDownload, onDelete, onToggleFavorite, onRestore, userRole, userId, isTrash }) => {
+const FileCard = ({ file, onDownload, onView, onDelete, onToggleFavorite, onRestore, userRole, userId, isTrash }) => {
   const canDelete = userRole === 'admin' || file.uploader._id === userId;
   const isFavorited = file.favoritedBy?.includes(userId);
 
@@ -44,7 +44,7 @@ const FileCard = ({ file, onDownload, onDelete, onToggleFavorite, onRestore, use
           <Dropdown align="end">
             <Dropdown.Toggle
               variant="link"
-              className="p-1.5 text-gray-300 hover:text-black transition-all duration-200 rounded-full hover:bg-gray-50 opacity-0 group-hover:opacity-100"
+              className="p-1.5 text-gray-300 hover:text-black transition-all duration-200 rounded-full hover:bg-gray-50"
               id={`dropdown-${file._id}`}
             >
               <MoreVertical size={16} strokeWidth={2.5} />
@@ -54,6 +54,10 @@ const FileCard = ({ file, onDownload, onDelete, onToggleFavorite, onRestore, use
               <div className="px-4 py-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Actions</div>
               {!isTrash && (
                 <>
+                  <Dropdown.Item onClick={() => onView(file)} className="py-2.5 px-4 text-sm font-semibold hover:bg-[#FAFAFA] rounded-[10px] mx-1 flex items-center gap-3 transition-all duration-200">
+                    <Eye size={14} strokeWidth={2.5} className="text-gray-400" />
+                    View
+                  </Dropdown.Item>
                   <Dropdown.Item onClick={() => onDownload(file)} className="py-2.5 px-4 text-sm font-semibold hover:bg-[#FAFAFA] rounded-[10px] mx-1 flex items-center gap-3 transition-all duration-200">
                     <Download size={14} strokeWidth={2.5} className="text-gray-400" />
                     Download

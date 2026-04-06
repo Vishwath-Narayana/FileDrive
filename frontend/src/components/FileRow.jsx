@@ -1,8 +1,8 @@
-import { MoreVertical, Download, Star, Trash2, FileText, Image as ImageIcon, FileSpreadsheet, RotateCcw } from 'lucide-react';
+import { MoreVertical, Download, Star, Trash2, FileText, Image as ImageIcon, FileSpreadsheet, RotateCcw, Eye } from 'lucide-react';
 import { Dropdown } from 'react-bootstrap';
 import { useAuth } from '../context/AuthContext';
 
-const FileRow = ({ file, onDownload, onDelete, onToggleFavorite, onRestore, userRole, userId, isTrash }) => {
+const FileRow = ({ file, onDownload, onView, onDelete, onToggleFavorite, onRestore, userRole, userId, isTrash }) => {
   const canDelete = userRole === 'admin' || file.uploader._id === userId;
   const isFavorited = file.favoritedBy?.includes(userId);
 
@@ -74,6 +74,10 @@ const FileRow = ({ file, onDownload, onDelete, onToggleFavorite, onRestore, user
             <div className="px-4 py-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Actions</div>
             {!isTrash && (
               <>
+                <Dropdown.Item onClick={() => onView(file)} className="py-2.5 px-4 text-sm font-semibold hover:bg-[#FAFAFA] rounded-[10px] mx-1 flex items-center gap-3 transition-colors">
+                  <Eye size={14} strokeWidth={2.5} className="text-gray-400" />
+                  View
+                </Dropdown.Item>
                 <Dropdown.Item onClick={() => onDownload(file)} className="py-2.5 px-4 text-sm font-semibold hover:bg-[#FAFAFA] rounded-[10px] mx-1 flex items-center gap-3 transition-colors">
                   <Download size={14} strokeWidth={2.5} className="text-gray-400" />
                   Download
