@@ -7,7 +7,7 @@ import { useAuth } from '../context/AuthContext';
 import { supabase } from '../services/supabaseClient';
 
 const ManageOrgModal = ({ show, onHide }) => {
-  const { user, currentOrganization, refreshOrganizations } = useAuth();
+  const { user, currentOrganization, refreshOrganizations, switchOrganization, organizations } = useAuth();
   const [members, setMembers] = useState([]);
   const [invitations, setInvitations] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -147,8 +147,27 @@ const ManageOrgModal = ({ show, onHide }) => {
       setDeletingOrg(true);
       await api.delete(`/organizations/${currentOrganization._id}`);
       toast.success('Organization deleted successfully');
+
+      // Clear stale org from localStorage before refreshing
+      localStorage.removeItem('currentOrganization');
+
+      // Refresh the org list (deleted org will be gone)
+      await refreshOrganizations();
+
+      // Switch to personal org (or first available org)
+      const remainingOrgs = organizations.filter(o => o._id !== currentOrganization._id);
+      const fallback =
+        remainingOrgs.find(o => o._id === user?.personalOrganization?.toString()) ||
+        remainingOrgs.find(o => o._id === user?.personalOrganization) ||
+        remainingOrgs[0];
+
+      if (fallback) {
+        switchOrganization(fallback);
+      }
+
       setShowDeleteConfirm(false);
-      setTimeout(() => window.location.reload(), 1000);
+      setConfirmOrgName('');
+      onHide(); // Close ManageOrgModal
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to delete organization');
     } finally {
@@ -156,8 +175,11 @@ const ManageOrgModal = ({ show, onHide }) => {
     }
   };
 
-  const isOwner = currentOrganization?.owner === user?._id || currentOrganization?.owner?._id === user?._id;
-  const isPersonal = user?.personalOrganization === currentOrganization?._id;
+  const isOwner =
+    currentOrganization?.owner?.toString() === user?._id?.toString() ||
+    currentOrganization?.owner?._id?.toString() === user?._id?.toString();
+  const isPersonal =
+    user?.personalOrganization?.toString() === currentOrganization?._id?.toString();
 
   return (
     <Modal show={show} onHide={onHide} size="lg" centered className="premium-modal">

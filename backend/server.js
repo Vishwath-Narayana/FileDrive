@@ -20,11 +20,11 @@ initIO(server);
 
 connectDB();
 
-app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(cors()); // frontend connection 
+app.use(express.json()); //read JSON 
+app.use(express.urlencoded({ extended: true })); //read URL encoded data
 
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads'))); //serve static files
 
 app.use('/api/auth', authRoutes);
 app.use('/api/files', fileRoutes);

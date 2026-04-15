@@ -268,8 +268,20 @@ export const AuthProvider = ({ children }) => {
       if (currentOrganization) {
         const updatedCurrentOrg = response.data.find(org => org._id === currentOrganization._id);
         if (updatedCurrentOrg) {
+          // Org still exists — update with fresh data
           setCurrentOrganization(updatedCurrentOrg);
           localStorage.setItem('currentOrganization', JSON.stringify(updatedCurrentOrg));
+        } else if (response.data.length > 0) {
+          // Current org was deleted — fall back to personal org or first available
+          const fallback =
+            response.data.find(o => o._id === user?.personalOrganization?.toString()) ||
+            response.data.find(o => o._id === user?.personalOrganization) ||
+            response.data[0];
+          setCurrentOrganization(fallback);
+          localStorage.setItem('currentOrganization', JSON.stringify(fallback));
+        } else {
+          setCurrentOrganization(null);
+          localStorage.removeItem('currentOrganization');
         }
       }
     } catch (error) {

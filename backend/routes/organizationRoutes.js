@@ -29,8 +29,8 @@ router.put('/:organizationId/members/:userId/role', authMiddleware, updateMember
 router.delete('/:organizationId/members/:userId', authMiddleware, removeMember);
 router.post('/:organizationId/invitations', authMiddleware, sendInvitation);
 router.get('/:organizationId/invitations', authMiddleware, getOrganizationInvitations);
-router.delete('/:id', authMiddleware, deleteOrganization);
-router.delete('/:organizationId/invitations/:invitationId', authMiddleware, revokeInvitation);
+router.delete('/:organizationId/invitations/:invitationId', authMiddleware, revokeInvitation); // more specific first
+router.delete('/:id', authMiddleware, deleteOrganization); // generic last
 router.post('/invitations/:invitationId/accept', authMiddleware, acceptInvitation);
 router.post('/invitations/:invitationId/reject', authMiddleware, rejectInvitation);
 router.post('/accept-invite', acceptInviteByToken);
