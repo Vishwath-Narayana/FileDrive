@@ -78,8 +78,8 @@ const Landing = () => {
       <section className="relative pt-32 pb-20 overflow-hidden grid-pattern border-b border-dashed border-[#F0F0F0]">
         <div className="section-container !py-0 text-center relative z-10">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-[#F0F0F0] text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-8 shadow-sm">
-            <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
-            Operational
+            <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-[pulse_2s_infinite]"></span>
+            All systems operational
           </div>
           
           <h1 className="text-5xl md:text-7xl font-bold tracking-tighter text-black mb-6 hero-text-glow leading-[1.05] animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -87,8 +87,8 @@ const Landing = () => {
             for modern teams.
           </h1>
           
-          <p className="max-w-xl mx-auto text-base text-gray-400 font-medium mb-10 leading-relaxed animate-in fade-in slide-in-from-bottom-6 duration-700 delay-100">
-            Secure, clean, and blazingly fast file management. Use our robust organization system to keep your team's assets synchronized.
+          <p className="max-w-[480px] mx-auto text-[16px] text-gray-400 font-medium mb-10 leading-[1.6] animate-in fade-in slide-in-from-bottom-6 duration-700 delay-100">
+            Upload, organize, and share files with your team in real time. No friction, no bloat.
           </p>
 
           <div className="flex flex-col md:flex-row items-center justify-center gap-3 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-200">
@@ -99,7 +99,7 @@ const Landing = () => {
               Sign up
               <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
             </button>
-            <button className="w-full md:w-auto bg-white text-black text-xs font-bold uppercase tracking-widest px-8 py-4 rounded border border-[#F0F0F0] hover:bg-[#FAFAFA] transition-all">
+            <button className="w-full md:w-auto bg-white text-[#374151] text-xs font-bold uppercase tracking-widest px-8 py-4 rounded border-[1.5px] border-[#D1D5DB] hover:border-[#9CA3AF] hover:bg-[#F9FAFB] transition-all">
               Learn more
             </button>
           </div>
@@ -110,7 +110,7 @@ const Landing = () => {
       <section id="features" className="bg-white py-20 border-b border-dashed border-[#F0F0F0]">
         <div className="section-container !py-0">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-black mb-4">Why choose us over others?</h2>
+            <h2 className="text-[32px] md:text-[32px] font-bold tracking-tight text-black mb-4">Why choose us over others?</h2>
             <p className="text-sm text-gray-400 font-medium max-w-lg mx-auto leading-relaxed">
               We provide the absolute best file management experience for modern, fast-moving teams.
             </p>
@@ -119,11 +119,11 @@ const Landing = () => {
           <div className="max-w-4xl mx-auto relative group">
             <div className="grid grid-cols-1 lg:grid-cols-10 border border-[#F0F0F0] rounded-xl overflow-hidden bg-white shadow-sm">
               {/* Features List */}
-              <div className="lg:col-span-6 flex flex-col">
+              <div className="lg:col-span-6 flex flex-col items-stretch">
                 <div className="p-8 md:p-10 pb-0">
-                   <div className="px-6 py-4 border border-dashed border-[#F0F0F0] rounded flex justify-between items-center mb-8">
-                      <div className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">Feature</div>
-                      <div className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] text-right">Others</div>
+                   <div className="px-6 py-4 border border-dashed border-[#F0F0F0] rounded flex justify-between items-center mb-8 h-[54px]">
+                      <div className="text-[12px] font-medium text-gray-400 tracking-[0.04em]">Feature</div>
+                      <div className="text-[12px] font-medium text-gray-400 tracking-[0.04em] text-right">Others</div>
                    </div>
                 </div>
 
@@ -142,7 +142,7 @@ const Landing = () => {
                     <div key={id} className="grid grid-cols-10 h-[52px] items-center border-b border-gray-50 last:border-0 group/item">
                       <span className="col-span-7 text-[13px] font-bold text-gray-600 group-hover/item:text-black transition-colors">{item.name}</span>
                       <div className="col-span-3 flex justify-end pr-4">
-                        {item.others ? <Check size={14} className="text-gray-400" /> : <X size={14} className="text-gray-400" />}
+                        {item.others ? <Check size={14} className="text-[#6B7280]" /> : <X size={14} className="text-[#D1D5DB]" />}
                       </div>
                     </div>
                   ))}
@@ -150,10 +150,10 @@ const Landing = () => {
               </div>
 
               {/* FileDrive Column */}
-              <div className="lg:col-span-4 bg-black flex flex-col">
+              <div className="lg:col-span-4 bg-black flex flex-col items-stretch">
                 <div className="p-8 md:p-10 pb-0">
                    <div className="px-6 py-4 border border-transparent rounded flex justify-center items-center mb-8 h-[54px]">
-                      <div className="text-[10px] font-bold text-white uppercase tracking-[0.2em]">FileDrive</div>
+                      <div className="text-[12px] font-medium text-white tracking-[0.04em]">FileDrive</div>
                    </div>
                 </div>
                 
@@ -183,7 +183,7 @@ const Landing = () => {
       {/* Pricing Section (Maintained consistent with Refinements) */}
       <section id="pricing" className="py-20 bg-white border-b border-dashed border-[#F0F0F0]">
         <div className="section-container !py-0 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-black mb-4">Simple Plans, Built for Serious Teams</h2>
+          <h2 className="text-[32px] md:text-[32px] font-bold tracking-tight text-black mb-4">Simple pricing, serious value</h2>
           <p className="text-sm text-gray-400 font-medium max-w-lg mx-auto mb-16 leading-relaxed">
             FileDrive has a plan designed to meet your needs. <br /> No bloat, no fluff — just what works.
           </p>
@@ -192,7 +192,7 @@ const Landing = () => {
             {/* Starter */}
             <div className="bg-[#FAFAFA]/50 border border-dashed border-[#F0F0F0] rounded-xl p-8 flex flex-col text-left group hover:border-black transition-colors duration-500">
               <div className="mb-6">
-                <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-3">Starter</h4>
+                <h4 className="text-[11px] font-medium text-gray-400 tracking-[0.06em] mb-3">Starter</h4>
                 <div className="flex items-center gap-2">
                   <span className="text-2xl font-bold text-black">₹299/month</span>
                 </div>
@@ -201,40 +201,39 @@ const Landing = () => {
               <div className="space-y-3 mb-10 flex-1">
                 {['Upload & manage files', 'Single organization', 'Limited storage', 'Simple UI access'].map((feat, i) => (
                   <div key={i} className="flex items-center gap-2.5">
-                    <Check size={10} className="text-gray-300" strokeWidth={3} />
+                    <span className="text-gray-400 text-[11px] font-medium">–</span>
                     <span className="text-[11px] font-bold text-gray-500">{feat}</span>
                   </div>
                 ))}
               </div>
-              <button onClick={() => navigate('/register')} className="w-full py-3 bg-[#EFEFEF] hover:bg-black hover:text-white rounded text-[10px] font-bold uppercase tracking-widest transition-all">Start today</button>
+              <button onClick={() => navigate('/register')} className="w-full py-3 bg-white border-[1.5px] border-[#E5E7EB] hover:bg-[#F9FAFB] rounded text-[10px] text-[#374151] font-bold tracking-widest transition-all">Start today</button>
             </div>
 
             {/* Basic */}
             <div className="bg-white border border-black rounded-xl p-8 flex flex-col text-left group shadow-2xl shadow-black/5">
               <div className="mb-6">
-                <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-3">Basic</h4>
+                <h4 className="text-[11px] font-medium text-gray-400 tracking-[0.06em] mb-3">Basic</h4>
                 <div className="flex items-center gap-2">
                   <span className="text-gray-300 text-sm line-through font-bold">₹1000/month</span>
                   <span className="text-2xl font-bold text-black">₹799/month</span>
-                  <span className="text-[9px] font-bold text-green-500 uppercase bg-green-50 px-1.5 py-0.5 rounded tracking-tighter">-0% off</span>
                 </div>
               </div>
               <p className="text-xs text-black font-medium mb-8 leading-relaxed">Full documentation site with a structured system.</p>
               <div className="space-y-3 mb-10 flex-1">
                 {['Real-time file updates', 'Multiple organizations', 'Invite team members', 'Role-based access', 'Cloud storage (Cloudinary)', 'Faster performance', 'Secure file handling'].map((feat, i) => (
                   <div key={i} className="flex items-center gap-2.5">
-                    <Check size={10} className="text-black" strokeWidth={3} />
+                    <Check size={10} className="text-[#16A34A]" strokeWidth={3} />
                     <span className="text-[11px] font-bold text-black">{feat}</span>
                   </div>
                 ))}
               </div>
-              <button onClick={() => navigate('/register')} className="w-full py-3 bg-black text-white rounded text-[10px] font-bold uppercase tracking-widest hover:bg-gray-800 transition-all">Start today</button>
+              <button onClick={() => navigate('/register')} className="w-full py-3 bg-[#111827] text-white rounded text-[10px] font-bold tracking-widest hover:bg-[#1F2937] transition-all">Start today</button>
             </div>
 
             {/* Enterprise */}
             <div className="bg-[#FAFAFA]/50 border border-dashed border-[#F0F0F0] rounded-xl p-8 flex flex-col text-left group hover:border-black transition-colors duration-500">
               <div className="mb-6">
-                <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-3">Enterprise</h4>
+                <h4 className="text-[11px] font-medium text-gray-400 tracking-[0.06em] mb-3">Enterprise</h4>
                 <div className="flex items-center gap-2">
                   <span className="text-2xl font-bold text-black">₹4000/month</span>
                 </div>
@@ -243,12 +242,12 @@ const Landing = () => {
               <div className="space-y-3 mb-10 flex-1">
                 {['Everything in Pro', 'Unlimited organizations', 'Advanced access control', 'Priority performance', 'Scalable infrastructure', 'Team workflow optimization', 'Future integrations (API, analytics)'].map((feat, i) => (
                   <div key={i} className="flex items-center gap-2.5">
-                    <Check size={10} className="text-gray-300" strokeWidth={3} />
+                    <span className="text-gray-400 text-[11px] font-medium">–</span>
                     <span className="text-[11px] font-bold text-gray-500">{feat}</span>
                   </div>
                 ))}
               </div>
-              <button onClick={() => navigate('/register')} className="w-full py-3 bg-[#EFEFEF] hover:bg-black hover:text-white rounded text-[10px] font-bold uppercase tracking-widest transition-all">Start today</button>
+              <button onClick={() => navigate('/register')} className="w-full py-3 bg-white border-[1.5px] border-[#E5E7EB] hover:bg-[#F9FAFB] rounded text-[10px] text-[#374151] font-bold tracking-widest transition-all">Start today</button>
             </div>
           </div>
         </div>
@@ -258,26 +257,26 @@ const Landing = () => {
       <section id="faq" className="py-24 bg-white border-b border-dashed border-[#F0F0F0]">
         <div className="section-container !py-0 max-w-4xl">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-black mb-4">Answers to some Questions</h2>
+            <h2 className="text-[32px] md:text-[32px] font-bold tracking-tight text-black mb-4">Frequently asked questions</h2>
             <p className="text-sm text-gray-400 font-medium leading-relaxed">Everything you need to know about FileDrive.</p>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-3">
             {faqItems.map((item, id) => (
               <div 
                 key={id} 
-                className={`bg-[#F5F5F5] border-2 rounded-xl transition-all duration-300 ${activeFaq === id ? 'border-black' : 'border-[#F0F0F0] hover:border-black/20'}`}
+                className={`border rounded-xl transition-all duration-300 overflow-hidden ${activeFaq === id ? 'border-black' : 'border-[#E5E7EB]'}`}
               >
                 <button 
                   onClick={() => setActiveFaq(activeFaq === id ? null : id)}
-                  className="w-full px-8 py-6 flex items-center justify-between text-left group"
+                  className={`w-full px-5 py-4 flex items-center justify-between text-left transition-colors ${activeFaq === id ? 'bg-[#F9FAFB]' : 'bg-[#F9FAFB] hover:bg-[#F3F4F6]'}`}
                 >
-                  <span className="font-bold text-black text-sm tracking-tight">{item.q}</span>
-                  <Plus size={16} className={`text-gray-400 transform transition-transform duration-300 ${activeFaq === id ? 'rotate-45 text-black' : ''}`} />
+                  <span className="font-medium text-[#111827] text-sm tracking-tight">{item.q}</span>
+                  <Plus size={18} className={`text-[#9CA3AF] transform transition-transform duration-300 ${activeFaq === id ? 'rotate-45 text-black' : ''}`} />
                 </button>
                 {activeFaq === id && (
-                  <div className="px-8 pb-8 animate-in fade-in slide-in-from-top-1 duration-200">
-                    <p className="text-[13px] text-gray-500 font-medium leading-relaxed">
+                  <div className="px-5 pt-4 pb-5 bg-white border-t border-[#E5E7EB] animate-in fade-in slide-in-from-top-1 duration-200">
+                    <p className="text-[13px] text-gray-500 font-medium leading-[1.6]">
                       {item.a}
                     </p>
                   </div>
@@ -288,7 +287,7 @@ const Landing = () => {
 
           <div className="mt-16 text-center">
              <div className="inline-flex flex-col items-center">
-                <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-4">Have more questions?</p>
+                <p className="text-[12px] font-medium text-[#9CA3AF] mb-4">Have more questions?</p>
                 <button className="bg-black text-white text-[10px] font-bold uppercase tracking-[0.2em] px-10 py-3.5 rounded-full shadow-lg">Contact us</button>
              </div>
           </div>
@@ -299,10 +298,10 @@ const Landing = () => {
       <div className="max-w-7xl mx-auto px-8 py-16">
          <div className="bg-black text-white rounded-[32px] p-16 flex flex-col md:flex-row items-center justify-between gap-10 relative overflow-hidden group">
             <div className="relative z-10">
-               <h3 className="text-3xl font-bold tracking-tighter mb-4">Let's Make Docs That Devs Trust.</h3>
-               <p className="text-[11px] text-gray-500 font-bold uppercase tracking-[0.2em] max-w-md leading-relaxed">Book a call or send a brief — we'll respond fast, we mean really really super fast, don't believe?</p>
+               <h3 className="text-3xl font-bold tracking-tighter mb-4">Built for teams that move fast.</h3>
+               <p className="text-sm text-white/60 font-medium max-w-md leading-relaxed">Get started in minutes. No credit card required.</p>
             </div>
-            <button onClick={() => navigate('/register')} className="relative z-10 bg-white text-black text-[11px] font-bold uppercase tracking-widest px-12 py-5 rounded-2xl shadow-2xl transition-transform hover:scale-105">Get Started</button>
+            <button onClick={() => navigate('/register')} className="relative z-10 bg-white text-black text-[11px] font-bold uppercase tracking-widest px-12 py-5 rounded-2xl shadow-2xl transition-transform hover:scale-105">Get started</button>
             
             {/* Visual Accent */}
             <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 blur-[100px] rounded-full -translate-y-1/2 translate-x-1/2 group-hover:bg-white/10 transition-colors"></div>
@@ -310,22 +309,22 @@ const Landing = () => {
       </div>
 
       {/* Mini Footer */}
-      <footer className="border-t border-dashed border-[#F0F0F0] py-10 bg-[#FAFAFA]">
+          <footer className="border-t border-dashed border-[#F0F0F0] py-10 bg-[#FAFAFA]">
         <div className="max-w-7xl mx-auto px-8 flex flex-col md:flex-row items-center justify-between gap-8">
           <div className="flex items-center gap-3">
             <img src={logo} alt="FileDrive Logo" className="w-6 h-6 object-cover rounded" />
             <span className="text-xs font-bold tracking-tight uppercase">FileDrive</span>
           </div>
           
-          <div className="flex gap-10 text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">
-            <a href="#" className="text-gray-400 no-underline hover:text-black transition-colors">Twitter</a>
-            <a href="#" className="text-gray-400 no-underline hover:text-black transition-colors">Dribbble</a>
-            <a href="#" className="text-gray-400 no-underline hover:text-black transition-colors">LinkedIn</a>
-            <a href="#" className="text-gray-400 no-underline hover:text-black transition-colors">Contact</a>
+          <div className="flex gap-10 text-[12px] font-normal text-[#9CA3AF]">
+            <a href="#" className="text-[#9CA3AF] no-underline hover:text-[#374151] transition-colors">Twitter</a>
+            <a href="#" className="text-[#9CA3AF] no-underline hover:text-[#374151] transition-colors">Dribbble</a>
+            <a href="#" className="text-[#9CA3AF] no-underline hover:text-[#374151] transition-colors">LinkedIn</a>
+            <a href="#" className="text-[#9CA3AF] no-underline hover:text-[#374151] transition-colors">Contact</a>
           </div>
 
-          <div className="text-[10px] font-bold text-gray-300 uppercase tracking-widest">
-            © 2026 FIledrive Inc.
+          <div className="text-[10px] font-bold text-gray-300 tracking-widest">
+            © 2026 FileDrive Inc.
           </div>
         </div>
       </footer>
