@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, ArrowLeft, Camera, Lock, Eye, EyeOff, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, Camera, Eye, EyeOff, ShieldCheck } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import Sidebar from '../components/Sidebar';
 import Topbar from '../components/Topbar';
@@ -27,10 +27,10 @@ const Settings = () => {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [updatingPassword, setUpdatingPassword] = useState(false);
-  // Password strength
+
   const passwordStrength = newPassword.length === 0 ? 0 : newPassword.length < 6 ? 1 : newPassword.length < 10 ? 2 : 3;
   const strengthLabels = ['', 'Weak', 'Good', 'Strong'];
-  const strengthColors = ['', 'bg-red-400', 'bg-amber-400', 'bg-green-500'];
+  const strengthColors = ['', '#EF4444', '#F59E0B', '#22C55E'];
 
   const handleAvatarChange = async (e) => {
     const file = e.target.files[0];
@@ -43,13 +43,11 @@ const Settings = () => {
       toast.error('Image must be under 5MB');
       return;
     }
-    // Show local preview immediately
     const reader = new FileReader();
     reader.onloadend = () => setAvatarPreview(reader.result);
     reader.readAsDataURL(file);
     setAvatarFile(file);
 
-    // Upload immediately
     try {
       setUploadingAvatar(true);
       const formData = new FormData();
@@ -117,262 +115,295 @@ const Settings = () => {
     }
   };
 
+  const sectionCard = {
+    background: 'var(--bg-surface)',
+    border: '1px solid var(--border)',
+    borderRadius: '12px',
+    padding: '24px',
+    marginBottom: '16px',
+  };
+
+  const sectionTitle = {
+    fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)',
+    margin: '0 0 16px',
+  };
+
+  const labelStyle = {
+    display: 'block',
+    fontSize: '12px', fontWeight: 500, color: 'var(--text-primary)',
+    marginBottom: '6px',
+  };
+
+  const initials = user?.name
+    ? user.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
+    : '?';
+
   return (
-    <div className="flex h-screen bg-[#FAFAFA]">
+    <div style={{ display: 'flex', height: '100vh', background: 'var(--bg-base)' }}>
       <Sidebar activeTab="settings" setActiveTab={() => {}} />
       
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', marginLeft: '200px' }}>
         <Topbar 
           onOpenAdminModal={() => {}} 
           onOpenCreateOrgModal={() => {}}
         />
         
-        <main className="flex-1 overflow-y-auto p-12">
-          <div className="max-w-4xl mx-auto">
-            <div className="mb-10">
+        <main style={{ flex: 1, overflowY: 'auto', background: 'var(--bg-base)' }}>
+          <div style={{ maxWidth: '560px', margin: '0 auto', padding: '40px 24px' }}>
+            {/* Back + heading */}
+            <div style={{ marginBottom: '24px' }}>
               <button
                 onClick={() => navigate('/dashboard')}
-                className="flex items-center gap-2 text-gray-400 hover:text-black mb-6 transition-colors text-sm font-medium border-none bg-transparent p-0 focus:outline-none"
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '6px',
+                  fontSize: '13px', color: 'var(--text-secondary)',
+                  background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+                  marginBottom: '16px',
+                  transition: 'color 150ms ease',
+                }}
+                onMouseEnter={e => e.currentTarget.style.color = 'var(--text-primary)'}
+                onMouseLeave={e => e.currentTarget.style.color = 'var(--text-secondary)'}
               >
-                <ArrowLeft size={16} strokeWidth={2.5} />
-                Back to Dashboard
+                <ArrowLeft size={14} strokeWidth={2} />
+                Back to dashboard
               </button>
-              <h1 className="text-3xl font-bold tracking-tight text-black mb-1">Account Settings</h1>
-              <p className="text-sm text-gray-500">Manage your account preferences</p>
+              <h1 style={{ fontSize: '20px', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>
+                Account settings
+              </h1>
             </div>
 
-            <div className="card-premium overflow-hidden bg-white">
-              <div className="px-6 pt-4 pb-0 border-b border-[#EDEDED]">
-                <span className="flex items-center gap-2 px-2 py-4 text-sm font-bold text-black">
-                  <User size={16} />
-                  Account Settings
-                </span>
-              </div>
+            {/* Profile section */}
+            <div style={sectionCard}>
+              <p style={sectionTitle}>Profile</p>
 
-              <div className="p-10">
-                <form onSubmit={handleUpdateProfile} className="space-y-8">
-                  <div>
-                    <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-4">
-                      Your Avatar
-                    </label>
-                    <div className="flex items-center gap-8">
-                      <div className="relative group">
-                        <div className="w-24 h-24 rounded-full bg-gray-100 border-2 border-[#EDEDED] p-1 overflow-hidden transition-all group-hover:border-black">
-                          <div className="w-full h-full rounded-full bg-black text-white flex items-center justify-center text-2xl font-bold overflow-hidden">
-                            {avatarPreview ? (
-                              <img
-                                src={avatarPreview}
-                                alt="Profile"
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              user?.name?.charAt(0).toUpperCase()
-                            )}
-                          </div>
+              <form onSubmit={handleUpdateProfile} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {/* Avatar */}
+                <div>
+                  <label style={{ ...labelStyle }}>Your avatar</label>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                    <div style={{ position: 'relative' }}>
+                      <div
+                        style={{
+                          width: '52px', height: '52px', borderRadius: '50%',
+                          background: '#E8E8E6',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          fontSize: '18px', fontWeight: 500, color: 'var(--text-secondary)',
+                          overflow: 'hidden',
+                        }}
+                      >
+                        {avatarPreview ? (
+                          <img src={avatarPreview} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        ) : initials}
+                      </div>
+                      {uploadingAvatar && (
+                        <div style={{
+                          position: 'absolute', inset: 0, borderRadius: '50%',
+                          background: 'rgba(0,0,0,0.45)',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        }}>
+                          <div style={{ width: '18px', height: '18px', border: '2px solid rgba(255,255,255,0.4)', borderTopColor: 'white', borderRadius: '50%', animation: 'spin 0.6s linear infinite' }} />
                         </div>
-                        {uploadingAvatar && (
-                          <div className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center backdrop-blur-[1px]">
-                            <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                          </div>
-                        )}
-                      </div>
-
-                      <div>
-                        <label
-                          htmlFor="avatar-upload"
-                          className="btn-secondary py-2 text-xs"
-                        >
-                          <Camera size={14} />
-                          {uploadingAvatar ? 'Uploading...' : 'Change Photo'}
-                        </label>
-                        <input
-                          id="avatar-upload"
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={handleAvatarChange}
-                          disabled={uploadingAvatar}
-                        />
-                        <p className="text-[10px] text-gray-400 mt-3 font-medium uppercase tracking-tighter">Square PNG or JPG • Max 5MB</p>
-                      </div>
+                      )}
                     </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div>
-                      <label htmlFor="name" className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">
-                        Full Name
+                      <label
+                        htmlFor="avatar-upload"
+                        style={{
+                          fontSize: '12px', fontWeight: 400, color: 'var(--text-secondary)',
+                          cursor: 'pointer', textDecoration: 'underline', textDecorationColor: 'transparent',
+                          transition: 'text-decoration-color 150ms ease',
+                        }}
+                        onMouseEnter={e => e.currentTarget.style.textDecorationColor = 'var(--text-secondary)'}
+                        onMouseLeave={e => e.currentTarget.style.textDecorationColor = 'transparent'}
+                      >
+                        {uploadingAvatar ? 'Uploading...' : 'Change photo'}
                       </label>
                       <input
-                        id="name"
-                        type="text"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        className="input-field"
-                        placeholder="John Doe"
+                        id="avatar-upload"
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleAvatarChange}
+                        disabled={uploadingAvatar}
                       />
-                    </div>
-
-                    <div>
-                      <label htmlFor="age" className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">
-                        Age (Optional)
-                      </label>
-                      <input
-                        id="age"
-                        type="number"
-                        value={age}
-                        onChange={(e) => setAge(e.target.value)}
-                        className="input-field"
-                        placeholder="e.g. 25"
-                        min="0"
-                      />
+                      <p style={{ fontSize: '11px', color: 'var(--text-tertiary)', margin: '3px 0 0' }}>
+                        Square PNG or JPG · Max 5MB
+                      </p>
                     </div>
                   </div>
+                </div>
 
+                {/* Name + Age */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                   <div>
-                    <label htmlFor="email" className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">
-                      Email Address
-                    </label>
+                    <label htmlFor="name" style={labelStyle}>Full name</label>
                     <input
-                      id="email"
-                      type="email"
-                      value={email}
-                      className="input-field opacity-60 cursor-not-allowed"
-                      disabled
+                      id="name"
+                      type="text"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      className="input-field"
+                      placeholder="John Doe"
                     />
-                    <p className="text-[10px] text-gray-400 mt-1">Email is managed by your authentication provider</p>
                   </div>
+                  <div>
+                    <label htmlFor="age" style={labelStyle}>Age (optional)</label>
+                    <input
+                      id="age"
+                      type="number"
+                      value={age}
+                      onChange={(e) => setAge(e.target.value)}
+                      className="input-field"
+                      placeholder="e.g. 25"
+                      min="0"
+                    />
+                  </div>
+                </div>
 
-                  <div className="flex gap-4 pt-4 border-t border-[#FAFAFA]">
-                    <button
-                      type="submit"
-                      disabled={savingProfile}
-                      className="btn-primary"
-                    >
-                      {savingProfile ? 'Saving...' : 'Update Details'}
-                    </button>
-                  </div>
-                </form>
-              </div>
+                {/* Email */}
+                <div>
+                  <label htmlFor="email" style={labelStyle}>Email address</label>
+                  <input
+                    id="email"
+                    type="email"
+                    value={email}
+                    className="input-field"
+                    disabled
+                    style={{ opacity: 0.5, cursor: 'not-allowed' }}
+                  />
+                  <p style={{ fontSize: '11px', color: 'var(--text-tertiary)', margin: '4px 0 0' }}>
+                    Email is managed by your authentication provider
+                  </p>
+                </div>
+
+                <div style={{ paddingTop: '8px', borderTop: '1px solid var(--border)' }}>
+                  <button type="submit" disabled={savingProfile} className="btn-primary">
+                    {savingProfile ? 'Saving...' : 'Save changes'}
+                  </button>
+                </div>
+              </form>
             </div>
 
-            {/* Security Section */}
-            <div className="card-premium overflow-hidden bg-white mt-8">
-              <div className="px-6 pt-4 pb-0 border-b border-[#EDEDED]">
-                <span className="flex items-center gap-2 px-2 py-4 text-sm font-bold text-black">
-                  <Lock size={16} />
-                  Security
-                </span>
-              </div>
+            {/* Security section */}
+            <div style={sectionCard}>
+              <p style={sectionTitle}>Security</p>
 
-              <div className="p-10">
-                <form onSubmit={handleUpdatePassword} className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div>
-                      <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">
-                        New Password
-                      </label>
-                      <div className="relative">
-                        <input
-                          id="new-password"
-                          type={showNewPassword ? "text" : "password"}
-                          value={newPassword}
-                          onChange={(e) => setNewPassword(e.target.value)}
-                          className="input-field pr-12"
-                          placeholder="••••••••"
-                          autoComplete="new-password"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowNewPassword(!showNewPassword)}
-                          className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black transition-colors focus:outline-none border-none bg-transparent p-0"
-                        >
-                          {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                        </button>
-                      </div>
-                      {/* Password strength bar */}
-                      {newPassword.length > 0 && (
-                        <div className="mt-2 space-y-1">
-                          <div className="flex gap-1">
-                            {[1, 2, 3].map(i => (
-                              <div
-                                key={i}
-                                className={`h-1 flex-1 rounded-full transition-all duration-300 ${
-                                  i <= passwordStrength ? strengthColors[passwordStrength] : 'bg-gray-100'
-                                }`}
-                              />
-                            ))}
-                          </div>
-                          <p className={`text-[10px] font-bold ${
-                            passwordStrength === 1 ? 'text-red-400' :
-                            passwordStrength === 2 ? 'text-amber-500' : 'text-green-500'
-                          }`}>{strengthLabels[passwordStrength]}</p>
+              <form onSubmit={handleUpdatePassword} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                  {/* New password */}
+                  <div>
+                    <label style={labelStyle}>New password</label>
+                    <div style={{ position: 'relative' }}>
+                      <input
+                        id="new-password"
+                        type={showNewPassword ? 'text' : 'password'}
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        className="input-field"
+                        placeholder="••••••••"
+                        autoComplete="new-password"
+                        style={{ paddingRight: '40px' }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowNewPassword(!showNewPassword)}
+                        style={{
+                          position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)',
+                          background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+                          color: 'var(--text-tertiary)', display: 'flex', alignItems: 'center',
+                        }}
+                      >
+                        {showNewPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                      </button>
+                    </div>
+                    {newPassword.length > 0 && (
+                      <div style={{ marginTop: '6px' }}>
+                        <div style={{ display: 'flex', gap: '3px' }}>
+                          {[1, 2, 3].map(i => (
+                            <div
+                              key={i}
+                              style={{
+                                height: '3px', flex: 1, borderRadius: '2px',
+                                background: i <= passwordStrength ? strengthColors[passwordStrength] : 'var(--border)',
+                                transition: 'background 200ms ease',
+                              }}
+                            />
+                          ))}
                         </div>
-                      )}
-                      {!newPassword && (
-                        <p className="text-[10px] text-gray-300 mt-2 font-medium">Minimum 6 characters</p>
-                      )}
-                    </div>
-
-                    <div>
-                      <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">
-                        Confirm New Password
-                      </label>
-                      <div className="relative">
-                        <input
-                          id="confirm-password"
-                          type={showConfirmPassword ? "text" : "password"}
-                          value={confirmPassword}
-                          onChange={(e) => setConfirmPassword(e.target.value)}
-                          className={`input-field pr-12 transition-all duration-200 ${
-                            confirmPassword && confirmPassword !== newPassword
-                              ? 'border-red-300 focus:border-red-400'
-                              : confirmPassword && confirmPassword === newPassword
-                              ? 'border-green-300 focus:border-green-400'
-                              : ''
-                          }`}
-                          placeholder="••••••••"
-                          autoComplete="new-password"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                          className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black transition-colors focus:outline-none border-none bg-transparent p-0"
-                        >
-                          {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                        </button>
-                      </div>
-                      {confirmPassword && confirmPassword !== newPassword && (
-                        <p className="text-[10px] text-red-400 mt-2 font-bold">Passwords do not match</p>
-                      )}
-                      {confirmPassword && confirmPassword === newPassword && (
-                        <p className="text-[10px] text-green-500 mt-2 font-bold flex items-center gap-1">
-                          <ShieldCheck size={11} /> Passwords match
+                        <p style={{ fontSize: '11px', color: strengthColors[passwordStrength], margin: '3px 0 0', fontWeight: 500 }}>
+                          {strengthLabels[passwordStrength]}
                         </p>
-                      )}
-                    </div>
+                      </div>
+                    )}
+                    {!newPassword && (
+                      <p style={{ fontSize: '11px', color: 'var(--text-tertiary)', margin: '4px 0 0' }}>Minimum 6 characters</p>
+                    )}
                   </div>
 
-                  <div className="flex gap-4 pt-4 border-t border-[#FAFAFA]">
-                    <button
-                      type="submit"
-                      disabled={updatingPassword || !newPassword || !confirmPassword}
-                      className="btn-primary"
-                    >
-                      {updatingPassword ? (
-                        <span className="flex items-center gap-2">
-                          <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                          Updating...
-                        </span>
-                      ) : 'Change Password'}
-                    </button>
+                  {/* Confirm password */}
+                  <div>
+                    <label style={labelStyle}>Confirm new password</label>
+                    <div style={{ position: 'relative' }}>
+                      <input
+                        id="confirm-password"
+                        type={showConfirmPassword ? 'text' : 'password'}
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        className="input-field"
+                        placeholder="••••••••"
+                        autoComplete="new-password"
+                        style={{
+                          paddingRight: '40px',
+                          borderColor: confirmPassword && confirmPassword !== newPassword
+                            ? '#EF4444'
+                            : confirmPassword && confirmPassword === newPassword
+                            ? '#22C55E'
+                            : undefined,
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        style={{
+                          position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)',
+                          background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+                          color: 'var(--text-tertiary)', display: 'flex', alignItems: 'center',
+                        }}
+                      >
+                        {showConfirmPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                      </button>
+                    </div>
+                    {confirmPassword && confirmPassword !== newPassword && (
+                      <p style={{ fontSize: '11px', color: '#EF4444', margin: '4px 0 0' }}>Passwords do not match</p>
+                    )}
+                    {confirmPassword && confirmPassword === newPassword && (
+                      <p style={{ fontSize: '11px', color: '#22C55E', margin: '4px 0 0', display: 'flex', alignItems: 'center', gap: '3px' }}>
+                        <ShieldCheck size={11} /> Passwords match
+                      </p>
+                    )}
                   </div>
-                </form>
-              </div>
+                </div>
+
+                <div style={{ paddingTop: '8px', borderTop: '1px solid var(--border)' }}>
+                  <button
+                    type="submit"
+                    disabled={updatingPassword || !newPassword || !confirmPassword}
+                    className="btn-primary"
+                  >
+                    {updatingPassword ? (
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <div style={{ width: '13px', height: '13px', border: '2px solid rgba(255,255,255,0.4)', borderTopColor: 'white', borderRadius: '50%', animation: 'spin 0.6s linear infinite' }} />
+                        Updating...
+                      </span>
+                    ) : 'Change password'}
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         </main>
       </div>
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 };

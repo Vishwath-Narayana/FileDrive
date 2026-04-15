@@ -1,4 +1,4 @@
-import { MoreVertical, Download, Star, Trash2, FileText, Image as ImageIcon, FileSpreadsheet, RotateCcw, Eye } from 'lucide-react';
+import { FileText, Image as ImageIcon, FileSpreadsheet, Video, MoreHorizontal, Download, Star, Trash2, RotateCcw, Eye } from 'lucide-react';
 import { Dropdown } from 'react-bootstrap';
 import { useAuth } from '../context/AuthContext';
 
@@ -6,19 +6,18 @@ const FileRow = ({ file, onDownload, onView, onDelete, onToggleFavorite, onResto
   const canDelete = userRole === 'admin' || file.uploader._id === userId;
   const isFavorited = file.favoritedBy?.includes(userId);
 
-  const getFileIcon = (fileType) => {
-    const iconSize = 18;
-    const iconStroke = 2.5;
-    
+  const getFileIconConfig = (fileType) => {
     switch (fileType) {
       case 'image':
-        return <ImageIcon size={iconSize} strokeWidth={iconStroke} />;
+        return { icon: ImageIcon, color: '#8B5CF6' };
       case 'csv':
-        return <FileSpreadsheet size={iconSize} strokeWidth={iconStroke} />;
+        return { icon: FileSpreadsheet, color: '#22C55E' };
       case 'pdf':
-        return <FileText size={iconSize} strokeWidth={iconStroke} />;
+        return { icon: FileText, color: '#EF4444' };
+      case 'video':
+        return { icon: Video, color: '#3B82F6' };
       default:
-        return <FileText size={iconSize} strokeWidth={iconStroke} />;
+        return { icon: FileText, color: '#6B6B6B' };
     }
   };
 
@@ -35,71 +34,158 @@ const FileRow = ({ file, onDownload, onView, onDelete, onToggleFavorite, onResto
     return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
   };
 
+  const { icon: FileIcon, color: iconColor } = getFileIconConfig(file.fileType);
+  const ext = file.fileType
+    ? file.fileType.charAt(0).toUpperCase() + file.fileType.slice(1)
+    : 'File';
+  const uploaderInitial = file.uploader.name.charAt(0).toUpperCase();
+
   return (
-    <tr className="border-b border-[#F5F5F5] hover:bg-[#FAFAFA] group transition-all duration-300">
-      <td className="py-5 px-6">
-        <div className="flex items-center gap-4">
-          <div className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center text-gray-400 group-hover:bg-black group-hover:text-white transition-all duration-500">
-            {getFileIcon(file.fileType)}
-          </div>
-          <span className="text-sm font-bold text-black truncate max-w-xs tracking-tight" title={file.originalName}>
+    <tr
+      className="group"
+      style={{
+        borderBottom: '1px solid var(--border)',
+        transition: 'background 100ms ease',
+      }}
+      onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
+      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+    >
+      {/* Name + icon */}
+      <td style={{ padding: '0 16px', height: '44px' }}>
+        <div className="flex items-center gap-3">
+          <FileIcon size={16} style={{ color: iconColor, flexShrink: 0 }} strokeWidth={1.75} />
+          <span
+            title={file.originalName}
+            style={{
+              fontSize: '13px', fontWeight: 400, color: 'var(--text-primary)',
+              maxWidth: '280px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+            }}
+          >
             {file.originalName}
           </span>
         </div>
       </td>
-      <td className="py-5 px-6">
-        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{file.fileType}</span>
+
+      {/* Type badge */}
+      <td style={{ padding: '0 16px', height: '44px' }}>
+        <span
+          style={{
+            fontSize: '11px', fontWeight: 500,
+            padding: '2px 7px', borderRadius: '4px',
+            background: 'var(--bg-hover)', color: 'var(--text-secondary)',
+            display: 'inline-block',
+          }}
+        >
+          {ext}
+        </span>
       </td>
-      <td className="py-5 px-6">
-        <div className="flex items-center gap-2.5">
-          <div className="w-6 h-6 rounded-full bg-black text-white flex items-center justify-center text-[9px] font-bold shadow-sm">
-            {file.uploader.name.charAt(0).toUpperCase()}
+
+      {/* Size */}
+      <td style={{ padding: '0 16px', height: '44px' }}>
+        <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+          {formatFileSize(file.size)}
+        </span>
+      </td>
+
+      {/* Uploader */}
+      <td style={{ padding: '0 16px', height: '44px' }}>
+        <div className="flex items-center gap-2">
+          <div
+            style={{
+              width: '20px', height: '20px', borderRadius: '50%',
+              background: '#E8E8E6', color: 'var(--text-secondary)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: '10px', fontWeight: 500, flexShrink: 0,
+            }}
+          >
+            {uploaderInitial}
           </div>
-          <span className="text-[11px] font-bold text-gray-500 tracking-tight">{file.uploader.name.split(' ')[0]}</span>
+          <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+            {file.uploader.name.split(' ')[0]}
+          </span>
         </div>
       </td>
-      <td className="py-5 px-6 text-[11px] font-bold text-gray-300 uppercase tracking-tighter">{formatDate(file.createdAt)}</td>
-      <td className="py-5 px-6 text-[11px] font-bold text-gray-400 tracking-tight">{formatFileSize(file.size)}</td>
-      <td className="py-5 px-6 text-right">
+
+      {/* Date */}
+      <td style={{ padding: '0 16px', height: '44px' }}>
+        <span style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>
+          {formatDate(file.createdAt)}
+        </span>
+      </td>
+
+      {/* Actions */}
+      <td style={{ padding: '0 16px', height: '44px', textAlign: 'right' }}>
         <Dropdown align="end">
           <Dropdown.Toggle
             variant="link"
-            className="p-1.5 text-gray-200 hover:text-black transition-colors rounded-full hover:bg-gray-100"
+            className="text-decoration-none p-0 border-0 bg-transparent"
             id={`file-menu-${file._id}`}
           >
-            <MoreVertical size={16} strokeWidth={2.5} />
+            <div
+              style={{
+                width: '28px', height: '28px', borderRadius: '4px',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                cursor: 'pointer', transition: 'background 150ms ease',
+              }}
+              onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+            >
+              <MoreHorizontal size={14} style={{ color: 'var(--text-tertiary)' }} />
+            </div>
           </Dropdown.Toggle>
 
-          <Dropdown.Menu className="shadow-2xl border border-[#F0F0F0] py-2 rounded-[18px] min-w-[180px] mt-2 animate-in fade-in slide-in-from-top-1 duration-300 overflow-hidden">
-            <div className="px-4 py-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Actions</div>
+          <Dropdown.Menu
+            className="shadow-lg py-1"
+            style={{
+              border: '1px solid var(--border)',
+              borderRadius: '8px',
+              minWidth: '160px',
+              background: 'var(--bg-surface)',
+            }}
+          >
             {!isTrash && (
               <>
-                <Dropdown.Item onClick={() => onView(file)} className="py-2.5 px-4 text-sm font-semibold hover:bg-[#FAFAFA] rounded-[10px] mx-1 flex items-center gap-3 transition-colors">
-                  <Eye size={14} strokeWidth={2.5} className="text-gray-400" />
+                <Dropdown.Item
+                  onClick={() => onView(file)}
+                  style={{ padding: '7px 12px', fontSize: '13px', margin: '1px 4px', borderRadius: '5px', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '8px' }}
+                >
+                  <Eye size={13} style={{ color: 'var(--text-tertiary)' }} />
                   View
                 </Dropdown.Item>
-                <Dropdown.Item onClick={() => onDownload(file)} className="py-2.5 px-4 text-sm font-semibold hover:bg-[#FAFAFA] rounded-[10px] mx-1 flex items-center gap-3 transition-colors">
-                  <Download size={14} strokeWidth={2.5} className="text-gray-400" />
+                <Dropdown.Item
+                  onClick={() => onDownload(file)}
+                  style={{ padding: '7px 12px', fontSize: '13px', margin: '1px 4px', borderRadius: '5px', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '8px' }}
+                >
+                  <Download size={13} style={{ color: 'var(--text-tertiary)' }} />
                   Download
                 </Dropdown.Item>
-                <Dropdown.Item onClick={() => onToggleFavorite(file)} className="py-2.5 px-4 text-sm font-semibold hover:bg-[#FAFAFA] rounded-[10px] mx-1 flex items-center gap-3 transition-colors">
-                  <Star size={14} strokeWidth={2.5} className={isFavorited ? 'text-black fill-current' : 'text-gray-400'} />
+                <Dropdown.Item
+                  onClick={() => onToggleFavorite(file)}
+                  style={{ padding: '7px 12px', fontSize: '13px', margin: '1px 4px', borderRadius: '5px', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '8px' }}
+                >
+                  <Star size={13} style={{ color: isFavorited ? '#F59E0B' : 'var(--text-tertiary)', fill: isFavorited ? '#F59E0B' : 'none' }} />
                   {isFavorited ? 'Unfavorite' : 'Favorite'}
                 </Dropdown.Item>
               </>
             )}
             {isTrash && canDelete && (
-              <Dropdown.Item onClick={() => onRestore(file)} className="py-2.5 px-4 text-sm font-semibold hover:bg-[#FAFAFA] rounded-[10px] mx-1 flex items-center gap-3 transition-colors">
-                <RotateCcw size={14} strokeWidth={2.5} className="text-gray-400" />
+              <Dropdown.Item
+                onClick={() => onRestore(file)}
+                style={{ padding: '7px 12px', fontSize: '13px', margin: '1px 4px', borderRadius: '5px', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '8px' }}
+              >
+                <RotateCcw size={13} style={{ color: 'var(--text-tertiary)' }} />
                 Restore
               </Dropdown.Item>
             )}
             {canDelete && (
               <>
-                <div className="h-px bg-[#F5F5F5] my-2" />
-                <Dropdown.Item onClick={() => onDelete(file)} className="py-2.5 px-4 text-sm font-bold text-red-500 hover:bg-red-50 rounded-[10px] mx-1 flex items-center gap-3 transition-colors">
-                  <Trash2 size={14} strokeWidth={2.5} />
-                  {isTrash ? 'Permanently Delete' : 'Move to Trash'}
+                <div style={{ height: '1px', background: 'var(--border)', margin: '3px 0' }} />
+                <Dropdown.Item
+                  onClick={() => onDelete(file)}
+                  style={{ padding: '7px 12px', fontSize: '13px', margin: '1px 4px', borderRadius: '5px', color: '#EF4444', display: 'flex', alignItems: 'center', gap: '8px' }}
+                >
+                  <Trash2 size={13} />
+                  {isTrash ? 'Delete forever' : 'Move to trash'}
                 </Dropdown.Item>
               </>
             )}

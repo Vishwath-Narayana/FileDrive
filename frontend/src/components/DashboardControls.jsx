@@ -1,4 +1,4 @@
-import { Search, Upload, Grid3x3, List, Filter, ChevronDown, Plus } from 'lucide-react';
+import { Search, Grid3x3, List, ChevronDown, Plus } from 'lucide-react';
 import { Dropdown } from 'react-bootstrap';
 import { useAuth } from '../context/AuthContext';
 
@@ -13,70 +13,146 @@ const DashboardControls = ({
   userRole
 }) => {
   const canUpload = userRole === 'admin' || userRole === 'editor';
+  const isViewer = userRole === 'viewer';
 
   return (
-    <div className="mb-10 animate-in fade-in slide-in-from-top-4 duration-500">
-      <div className="flex items-center gap-4">
-        <div className="flex-1 relative group">
-          <Search className="absolute left-5 top-1/2 transform -translate-y-1/2 text-gray-300 group-focus-within:text-black transition-colors" size={20} />
-          <input
-            type="text"
-            placeholder="Search documents, images..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="input-field pl-14 py-3.5 shadow-sm"
-          />
-        </div>
+    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', height: '36px' }}>
+      {/* Search */}
+      <div style={{ flex: 1, maxWidth: '320px', position: 'relative' }}>
+        <Search
+          size={13}
+          style={{
+            position: 'absolute', left: '10px', top: '50%',
+            transform: 'translateY(-50%)', color: 'var(--text-tertiary)',
+            pointerEvents: 'none',
+          }}
+        />
+        <input
+          type="text"
+          placeholder="Search files..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          style={{
+            width: '100%', height: '32px',
+            padding: '0 12px 0 30px',
+            background: 'var(--bg-surface)',
+            border: '1px solid var(--border)',
+            borderRadius: '6px',
+            fontFamily: 'inherit', fontSize: '13px',
+            color: 'var(--text-primary)',
+            outline: 'none',
+            transition: 'border-color 150ms ease, box-shadow 150ms ease',
+            boxSizing: 'border-box',
+          }}
+          onFocus={e => { e.target.style.borderColor = 'var(--text-primary)'; e.target.style.boxShadow = '0 0 0 2px rgba(26,26,26,0.08)'; }}
+          onBlur={e => { e.target.style.borderColor = 'var(--border)'; e.target.style.boxShadow = 'none'; }}
+        />
+      </div>
 
-        <div className="flex items-center gap-1.5 p-1.5 bg-white border border-[#F0F0F0] rounded-[16px] shadow-sm">
-          <button
-            onClick={() => setViewMode('grid')}
-            className={`p-2.5 rounded-[12px] transition-all duration-300 ${viewMode === 'grid' ? 'bg-black text-white shadow-lg shadow-black/10' : 'text-gray-400 hover:text-black'}`}
+      {/* View toggle — grid / list */}
+      <div
+        style={{
+          display: 'flex',
+          border: '1px solid var(--border)',
+          borderRadius: '6px',
+          overflow: 'hidden',
+          background: 'var(--bg-surface)',
+        }}
+      >
+        <button
+          onClick={() => setViewMode('grid')}
+          title="Grid view"
+          style={{
+            width: '32px', height: '32px',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            border: 'none', cursor: 'pointer',
+            background: viewMode === 'grid' ? '#EFEFED' : 'transparent',
+            color: viewMode === 'grid' ? 'var(--text-primary)' : 'var(--text-tertiary)',
+            transition: 'background 150ms ease, color 150ms ease',
+          }}
+        >
+          <Grid3x3 size={15} strokeWidth={1.75} />
+        </button>
+        <button
+          onClick={() => setViewMode('table')}
+          title="List view"
+          style={{
+            width: '32px', height: '32px',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            border: 'none', borderLeft: '1px solid var(--border)', cursor: 'pointer',
+            background: viewMode === 'table' ? '#EFEFED' : 'transparent',
+            color: viewMode === 'table' ? 'var(--text-primary)' : 'var(--text-tertiary)',
+            transition: 'background 150ms ease, color 150ms ease',
+          }}
+        >
+          <List size={15} strokeWidth={1.75} />
+        </button>
+      </div>
+
+      {/* Type filter */}
+      <Dropdown>
+        <Dropdown.Toggle
+          variant="link"
+          id="type-filter"
+          className="text-decoration-none p-0 border-0 bg-transparent"
+        >
+          <div
+            className="flex items-center gap-1.5"
+            style={{
+              height: '32px', padding: '0 10px',
+              background: 'var(--bg-surface)',
+              border: '1px solid var(--border)',
+              borderRadius: '6px', cursor: 'pointer',
+            }}
           >
-            <Grid3x3 size={20} strokeWidth={viewMode === 'grid' ? 2.5 : 2} />
-          </button>
-          <button
-            onClick={() => setViewMode('table')}
-            className={`p-2.5 rounded-[12px] transition-all duration-300 ${viewMode === 'table' ? 'bg-black text-white shadow-lg shadow-black/10' : 'text-gray-400 hover:text-black'}`}
-          >
-            <List size={20} strokeWidth={viewMode === 'table' ? 2.5 : 2} />
-          </button>
-        </div>
+            <span style={{ fontSize: '13px', fontWeight: 400, color: 'var(--text-primary)' }}>
+              {typeFilter === 'all' ? 'All types' : typeFilter.charAt(0).toUpperCase() + typeFilter.slice(1)}
+            </span>
+            <ChevronDown size={13} style={{ color: 'var(--text-tertiary)' }} strokeWidth={2} />
+          </div>
+        </Dropdown.Toggle>
 
-        <Dropdown>
-          <Dropdown.Toggle 
-            variant="light" 
-            id="type-filter" 
-            className="flex items-center gap-3 bg-white border border-[#F0F0F0] text-black px-6 py-3.5 rounded-[16px] text-sm font-bold hover:bg-[#FAFAFA] transition-all shadow-sm"
-          >
-            <Filter size={18} className="text-gray-400" />
-            <span className="tracking-tight">{typeFilter === 'all' ? 'All Types' : typeFilter.charAt(0).toUpperCase() + typeFilter.slice(1)}</span>
-            <ChevronDown size={14} className="text-gray-300 ml-1" strokeWidth={2.5} />
-          </Dropdown.Toggle>
+        <Dropdown.Menu
+          className="shadow-lg py-1 mt-1"
+          style={{
+            border: '1px solid var(--border)',
+            borderRadius: '8px',
+            minWidth: '150px',
+            background: 'var(--bg-surface)',
+          }}
+        >
+          {['all', 'image', 'csv', 'pdf'].map((type) => (
+            <Dropdown.Item
+              key={type}
+              onClick={() => setTypeFilter(type)}
+              style={{
+                padding: '7px 12px', fontSize: '13px',
+                margin: '1px 4px', borderRadius: '5px',
+                background: typeFilter === type ? 'var(--bg-hover)' : 'transparent',
+                color: typeFilter === type ? 'var(--text-primary)' : 'var(--text-secondary)',
+                fontWeight: typeFilter === type ? 500 : 400,
+              }}
+            >
+              {type === 'all' ? 'All files' : type.charAt(0).toUpperCase() + type.slice(1) + 's'}
+            </Dropdown.Item>
+          ))}
+        </Dropdown.Menu>
+      </Dropdown>
 
-          <Dropdown.Menu className="shadow-2xl border border-[#F0F0F0] py-2 rounded-[20px] min-w-[200px] mt-3 animate-in fade-in slide-in-from-top-2 duration-300 overflow-hidden">
-            <div className="px-4 py-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Filter by Type</div>
-            {['all', 'image', 'csv', 'pdf'].map((type) => (
-              <Dropdown.Item 
-                key={type}
-                onClick={() => setTypeFilter(type)} 
-                className={`py-2.5 px-4 text-sm font-semibold transition-all mx-1 rounded-[10px] ${
-                  typeFilter === type ? 'bg-[#F5F5F5] text-black' : 'text-gray-500 hover:bg-[#FAFAFA] hover:text-black'
-                }`}
-              >
-                {type === 'all' ? 'All Files' : type.charAt(0).toUpperCase() + type.slice(1) + 's'}
-              </Dropdown.Item>
-            ))}
-          </Dropdown.Menu>
-        </Dropdown>
-
-        {canUpload && (
-          <button onClick={onUpload} className="btn-primary py-3.5 px-7">
-            <Plus size={20} strokeWidth={3} />
+      {/* Upload button */}
+      {canUpload ? (
+        <button onClick={onUpload} className="btn-primary" style={{ gap: '4px' }}>
+          <Plus size={14} strokeWidth={2.5} />
+          Upload
+        </button>
+      ) : isViewer ? (
+        <div title="Viewers cannot upload files" style={{ cursor: 'not-allowed' }}>
+          <button disabled className="btn-primary" style={{ gap: '4px', pointerEvents: 'none' }}>
+            <Plus size={14} strokeWidth={2.5} />
             Upload
           </button>
-        )}
-      </div>
+        </div>
+      ) : null}
     </div>
   );
 };

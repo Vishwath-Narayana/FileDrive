@@ -6,6 +6,13 @@ import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../services/supabaseClient';
 
+/* Role badge helper */
+const RoleBadge = ({ role }) => (
+  <span className={`role-badge role-badge-${role}`}>
+    {role.charAt(0).toUpperCase() + role.slice(1)}
+  </span>
+);
+
 const ManageOrgModal = ({ show, onHide }) => {
   const { user, currentOrganization, refreshOrganizations, switchOrganization, organizations } = useAuth();
   const [members, setMembers] = useState([]);
@@ -16,9 +23,8 @@ const ManageOrgModal = ({ show, onHide }) => {
   const [deletingOrg, setDeletingOrg] = useState(false);
   const [inviteRole, setInviteRole] = useState('viewer');
   const [sending, setSending] = useState(false);
-  const [inviteSuccess, setInviteSuccess] = useState(null); // {email}
+  const [inviteSuccess, setInviteSuccess] = useState(null);
   
-  // Custom confirmation modal states
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [confirmOrgName, setConfirmOrgName] = useState('');
   const [memberToRemove, setMemberToRemove] = useState(null);
@@ -88,7 +94,6 @@ const ManageOrgModal = ({ show, onHide }) => {
 
     try {
       setSending(true);
-      // 1. Create invitation in MongoDB → get token
       const response = await api.post(`/organizations/${currentOrganization._id}/invitations`, {
         email: inviteEmail,
         role: inviteRole
@@ -97,12 +102,11 @@ const ManageOrgModal = ({ show, onHide }) => {
       const token = response.data.token;
       const inviteLink = `${window.location.origin}/accept-invite?token=${token}`;
 
-      // 2. Send Supabase Magic Link with invite token embedded in redirect URL
       const { error: otpError } = await supabase.auth.signInWithOtp({
         email: inviteEmail,
         options: {
           emailRedirectTo: inviteLink,
-          shouldCreateUser: true  // handles both new + existing users
+          shouldCreateUser: true
         }
       });
 
@@ -148,13 +152,9 @@ const ManageOrgModal = ({ show, onHide }) => {
       await api.delete(`/organizations/${currentOrganization._id}`);
       toast.success('Organization deleted successfully');
 
-      // Clear stale org from localStorage before refreshing
       localStorage.removeItem('currentOrganization');
-
-      // Refresh the org list (deleted org will be gone)
       await refreshOrganizations();
 
-      // Switch to personal org (or first available org)
       const remainingOrgs = organizations.filter(o => o._id !== currentOrganization._id);
       const fallback =
         remainingOrgs.find(o => o._id === user?.personalOrganization?.toString()) ||
@@ -167,7 +167,7 @@ const ManageOrgModal = ({ show, onHide }) => {
 
       setShowDeleteConfirm(false);
       setConfirmOrgName('');
-      onHide(); // Close ManageOrgModal
+      onHide();
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to delete organization');
     } finally {
@@ -181,96 +181,175 @@ const ManageOrgModal = ({ show, onHide }) => {
   const isPersonal =
     user?.personalOrganization?.toString() === currentOrganization?._id?.toString();
 
+  /* ── Style helpers ── */
+  const modalBody = {
+    background: 'var(--bg-surface)',
+    borderRadius: '16px',
+    padding: '24px',
+    boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
+    border: '1px solid var(--border)',
+  };
+
+  const memberRowStyle = {
+    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+    height: '44px', padding: '0 8px',
+    borderRadius: '6px', transition: 'background 100ms ease',
+    cursor: 'default',
+  };
+
   return (
     <Modal show={show} onHide={onHide} size="lg" centered className="premium-modal">
-      <div className="p-8">
-        <div className="flex items-center justify-between mb-8">
+      <div style={modalBody}>
+        {/* Header */}
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '20px' }}>
           <div>
-            <h2 className="text-2xl font-bold text-black mb-1 tracking-tight">Manage Organization</h2>
-            <p className="text-sm font-medium text-gray-400">Workspace Settings & Members</p>
+            <h2 style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>
+              Manage organization
+            </h2>
+            <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: '2px 0 0' }}>
+              {currentOrganization?.name}
+            </p>
           </div>
-          <button 
-            onClick={onHide} 
-            className="w-10 h-10 flex items-center justify-center rounded-full border border-gray-200 text-gray-400 hover:text-black hover:border-black transition-all duration-300 group"
+          <button
+            onClick={onHide}
+            style={{
+              width: '28px', height: '28px', borderRadius: '6px',
+              border: 'none', background: 'transparent',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: 'var(--text-tertiary)', cursor: 'pointer',
+              transition: 'background 150ms ease',
+            }}
+            onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
+            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
           >
-            <X size={20} className="group-hover:rotate-90 transition-transform duration-300" />
+            <X size={14} />
           </button>
         </div>
 
-        {/* Email Sent Success Banner — no raw link */}
+        {/* Invite success banner */}
         {inviteSuccess && (
-          <div className="mb-6 p-5 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-[20px] animate-in fade-in slide-in-from-top-2 duration-300">
-            <div className="flex items-start gap-4">
-              <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
-                <Mail size={18} className="text-green-600" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-bold text-green-900 mb-0.5">Invitation sent!</p>
-                <p className="text-xs text-green-700">A magic link was emailed to <span className="font-bold">{inviteSuccess.email}</span>. They'll join automatically after clicking it.</p>
-              </div>
-              <button onClick={() => setInviteSuccess(null)} className="p-1 text-green-400 hover:text-green-700">
-                <X size={16} />
-              </button>
+          <div
+            style={{
+              display: 'flex', alignItems: 'flex-start', gap: '10px',
+              padding: '12px 14px', marginBottom: '16px',
+              background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: '8px',
+            }}
+          >
+            <Mail size={15} style={{ color: '#22C55E', flexShrink: 0, marginTop: '1px' }} />
+            <div style={{ flex: 1 }}>
+              <p style={{ fontSize: '13px', fontWeight: 500, color: '#15803D', margin: 0 }}>Invitation sent!</p>
+              <p style={{ fontSize: '12px', color: '#166534', margin: '2px 0 0' }}>
+                A magic link was emailed to <strong>{inviteSuccess.email}</strong>. They'll join automatically after clicking it.
+              </p>
             </div>
+            <button onClick={() => setInviteSuccess(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#22C55E', padding: 0, display: 'flex' }}>
+              <X size={14} />
+            </button>
           </div>
         )}
 
-        <Tabs defaultActiveKey="members" className="premium-tabs mb-8 border-b border-[#EDEDED]">
+        <Tabs defaultActiveKey="members" className="premium-tabs mb-5 border-b border-[--border]">
+          {/* ── Members Tab ── */}
           <Tab eventKey="members" title="Members" className="pt-2">
-            <div className="space-y-3">
+            <div>
               {loading ? (
-                <div className="space-y-3">
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   {[...Array(3)].map((_, i) => (
-                    <div key={i} className="flex items-center justify-between p-4 bg-white border border-[#EDEDED] rounded-[16px] animate-pulse">
-                      <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-full bg-gray-100" />
-                        <div>
-                          <div className="h-3.5 bg-gray-100 rounded w-24 mb-2" />
-                          <div className="h-2.5 bg-gray-50 rounded w-32" />
-                        </div>
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '12px', height: '44px' }}>
+                      <div className="skeleton-shimmer" style={{ width: '28px', height: '28px', borderRadius: '50%', flexShrink: 0 }} />
+                      <div style={{ flex: 1 }}>
+                        <div className="skeleton-shimmer" style={{ height: '13px', width: '100px', borderRadius: '4px', marginBottom: '4px' }} />
+                        <div className="skeleton-shimmer" style={{ height: '11px', width: '150px', borderRadius: '4px' }} />
                       </div>
-                      <div className="h-8 bg-gray-50 rounded-full w-20" />
+                      <div className="skeleton-shimmer" style={{ height: '22px', width: '60px', borderRadius: '4px' }} />
                     </div>
                   ))}
                 </div>
               ) : members.length === 0 ? (
-                <div className="text-center py-12 text-gray-400 text-sm">No members found</div>
+                <p style={{ textAlign: 'center', padding: '32px 0', fontSize: '13px', color: 'var(--text-tertiary)' }}>No members found</p>
               ) : (
                 members.filter(m => m.user).map((member) => (
                   <div
                     key={member.user?._id || member.user}
-                    className="flex items-center justify-between p-4 bg-white border border-[#EDEDED] rounded-[16px] hover:border-black hover:shadow-sm transition-all duration-200"
+                    style={memberRowStyle}
+                    onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                   >
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-full bg-black text-white flex items-center justify-center text-xs font-bold ring-2 ring-gray-50">
+                    {/* Avatar + name */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <div
+                        style={{
+                          width: '28px', height: '28px', borderRadius: '50%',
+                          background: '#E8E8E6', color: 'var(--text-secondary)',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          fontSize: '11px', fontWeight: 500, flexShrink: 0,
+                        }}
+                      >
                         {member.user?.name?.charAt(0).toUpperCase() || 'U'}
                       </div>
                       <div>
-                        <div className="text-sm font-bold text-black">{member.user?.name || 'Unknown User'}</div>
-                        <div className="text-[11px] font-medium text-gray-400 uppercase tracking-tight">{member.user?.email || ''}</div>
+                        <div style={{ fontSize: '13px', fontWeight: 500, color: 'var(--text-primary)' }}>
+                          {member.user?.name || 'Unknown User'}
+                        </div>
+                        <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                          {member.user?.email || ''}
+                        </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3">
+
+                    {/* Role + actions */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <Dropdown align="end">
-                        <Dropdown.Toggle variant="light" size="sm" className="flex items-center gap-2 bg-gray-50 border-0 text-[11px] font-bold text-gray-600 px-4 py-2 rounded-full hover:bg-black hover:text-white transition-all duration-200">
-                          {member.role.toUpperCase()}
-                          <ChevronDown size={12} />
+                        <Dropdown.Toggle
+                          variant="link"
+                          size="sm"
+                          className="text-decoration-none p-0 border-0 bg-transparent"
+                        >
+                          <div
+                            style={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}
+                          >
+                            <RoleBadge role={member.role} />
+                            <ChevronDown size={11} style={{ color: 'var(--text-tertiary)' }} />
+                          </div>
                         </Dropdown.Toggle>
 
-                        <Dropdown.Menu className="shadow-2xl border border-[#EDEDED] py-2 rounded-[12px] min-w-[140px] mt-1">
-                          <Dropdown.Item onClick={() => handleRoleChange(member.user?._id || member.user, 'admin')} className="py-2 px-4 text-xs font-bold hover:bg-gray-50 rounded-[8px] mx-1">ADMIN</Dropdown.Item>
-                          <Dropdown.Item onClick={() => handleRoleChange(member.user?._id || member.user, 'editor')} className="py-2 px-4 text-xs font-bold hover:bg-gray-50 rounded-[8px] mx-1">EDITOR</Dropdown.Item>
-                          <Dropdown.Item onClick={() => handleRoleChange(member.user?._id || member.user, 'viewer')} className="py-2 px-4 text-xs font-bold hover:bg-gray-50 rounded-[8px] mx-1">VIEWER</Dropdown.Item>
+                        <Dropdown.Menu
+                          className="shadow-lg py-1"
+                          style={{
+                            border: '1px solid var(--border)', borderRadius: '8px',
+                            minWidth: '130px', background: 'var(--bg-surface)',
+                          }}
+                        >
+                          {['admin', 'editor', 'viewer'].map(role => (
+                            <Dropdown.Item
+                              key={role}
+                              onClick={() => handleRoleChange(member.user?._id || member.user, role)}
+                              style={{
+                                padding: '7px 12px', fontSize: '13px', margin: '1px 4px', borderRadius: '5px',
+                                color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '8px',
+                              }}
+                            >
+                              <RoleBadge role={role} />
+                            </Dropdown.Item>
+                          ))}
                         </Dropdown.Menu>
                       </Dropdown>
 
                       {isOwner && member.user?._id !== user?._id && (
                         <button
                           onClick={() => handleRemoveMember(member)}
-                          className="w-9 h-9 flex items-center justify-center text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-full transition-all duration-200 group/delete border border-transparent hover:border-red-100"
                           title="Remove member"
+                          style={{
+                            width: '28px', height: '28px', borderRadius: '4px',
+                            border: 'none', background: 'transparent',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            color: 'var(--text-tertiary)', cursor: 'pointer',
+                            transition: 'background 150ms ease, color 150ms ease',
+                          }}
+                          onMouseEnter={e => { e.currentTarget.style.background = '#FEF2F2'; e.currentTarget.style.color = '#EF4444'; }}
+                          onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-tertiary)'; }}
                         >
-                          <Trash2 size={16} className="group-hover/delete:scale-110 transition-transform" />
+                          <Trash2 size={13} />
                         </button>
                       )}
                     </div>
@@ -280,53 +359,56 @@ const ManageOrgModal = ({ show, onHide }) => {
             </div>
           </Tab>
           
-          <Tab eventKey="invitations" title="Pending Invites" className="pt-2">
-            <div className="mb-6">
+          {/* ── Pending Invites Tab ── */}
+          <Tab eventKey="invitations" title="Pending invites" className="pt-2">
+            <div style={{ marginBottom: '16px' }}>
               {!showInviteForm ? (
-                <button
-                  onClick={() => setShowInviteForm(true)}
-                  className="btn-primary hover:scale-[1.02] active:scale-95"
-                >
-                  <UserPlus size={16} strokeWidth={2.5} />
-                  Invite Member
+                <button onClick={() => setShowInviteForm(true)} className="btn-primary" style={{ gap: '6px' }}>
+                  <UserPlus size={14} strokeWidth={2} />
+                  Invite member
                 </button>
               ) : (
-                <form onSubmit={handleSendInvitation} className="space-y-5 p-6 bg-gray-50/50 border border-[#EDEDED] rounded-[20px] animate-in fade-in slide-in-from-top-2 duration-300">
+                <form
+                  onSubmit={handleSendInvitation}
+                  style={{
+                    display: 'flex', flexDirection: 'column', gap: '14px',
+                    padding: '16px',
+                    background: 'var(--bg-base)', border: '1px solid var(--border)',
+                    borderRadius: '10px',
+                  }}
+                >
                   <div>
-                    <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">
-                      Email Address
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 500, color: 'var(--text-primary)', marginBottom: '6px' }}>
+                      Email address
                     </label>
                     <input
                       type="email"
                       value={inviteEmail}
                       onChange={(e) => setInviteEmail(e.target.value)}
-                      className="input-field bg-white"
+                      className="input-field"
                       placeholder="teammate@company.com"
                       autoFocus
                     />
                   </div>
                   <div>
-                    <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">
-                      Permissions Role
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 500, color: 'var(--text-primary)', marginBottom: '6px' }}>
+                      Role
                     </label>
                     <select
                       value={inviteRole}
                       onChange={(e) => setInviteRole(e.target.value)}
-                      className="input-field bg-white appearance-none"
+                      className="input-field"
+                      style={{ appearance: 'none' }}
                     >
-                      <option value="viewer">Viewer (Read-only)</option>
-                      <option value="editor">Editor (Can upload/edit)</option>
-                      <option value="admin">Admin (Full Control)</option>
+                      <option value="viewer">Viewer (read-only)</option>
+                      <option value="editor">Editor (can upload/edit)</option>
+                      <option value="admin">Admin (full control)</option>
                     </select>
                   </div>
-                  <div className="flex gap-3 pt-2">
+                  <div style={{ display: 'flex', gap: '8px' }}>
                     <button
                       type="button"
-                      onClick={() => {
-                        setShowInviteForm(false);
-                        setInviteEmail('');
-                        setInviteRole('viewer');
-                      }}
+                      onClick={() => { setShowInviteForm(false); setInviteEmail(''); setInviteRole('viewer'); }}
                       className="btn-secondary"
                       disabled={sending}
                     >
@@ -338,180 +420,266 @@ const ManageOrgModal = ({ show, onHide }) => {
                       disabled={sending || !inviteEmail.trim()}
                     >
                       {sending ? (
-                        <span className="flex items-center gap-2">
-                          <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <div style={{ width: '12px', height: '12px', border: '2px solid rgba(255,255,255,0.4)', borderTopColor: 'white', borderRadius: '50%', animation: 'spin 0.6s linear infinite' }} />
                           Sending...
                         </span>
-                      ) : 'Send Invitation'}
+                      ) : 'Send invitation'}
                     </button>
                   </div>
                 </form>
               )}
             </div>
 
-            <div className="space-y-3 mt-8">
-              <h4 className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-4">Pending Access Requests</h4>
+            <div>
+              <p style={{ fontSize: '11px', fontWeight: 500, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '10px' }}>
+                Pending invites
+              </p>
               {invitations.length === 0 ? (
-                <div className="text-center py-12 bg-white border border-dashed border-[#EDEDED] rounded-[20px]">
-                  <div className="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-3">
-                    <Mail size={20} className="text-gray-300" />
-                  </div>
-                  <p className="text-sm font-medium text-gray-400">No active invitations</p>
-                  <p className="text-xs text-gray-300 mt-1">Invite team members to collaborate</p>
+                <div
+                  style={{
+                    textAlign: 'center', padding: '32px 0',
+                    border: '1px dashed var(--border)', borderRadius: '10px',
+                  }}
+                >
+                  <Mail size={20} style={{ color: 'var(--text-tertiary)', margin: '0 auto 8px' }} />
+                  <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: 0 }}>No active invitations</p>
+                  <p style={{ fontSize: '12px', color: 'var(--text-tertiary)', margin: '3px 0 0' }}>Invite team members to collaborate</p>
                 </div>
               ) : (
                 invitations.map((invitation) => (
                   <div
                     key={invitation._id}
-                    className="flex items-center justify-between p-4 bg-white border border-[#EDEDED] rounded-[16px] hover:shadow-sm transition-all duration-200"
+                    style={{
+                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                      height: '44px', padding: '0 8px', borderRadius: '6px',
+                      transition: 'background 100ms ease',
+                    }}
+                    onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                   >
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-400">
-                        <Mail size={18} />
-                      </div>
-                      <div>
-                        <div className="text-sm font-bold text-black">{invitation.email}</div>
-                        <div className="text-[10px] font-bold text-gray-400 uppercase tracking-tight">
-                          {invitation.role} • <span className={invitation.status === 'pending' ? 'text-amber-500' : invitation.status === 'accepted' ? 'text-green-500' : 'text-gray-400'}>{invitation.status}</span>
-                        </div>
+                    <div>
+                      <div style={{ fontSize: '13px', fontWeight: 400, color: 'var(--text-primary)' }}>{invitation.email}</div>
+                      <div style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>
+                        {invitation.role} ·{' '}
+                        <span style={{
+                          color: invitation.status === 'pending' ? '#F59E0B' : invitation.status === 'accepted' ? '#22C55E' : 'var(--text-tertiary)'
+                        }}>
+                          {invitation.status}
+                        </span>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      {invitation.status === 'pending' && (
-                        <span className="text-[10px] font-bold text-amber-500 bg-amber-50 px-3 py-1 rounded-full uppercase tracking-wide">Pending</span>
-                      )}
-                      <button
-                        onClick={() => handleRevokeInvitation(invitation._id)}
-                        className="p-2 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-full transition-all duration-200"
-                        title="Revoke invitation"
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
+                    <button
+                      onClick={() => handleRevokeInvitation(invitation._id)}
+                      title="Revoke invitation"
+                      style={{
+                        width: '28px', height: '28px', borderRadius: '4px',
+                        border: 'none', background: 'transparent',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        color: 'var(--text-tertiary)', cursor: 'pointer',
+                        transition: 'background 150ms ease, color 150ms ease',
+                      }}
+                      onMouseEnter={e => { e.currentTarget.style.background = '#FEF2F2'; e.currentTarget.style.color = '#EF4444'; }}
+                      onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-tertiary)'; }}
+                    >
+                      <Trash2 size={13} />
+                    </button>
                   </div>
                 ))
               )}
             </div>
           </Tab>
 
+          {/* ── Settings Tab (owner only, non-personal) ── */}
           {isOwner && !isPersonal && (
             <Tab eventKey="settings" title="Settings" className="pt-2">
-              <div className="relative overflow-hidden p-8 bg-gradient-to-br from-red-50 via-white to-[#FFF5F5] border border-red-100 rounded-[28px] shadow-sm">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-red-100/20 rounded-full blur-3xl -translate-y-12 translate-x-12" />
-                
-                <div className="relative flex items-start gap-5">
-                  <div className="w-12 h-12 bg-red-100 rounded-2xl flex items-center justify-center flex-shrink-0 text-red-600 shadow-inner">
-                    <AlertTriangle size={24} strokeWidth={2.5} />
-                  </div>
-                  
-                  <div className="flex-1">
-                    <h4 className="text-[15px] font-bold text-red-600 mb-2">Danger Zone</h4>
-                    <p className="text-sm text-gray-600 leading-relaxed max-w-[480px] mb-8">
-                      Deleting this organization will permanently remove all associated files, folders, and member access. This action <span className="font-bold text-red-600 underline underline-offset-4">cannot be recovered</span>.
-                    </p>
-                    <div className="flex justify-end pt-4 border-t border-red-100/50">
-                      <button
-                        onClick={handleDeleteOrganization}
-                        disabled={deletingOrg}
-                        className="bg-red-600 text-white text-xs font-bold py-3 px-8 rounded-full hover:bg-red-700 hover:shadow-lg hover:shadow-red-200 active:scale-95 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-wider"
-                      >
-                        {deletingOrg ? 'Processing...' : 'Delete Organization'}
-                      </button>
-                    </div>
-                  </div>
+              <div
+                style={{
+                  border: '1px solid #FECACA',
+                  background: '#FFF5F5',
+                  borderRadius: '8px',
+                  padding: '16px',
+                }}
+              >
+                <p style={{ fontSize: '13px', fontWeight: 600, color: '#DC2626', margin: '0 0 6px' }}>
+                  Danger zone
+                </p>
+                <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: '0 0 16px', lineHeight: 1.6 }}>
+                  Deleting this organization will permanently remove all associated files, folders, and member access. This action{' '}
+                  <strong style={{ color: '#DC2626' }}>cannot be recovered</strong>.
+                </p>
+                <div style={{ paddingTop: '12px', borderTop: '1px solid #FECACA' }}>
+                  <button
+                    onClick={handleDeleteOrganization}
+                    disabled={deletingOrg}
+                    style={{
+                      height: '32px', padding: '0 14px',
+                      background: '#DC2626', color: 'white',
+                      border: 'none', borderRadius: '6px',
+                      fontSize: '12px', fontWeight: 500,
+                      cursor: deletingOrg ? 'not-allowed' : 'pointer',
+                      opacity: deletingOrg ? 0.5 : 1,
+                      transition: 'opacity 150ms ease',
+                    }}
+                  >
+                    {deletingOrg ? 'Processing...' : 'Delete organization'}
+                  </button>
                 </div>
               </div>
             </Tab>
           )}
         </Tabs>
 
-        {/* Custom Confirmation Modals */}
-        <Modal 
-          show={showRemoveMemberConfirm} 
+        {/* ── Remove Member Confirm Modal ── */}
+        <Modal
+          show={showRemoveMemberConfirm}
           onHide={() => setShowRemoveMemberConfirm(false)}
           centered
           className="confirmation-modal"
           backdropClassName="confirmation-backdrop"
         >
-          <div className="p-8 text-center bg-white rounded-[28px] overflow-hidden">
-            <div className="w-16 h-16 bg-red-50 rounded-2xl flex items-center justify-center mx-auto mb-6 text-red-500 shadow-inner">
-              <AlertTriangle size={32} strokeWidth={2.5} />
+          <div
+            style={{
+              background: 'var(--bg-surface)',
+              border: '1px solid var(--border)',
+              borderRadius: '16px',
+              padding: '24px',
+              textAlign: 'center',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
+            }}
+          >
+            <div
+              style={{
+                width: '44px', height: '44px', borderRadius: '10px',
+                background: '#FEF2F2',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                margin: '0 auto 14px',
+              }}
+            >
+              <AlertTriangle size={22} style={{ color: '#EF4444' }} strokeWidth={2} />
             </div>
-            <h3 className="text-xl font-bold text-black mb-3">Remove Member?</h3>
-            <p className="text-sm text-gray-500 mb-8 px-4 leading-relaxed">
-              Are you sure you want to remove <span className="font-bold text-black">{memberToRemove?.user?.name || 'this member'}</span>? They will lose access to all files and shared resources immediately.
+            <h3 style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-primary)', margin: '0 0 8px' }}>
+              Remove member?
+            </h3>
+            <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '0 0 20px', lineHeight: 1.6 }}>
+              Are you sure you want to remove{' '}
+              <strong style={{ color: 'var(--text-primary)' }}>{memberToRemove?.user?.name || 'this member'}</strong>?{' '}
+              They will lose access immediately.
             </p>
-            <div className="flex gap-3">
-              <button 
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button
                 onClick={() => setShowRemoveMemberConfirm(false)}
-                className="flex-1 btn-secondary text-sm font-bold py-3"
+                className="btn-secondary"
+                style={{ flex: 1, justifyContent: 'center' }}
               >
                 Cancel
               </button>
-              <button 
+              <button
                 onClick={confirmRemoveMember}
-                className="flex-1 bg-red-600 text-white text-sm font-bold py-3 rounded-full hover:bg-red-700 transition-all active:scale-95 shadow-lg shadow-red-100"
+                style={{
+                  flex: 1, height: '32px', padding: '0 14px',
+                  background: '#EF4444', color: 'white',
+                  border: 'none', borderRadius: '6px',
+                  fontSize: '13px', fontWeight: 500, cursor: 'pointer',
+                  transition: 'opacity 150ms ease',
+                }}
+                onMouseEnter={e => e.currentTarget.style.opacity = '0.85'}
+                onMouseLeave={e => e.currentTarget.style.opacity = '1'}
               >
-                Remove Access
+                Remove
               </button>
             </div>
           </div>
         </Modal>
 
-        <Modal 
-          show={showDeleteConfirm} 
-          onHide={() => {
-            setShowDeleteConfirm(false);
-            setConfirmOrgName('');
-          }}
+        {/* ── Delete Org Confirm Modal ── */}
+        <Modal
+          show={showDeleteConfirm}
+          onHide={() => { setShowDeleteConfirm(false); setConfirmOrgName(''); }}
           centered
           className="confirmation-modal"
           backdropClassName="confirmation-backdrop"
         >
-          <div className="p-10 text-center bg-white rounded-[32px] overflow-hidden border border-red-50 shadow-2xl">
-            <div className="w-20 h-20 bg-red-100/50 rounded-3xl flex items-center justify-center mx-auto mb-8 text-red-600 shadow-inner group">
-              <AlertTriangle size={40} className="group-hover:scale-110 transition-transform duration-300" strokeWidth={2.5} />
+          <div
+            style={{
+              background: 'var(--bg-surface)',
+              border: '1px solid var(--border)',
+              borderRadius: '16px',
+              padding: '24px',
+              textAlign: 'center',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
+            }}
+          >
+            <div
+              style={{
+                width: '44px', height: '44px', borderRadius: '10px',
+                background: '#FEF2F2',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                margin: '0 auto 14px',
+              }}
+            >
+              <AlertTriangle size={22} style={{ color: '#EF4444' }} strokeWidth={2} />
             </div>
-            
-            <h3 className="text-2xl font-bold text-black mb-3 tracking-tight">Delete Organization?</h3>
-            <p className="text-sm text-gray-500 mb-8 px-6 leading-relaxed">
-              This action is <span className="font-bold text-red-600">permanent</span> and cannot be undone. All data, files, and member permissions will be <span className="font-bold text-black uppercase tracking-wider text-xs">permanently deleted</span>.
+            <h3 style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-primary)', margin: '0 0 8px' }}>
+              Delete organization?
+            </h3>
+            <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '0 0 20px', lineHeight: 1.6 }}>
+              This is <strong style={{ color: '#EF4444' }}>permanent</strong> and cannot be undone. All data, files, and member permissions will be deleted.
             </p>
 
-            <div className="mb-8 text-left bg-red-50/50 p-6 rounded-[20px] border border-red-100">
-              <label className="block text-[11px] font-bold text-red-600/70 uppercase tracking-widest mb-3">
-                Type organization name to confirm
+            <div
+              style={{
+                textAlign: 'left', marginBottom: '20px',
+                background: 'var(--bg-base)', padding: '14px',
+                borderRadius: '8px', border: '1px solid var(--border)',
+              }}
+            >
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: 500, color: 'var(--text-secondary)', marginBottom: '6px' }}>
+                Type <strong style={{ color: 'var(--text-primary)' }}>{currentOrganization?.name}</strong> to confirm
               </label>
               <input
                 type="text"
                 value={confirmOrgName}
                 onChange={(e) => setConfirmOrgName(e.target.value)}
                 placeholder={currentOrganization?.name}
-                className="w-full bg-white border-2 border-red-100 rounded-xl px-4 py-3.5 text-sm font-bold text-black placeholder:text-red-200 outline-none focus:border-red-300 transition-all"
+                className="input-field"
+                style={{
+                  /* Only show red border when text is typed AND wrong */
+                  borderColor: confirmOrgName && confirmOrgName !== currentOrganization?.name
+                    ? '#EF4444'
+                    : undefined,
+                }}
               />
             </div>
 
-            <div className="flex gap-4">
-              <button 
-                onClick={() => {
-                  setShowDeleteConfirm(false);
-                  setConfirmOrgName('');
-                }}
-                className="flex-1 btn-secondary text-base font-bold py-4 hover:bg-gray-100"
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button
+                onClick={() => { setShowDeleteConfirm(false); setConfirmOrgName(''); }}
+                className="btn-secondary"
+                style={{ flex: 1, justifyContent: 'center' }}
               >
                 Cancel
               </button>
-              <button 
+              <button
                 onClick={confirmDeleteOrganization}
                 disabled={confirmOrgName !== currentOrganization?.name || deletingOrg}
-                className="flex-[1.5] bg-red-600 text-white text-base font-bold py-4 rounded-full hover:bg-red-700 disabled:opacity-30 disabled:cursor-not-allowed hover:shadow-xl hover:shadow-red-200 transition-all active:scale-95 shadow-lg shadow-red-100"
+                style={{
+                  flex: 1, height: '32px', padding: '0 14px',
+                  background: '#EF4444', color: 'white',
+                  border: 'none', borderRadius: '6px',
+                  fontSize: '13px', fontWeight: 500,
+                  cursor: (confirmOrgName !== currentOrganization?.name || deletingOrg) ? 'not-allowed' : 'pointer',
+                  opacity: (confirmOrgName !== currentOrganization?.name || deletingOrg) ? 0.35 : 1,
+                  transition: 'opacity 150ms ease',
+                }}
               >
-                {deletingOrg ? 'Deleting...' : 'Delete Permanently'}
+                {deletingOrg ? 'Deleting...' : 'Delete permanently'}
               </button>
             </div>
           </div>
         </Modal>
       </div>
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </Modal>
   );
 };

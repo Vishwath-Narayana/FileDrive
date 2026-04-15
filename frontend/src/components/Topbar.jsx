@@ -15,51 +15,105 @@ const Topbar = ({ onOpenAdminModal, onOpenCreateOrgModal, socket }) => {
     navigate('/login');
   };
 
+  const initials = user?.name
+    ? user.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
+    : '?';
+
   return (
-    <div className="h-20 glass-effect px-8 flex items-center justify-between sticky top-0 z-[40] ml-64">
-      <div className="flex items-center gap-4">
+    <div
+      className="glass-effect flex items-center justify-between sticky top-0 z-[40]"
+      style={{
+        height: '52px',
+        padding: '0 20px',
+        marginLeft: '200px',
+      }}
+    >
+      {/* Left — org switcher */}
+      <div className="flex items-center gap-3">
         <Dropdown>
           <Dropdown.Toggle
-            variant="light"
-            className="flex items-center gap-2.5 border border-[#F0F0F0] bg-white text-black hover:bg-[#FAFAFA] font-bold px-5 py-2 rounded-full transition-all duration-200 text-sm shadow-sm hover:shadow-md"
+            variant="link"
+            className="text-decoration-none p-0 border-0 bg-transparent"
             id="org-dropdown"
           >
-            <span className="max-w-[150px] truncate tracking-tight">{currentOrganization?.name || 'Select Organization'}</span>
-            <ChevronDown size={14} className="text-gray-400" strokeWidth={2.5} />
+            <div
+              className="flex items-center gap-1.5 cursor-pointer"
+              style={{
+                padding: '6px 10px',
+                borderRadius: '6px',
+                transition: 'background 150ms ease',
+              }}
+              onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+            >
+              <span style={{ fontSize: '13px', fontWeight: 500, color: 'var(--text-primary)' }} className="max-w-[180px] truncate">
+                {currentOrganization?.name || 'Select Organization'}
+              </span>
+              <ChevronDown size={14} style={{ color: 'var(--text-tertiary)', flexShrink: 0 }} strokeWidth={2} />
+            </div>
           </Dropdown.Toggle>
 
-          <Dropdown.Menu className="shadow-xl border border-[#EDEDED] py-2 rounded-[12px] min-w-[240px] mt-2 animate-in fade-in slide-in-from-top-2 duration-200">
-            <div className="px-4 py-2 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Organizations</div>
+          <Dropdown.Menu
+            className="shadow-xl py-1 mt-1"
+            style={{
+              border: '1px solid var(--border)',
+              borderRadius: '10px',
+              minWidth: '220px',
+              background: 'var(--bg-surface)',
+            }}
+          >
+            <div style={{ padding: '6px 12px 4px', fontSize: '11px', fontWeight: 500, color: 'var(--text-tertiary)', letterSpacing: '0.04em' }}>
+              Organizations
+            </div>
             {organizations.map((org) => (
               <Dropdown.Item
                 key={org._id}
                 onClick={() => switchOrganization(org)}
                 active={false}
-                className={`py-2 px-4 text-sm flex items-center transition-all duration-200 mx-1 rounded-[8px] ${
-                  currentOrganization?._id === org._id 
-                    ? 'bg-black text-white font-semibold' 
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-black'
-                }`}
+                style={{
+                  padding: '7px 12px',
+                  fontSize: '13px',
+                  margin: '1px 4px',
+                  borderRadius: '6px',
+                  background: currentOrganization?._id === org._id ? 'var(--bg-hover)' : 'transparent',
+                  color: currentOrganization?._id === org._id ? 'var(--text-primary)' : 'var(--text-secondary)',
+                  fontWeight: currentOrganization?._id === org._id ? 500 : 400,
+                  transition: 'background 100ms ease',
+                }}
               >
                 {org.name}
               </Dropdown.Item>
             ))}
-            <Dropdown.Divider className="my-2 border-[#EDEDED]" />
-            <Dropdown.Item 
+            <div style={{ height: '1px', background: 'var(--border)', margin: '4px 0' }} />
+            <Dropdown.Item
               onClick={onOpenCreateOrgModal}
-              className="py-2.5 px-4 text-sm text-gray-700 hover:bg-gray-50 flex items-center transition-all duration-200 mx-1 rounded-[8px]"
+              style={{
+                padding: '7px 12px',
+                fontSize: '13px',
+                margin: '1px 4px',
+                borderRadius: '6px',
+                color: 'var(--text-secondary)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+              }}
             >
-              <div className="w-6 h-6 rounded bg-gray-100 flex items-center justify-center mr-3 text-gray-500">
-                <Plus size={14} />
+              <div
+                style={{
+                  width: '20px', height: '20px', borderRadius: '5px',
+                  background: 'var(--bg-hover)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}
+              >
+                <Plus size={12} style={{ color: 'var(--text-secondary)' }} />
               </div>
-              Create New
+              Create new
             </Dropdown.Item>
           </Dropdown.Menu>
         </Dropdown>
-      </div>
 
-      <div className="flex items-center gap-4">
-        {currentOrganization && 
+        {/* Manage button (admin only, non-personal org) */}
+        {currentOrganization &&
          currentOrganization._id !== user?.personalOrganization?._id &&
          currentOrganization._id !== user?.personalOrganization &&
          currentOrganization.members?.find(
@@ -67,60 +121,79 @@ const Topbar = ({ onOpenAdminModal, onOpenCreateOrgModal, socket }) => {
         )?.role === 'admin' && (
           <button
             onClick={onOpenAdminModal}
-            className="text-sm font-medium text-gray-500 hover:text-black transition-all duration-200 hover:scale-105"
+            style={{
+              fontSize: '13px', fontWeight: 400, color: 'var(--text-secondary)',
+              background: 'transparent', border: 'none', cursor: 'pointer',
+              padding: '6px 10px', borderRadius: '6px', transition: 'background 150ms ease, color 150ms ease',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg-hover)'; e.currentTarget.style.color = 'var(--text-primary)'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
           >
             Manage
           </button>
         )}
-        
-        {/* Notification Bell */}
+      </div>
+
+      {/* Right — bell + avatar */}
+      <div className="flex items-center gap-2">
         <NotificationBell socket={socket} />
-        
-        {/* User Avatar + Dropdown */}
+
         <Dropdown align="end">
           <Dropdown.Toggle
             variant="link"
             className="text-decoration-none p-0 border-0 bg-transparent"
             id="user-dropdown"
           >
-            <div className="flex items-center gap-3 group">
-              <div className="w-9 h-9 rounded-full bg-gray-100 border-2 border-[#EDEDED] p-[2px] overflow-hidden transition-all duration-200 group-hover:border-black group-hover:scale-110">
-                <div className="w-full h-full rounded-full bg-black text-white flex items-center justify-center text-xs font-bold overflow-hidden">
-                  {user?.avatar ? (
-                    <img
-                      src={user.avatar}
-                      alt={user?.name}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    user?.name?.charAt(0).toUpperCase()
-                  )}
-                </div>
-              </div>
+            <div
+              style={{
+                width: '28px', height: '28px', borderRadius: '50%',
+                background: '#E8E8E6', color: 'var(--text-secondary)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: '11px', fontWeight: 500, cursor: 'pointer',
+                overflow: 'hidden',
+              }}
+            >
+              {user?.avatar ? (
+                <img
+                  src={user.avatar}
+                  alt={user?.name}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                />
+              ) : (
+                initials
+              )}
             </div>
           </Dropdown.Toggle>
 
-          <Dropdown.Menu className="shadow-2xl border border-[#EDEDED] py-2 rounded-[16px] min-w-[220px] mt-2 animate-in fade-in slide-in-from-top-2 duration-200">
-            <div className="px-4 py-3 border-b border-[#EDEDED] mb-1">
-              <div className="font-bold text-sm text-black">{user?.name}</div>
-              <div className="text-[11px] text-gray-400 mt-0.5">{user?.email}</div>
+          <Dropdown.Menu
+            className="shadow-lg py-1 mt-1"
+            style={{
+              border: '1px solid var(--border)',
+              borderRadius: '10px',
+              minWidth: '200px',
+              background: 'var(--bg-surface)',
+            }}
+          >
+            <div style={{ padding: '8px 12px 6px', borderBottom: '1px solid var(--border)', marginBottom: '4px' }}>
+              <div style={{ fontSize: '13px', fontWeight: 500, color: 'var(--text-primary)' }}>{user?.name}</div>
+              <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '2px' }}>{user?.email}</div>
             </div>
-            
-            <Dropdown.Item 
-              onClick={() => navigate('/settings')} 
-              className="py-2.5 px-4 text-sm text-gray-600 hover:bg-gray-50 hover:text-black flex items-center transition-all duration-200 mx-1 rounded-[8px]"
+
+            <Dropdown.Item
+              onClick={() => navigate('/settings')}
+              style={{ padding: '7px 12px', fontSize: '13px', margin: '1px 4px', borderRadius: '6px', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '8px' }}
             >
-              <User size={16} className="mr-3 text-gray-400" />
-              Account Settings
+              <User size={14} style={{ color: 'var(--text-tertiary)' }} />
+              Account settings
             </Dropdown.Item>
-            
-            <Dropdown.Divider className="my-2 border-[#EDEDED]" />
-            
-            <Dropdown.Item 
-              onClick={handleLogout} 
-              className="py-2.5 px-4 text-sm text-red-500 hover:bg-red-50 flex items-center transition-all duration-200 mx-1 rounded-[8px] font-medium"
+
+            <div style={{ height: '1px', background: 'var(--border)', margin: '4px 0' }} />
+
+            <Dropdown.Item
+              onClick={handleLogout}
+              style={{ padding: '7px 12px', fontSize: '13px', margin: '1px 4px', borderRadius: '6px', color: '#EF4444', display: 'flex', alignItems: 'center', gap: '8px' }}
             >
-              <LogOut size={16} className="mr-3" />
+              <LogOut size={14} />
               Sign out
             </Dropdown.Item>
           </Dropdown.Menu>

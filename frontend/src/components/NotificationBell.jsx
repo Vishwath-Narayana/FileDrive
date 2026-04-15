@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Bell, X, Check, Users, ChevronRight } from 'lucide-react';
+import { Bell, X, Check, Users } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -66,81 +66,170 @@ const NotificationBell = ({ socket }) => {
     }
   };
 
+  const formatTime = (date) => {
+    return new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  };
+
   return (
-    <div className="relative" ref={ref}>
-      {/* Bell Button */}
+    <div style={{ position: 'relative' }} ref={ref}>
+      {/* Bell button */}
       <button
         onClick={() => { setOpen(o => !o); if (!open) fetchNotifications(); }}
-        className="relative w-10 h-10 flex items-center justify-center rounded-xl border border-[#EDEDED] text-gray-400 hover:text-black hover:border-black transition-all duration-200 group"
         title="Notifications"
+        style={{
+          width: '32px', height: '32px',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          borderRadius: '6px', border: 'none',
+          background: 'transparent',
+          color: 'var(--text-secondary)',
+          cursor: 'pointer',
+          position: 'relative',
+          transition: 'background 150ms ease',
+        }}
+        onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
+        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
       >
-        <Bell size={18} className="group-hover:scale-110 transition-transform duration-200" />
+        <Bell size={16} strokeWidth={1.75} />
+
+        {/* Unread dot badge */}
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 w-5 h-5 bg-black text-white text-[9px] font-bold rounded-full flex items-center justify-center animate-in zoom-in duration-300">
-            {unreadCount > 9 ? '9+' : unreadCount}
-          </span>
+          <span
+            style={{
+              position: 'absolute', top: '6px', right: '6px',
+              width: '8px', height: '8px',
+              borderRadius: '50%', background: '#EF4444',
+              border: '1.5px solid white',
+            }}
+          />
         )}
       </button>
 
       {/* Dropdown */}
       {open && (
-        <div className="absolute right-0 top-12 w-[360px] bg-white rounded-[20px] shadow-2xl border border-[#F0F0F0] z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+        <div
+          style={{
+            position: 'absolute', right: 0, top: '40px',
+            width: '320px',
+            background: 'var(--bg-surface)',
+            border: '1px solid var(--border)',
+            borderRadius: '12px',
+            boxShadow: '0 8px 24px rgba(0,0,0,0.10)',
+            zIndex: 50,
+            overflow: 'hidden',
+          }}
+        >
           {/* Header */}
-          <div className="px-5 py-4 border-b border-[#F5F5F5] flex items-center justify-between">
+          <div
+            style={{
+              padding: '12px 16px',
+              borderBottom: '1px solid var(--border)',
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            }}
+          >
             <div>
-              <h3 className="text-sm font-bold text-black">Notifications</h3>
+              <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>
+                Notifications
+              </span>
               {unreadCount > 0 && (
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{unreadCount} unread</p>
+                <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginLeft: '8px' }}>
+                  {unreadCount} unread
+                </span>
               )}
             </div>
             <button
               onClick={() => setOpen(false)}
-              className="p-1.5 text-gray-300 hover:text-black hover:bg-gray-50 rounded-lg transition-all"
+              style={{
+                width: '24px', height: '24px', borderRadius: '4px',
+                border: 'none', background: 'transparent',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: 'var(--text-tertiary)', cursor: 'pointer',
+                transition: 'background 150ms ease',
+              }}
+              onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
             >
-              <X size={14} />
+              <X size={13} />
             </button>
           </div>
 
           {/* List */}
-          <div className="max-h-[380px] overflow-y-auto divide-y divide-[#F9F9F9]">
+          <div style={{ maxHeight: '380px', overflowY: 'auto' }}>
             {notifications.length === 0 ? (
-              <div className="text-center py-14">
-                <div className="w-14 h-14 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Bell size={22} className="text-gray-200" />
+              <div style={{ padding: '40px 16px', textAlign: 'center' }}>
+                <div
+                  style={{
+                    width: '40px', height: '40px', borderRadius: '10px',
+                    background: 'var(--bg-hover)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    margin: '0 auto 10px',
+                  }}
+                >
+                  <Bell size={18} style={{ color: 'var(--text-tertiary)' }} />
                 </div>
-                <p className="text-sm font-bold text-gray-300">All caught up!</p>
-                <p className="text-xs text-gray-200 mt-1">No notifications yet</p>
+                <p style={{ fontSize: '13px', fontWeight: 500, color: 'var(--text-primary)', margin: 0 }}>
+                  All caught up
+                </p>
+                <p style={{ fontSize: '12px', color: 'var(--text-tertiary)', margin: '4px 0 0' }}>
+                  No notifications yet
+                </p>
               </div>
             ) : (
               notifications.map(n => (
                 <div
                   key={n._id}
-                  className={`px-5 py-4 transition-colors duration-150 ${n.status === 'unread' ? 'bg-blue-50/30' : 'bg-white'}`}
+                  style={{
+                    padding: '12px 16px',
+                    borderBottom: '1px solid var(--border)',
+                    transition: 'background 100ms ease',
+                    cursor: 'default',
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                 >
-                  <div className="flex items-start gap-3">
-                    <div className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${n.type === 'invite' ? 'bg-black text-white' : 'bg-gray-100 text-gray-500'}`}>
-                      {n.type === 'invite' ? <Users size={14} /> : <Bell size={14} />}
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+                    {/* Unread indicator dot */}
+                    <div style={{ flexShrink: 0, paddingTop: '6px' }}>
+                      {n.status === 'unread' ? (
+                        <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#3B82F6' }} />
+                      ) : (
+                        <div style={{ width: '6px', height: '6px' }} />
+                      )}
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-black leading-snug">{n.message}</p>
-                      <p className="text-[10px] text-gray-400 mt-1 font-medium">
-                        {n.sender?.name && `from ${n.sender.name} · `}
-                        {new Date(n.createdAt).toLocaleDateString()}
+
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ fontSize: '12px', fontWeight: 400, color: 'var(--text-primary)', margin: 0, lineHeight: 1.5 }}>
+                        {n.message}
+                      </p>
+                      <p style={{ fontSize: '11px', color: 'var(--text-tertiary)', margin: '2px 0 0' }}>
+                        {n.sender?.name && `${n.sender.name} · `}{formatTime(n.createdAt)}
                       </p>
 
-                      {/* Invite action buttons */}
+                      {/* Invite actions */}
                       {n.type === 'invite' && n.status === 'unread' && n.token && (
-                        <div className="flex items-center gap-2 mt-3">
+                        <div style={{ display: 'flex', gap: '6px', marginTop: '8px' }}>
                           <button
                             onClick={() => handleAcceptInvite(n)}
-                            className="flex items-center gap-1.5 text-[11px] font-bold text-white bg-black px-4 py-2 rounded-full hover:bg-gray-800 transition-all duration-200"
+                            style={{
+                              height: '24px', padding: '0 10px',
+                              background: 'var(--brand)', color: 'white',
+                              border: 'none', borderRadius: '4px',
+                              fontSize: '11px', fontWeight: 500,
+                              cursor: 'pointer',
+                              display: 'flex', alignItems: 'center', gap: '4px',
+                            }}
                           >
-                            <Check size={12} strokeWidth={3} />
+                            <Check size={10} strokeWidth={3} />
                             Join
                           </button>
                           <button
                             onClick={() => markRead(n._id)}
-                            className="text-[11px] font-bold text-gray-400 hover:text-black px-3 py-2 rounded-full hover:bg-gray-50 transition-all duration-200"
+                            style={{
+                              height: '24px', padding: '0 10px',
+                              background: 'transparent', color: 'var(--text-secondary)',
+                              border: '1px solid var(--border)', borderRadius: '4px',
+                              fontSize: '11px', fontWeight: 400,
+                              cursor: 'pointer',
+                            }}
                           >
                             Dismiss
                           </button>
@@ -148,13 +237,22 @@ const NotificationBell = ({ socket }) => {
                       )}
                     </div>
 
+                    {/* Mark read (non-invite unread) */}
                     {n.status === 'unread' && n.type !== 'invite' && (
                       <button
                         onClick={() => markRead(n._id)}
-                        className="p-1.5 text-gray-300 hover:text-black hover:bg-gray-50 rounded-lg transition-all flex-shrink-0"
                         title="Mark as read"
+                        style={{
+                          width: '24px', height: '24px', borderRadius: '4px',
+                          border: 'none', background: 'transparent',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          color: 'var(--text-tertiary)', cursor: 'pointer', flexShrink: 0,
+                          transition: 'background 150ms ease',
+                        }}
+                        onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
+                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                       >
-                        <Check size={12} strokeWidth={3} />
+                        <Check size={11} strokeWidth={2.5} />
                       </button>
                     )}
                   </div>
@@ -163,17 +261,24 @@ const NotificationBell = ({ socket }) => {
             )}
           </div>
 
+          {/* Footer */}
           {notifications.length > 0 && (
-            <div className="px-5 py-3 border-t border-[#F5F5F5]">
+            <div style={{ padding: '10px 16px', borderTop: '1px solid var(--border)' }}>
               <button
                 onClick={async () => {
                   for (const n of notifications.filter(n => n.status === 'unread')) {
                     await markRead(n._id);
                   }
                 }}
-                className="text-[11px] font-bold text-gray-400 hover:text-black transition-colors flex items-center gap-1"
+                style={{
+                  fontSize: '12px', fontWeight: 400, color: 'var(--text-secondary)',
+                  background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+                  transition: 'color 150ms ease',
+                }}
+                onMouseEnter={e => e.currentTarget.style.color = 'var(--text-primary)'}
+                onMouseLeave={e => e.currentTarget.style.color = 'var(--text-secondary)'}
               >
-                Mark all as read <ChevronRight size={12} />
+                Mark all as read
               </button>
             </div>
           )}

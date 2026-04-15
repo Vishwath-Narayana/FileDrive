@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-hot-toast';
-import { Eye, EyeOff, ArrowRight } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 import logo from '../assets/logo.png';
 
 const Register = () => {
@@ -53,26 +53,50 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] flex flex-col items-center justify-center px-4">
+    <div
+      style={{
+        minHeight: '100vh',
+        background: 'var(--bg-base)',
+        display: 'flex', flexDirection: 'column',
+        alignItems: 'center', justifyContent: 'center',
+        padding: '24px 16px',
+      }}
+    >
       <div className="animate-slide-up">
-        <Link to="/" className="mb-10 text-center block cursor-pointer group">
-          <div className="relative inline-block">
-            <img src={logo} alt="FileDrive Logo" className="w-12 h-12 object-cover rounded-xl mx-auto mb-4 shadow-lg transform group-hover:-translate-y-1 group-hover:shadow-xl transition-all duration-300" />
-          </div>
-          <h1 className="text-2xl font-bold tracking-tight text-black">FileDrive</h1>
-          <p className="text-xs text-gray-400 mt-1 font-medium">Secure file management for teams</p>
+        {/* Logo */}
+        <Link to="/" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '24px', textDecoration: 'none' }}>
+          <img
+            src={logo}
+            alt="FileDrive Logo"
+            style={{ width: '32px', height: '32px', objectFit: 'cover', borderRadius: '8px', marginBottom: '10px' }}
+          />
+          <span style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text-primary)' }}>FileDrive</span>
         </Link>
 
-        <div className="w-full max-w-[400px] bg-white p-10 rounded-[24px] shadow-xl border border-[#EDEDED] hover:shadow-2xl transition-shadow duration-500">
-          <div className="mb-8">
-            <h2 className="text-xl font-bold text-black mb-1">Create account</h2>
-            <p className="text-sm text-gray-400">Join your organization on FileDrive</p>
+        {/* Card */}
+        <div
+          style={{
+            width: '360px', maxWidth: '90vw',
+            background: 'var(--bg-surface)',
+            border: '1px solid var(--border)',
+            borderRadius: '16px',
+            padding: '32px',
+          }}
+        >
+          <div style={{ marginBottom: '24px' }}>
+            <h1 style={{ fontSize: '18px', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>
+              Create account
+            </h1>
+            <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '4px 0 0' }}>
+              Join your organization on FileDrive
+            </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            {/* Name */}
             <div>
-              <label htmlFor="name" className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">
-                Full Name
+              <label htmlFor="name" style={{ display: 'block', fontSize: '12px', fontWeight: 500, color: 'var(--text-primary)', marginBottom: '6px' }}>
+                Full name
               </label>
               <input
                 id="name"
@@ -85,9 +109,10 @@ const Register = () => {
               />
             </div>
 
+            {/* Email */}
             <div>
-              <label htmlFor="email" className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">
-                Email Address
+              <label htmlFor="email" style={{ display: 'block', fontSize: '12px', fontWeight: 500, color: 'var(--text-primary)', marginBottom: '6px' }}>
+                Email address
               </label>
               <input
                 id="email"
@@ -100,60 +125,71 @@ const Register = () => {
               />
             </div>
 
+            {/* Password */}
             <div>
-              <label htmlFor="password" className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">
+              <label htmlFor="password" style={{ display: 'block', fontSize: '12px', fontWeight: 500, color: 'var(--text-primary)', marginBottom: '6px' }}>
                 Password
               </label>
-              <div className="relative">
+              <div style={{ position: 'relative' }}>
                 <input
                   id="password"
-                  type={showPassword ? "text" : "password"}
+                  type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="input-field pr-12"
+                  className="input-field"
                   placeholder="••••••••"
                   autoComplete="new-password"
+                  style={{ paddingRight: '40px' }}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black transition-colors duration-200 focus:outline-none border-none bg-transparent p-0"
+                  style={{
+                    position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)',
+                    background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+                    color: 'var(--text-tertiary)', display: 'flex', alignItems: 'center',
+                  }}
                 >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
                 </button>
               </div>
-              <p className="text-[10px] text-gray-300 mt-2 font-medium">Minimum 6 characters</p>
+              <p style={{ fontSize: '12px', color: 'var(--text-tertiary)', margin: '4px 0 0' }}>
+                Minimum 6 characters
+              </p>
             </div>
 
+            {/* Submit */}
             <button
               type="submit"
               disabled={loading}
-              className="w-full btn-primary py-3.5 flex justify-center text-sm group"
+              className="btn-primary"
+              style={{ width: '100%', justifyContent: 'center', height: '36px', marginTop: '4px' }}
             >
               {loading ? (
-                <span className="flex items-center gap-2">
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <div style={{ width: '13px', height: '13px', border: '2px solid rgba(255,255,255,0.4)', borderTopColor: 'white', borderRadius: '50%', animation: 'spin 0.6s linear infinite' }} />
                   Creating account...
                 </span>
-              ) : (
-                <span className="flex items-center gap-2">
-                  Create account
-                  <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform duration-200" />
-                </span>
-              )}
+              ) : 'Create account'}
             </button>
           </form>
 
-          <div className="mt-10 pt-8 border-t border-[#EDEDED] text-center">
-            <p className="text-xs text-gray-500">
+          <div style={{ marginTop: '20px', paddingTop: '16px', borderTop: '1px solid var(--border)', textAlign: 'center' }}>
+            <p style={{ fontSize: '12px', color: 'var(--text-tertiary)', margin: 0 }}>
               Already have an account?{' '}
-              <Link to="/login" className="font-bold text-black hover:underline underline-offset-4 transition-colors">
-                Sign in instead
+              <Link
+                to="/login"
+                style={{ color: 'var(--text-primary)', fontWeight: 500, textDecoration: 'none' }}
+                onMouseEnter={e => e.target.style.textDecoration = 'underline'}
+                onMouseLeave={e => e.target.style.textDecoration = 'none'}
+              >
+                Sign in
               </Link>
             </p>
           </div>
         </div>
       </div>
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 };

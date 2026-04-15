@@ -11,39 +11,57 @@ import CreateOrgModal from '../components/CreateOrgModal';
 import api from '../services/api';
 import socket from '../services/socket';
 import { useAuth } from '../context/AuthContext';
-import { X, File, Plus, Upload, CloudUpload, Sparkles } from 'lucide-react';
+import { X, File, Plus, Upload, CloudUpload } from 'lucide-react';
 
-/* ── Skeleton shimmer for loading states ─────────────────────── */
+/* ── Skeleton shimmer ───────────────────────────── */
 const SkeletonCard = () => (
-  <div className="bg-white border border-[#F2F2F2] rounded-[16px] p-7 animate-pulse">
-    <div className="flex items-start justify-between mb-8">
-      <div className="w-12 h-12 bg-gray-100 rounded-2xl" />
-      <div className="w-6 h-6 bg-gray-50 rounded-full" />
+  <div
+    style={{
+      background: 'var(--bg-surface)',
+      border: '1px solid var(--border)',
+      borderRadius: '12px',
+      padding: '16px',
+    }}
+  >
+    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+      <div className="skeleton-shimmer" style={{ width: '40px', height: '40px', borderRadius: '8px' }} />
+      <div className="skeleton-shimmer" style={{ width: '24px', height: '24px', borderRadius: '4px' }} />
     </div>
-    <div className="space-y-2 mb-8">
-      <div className="h-4 bg-gray-100 rounded-lg w-3/4" />
-      <div className="h-3 bg-gray-50 rounded-lg w-1/2" />
+    <div style={{ marginTop: '12px' }}>
+      <div className="skeleton-shimmer" style={{ height: '13px', borderRadius: '4px', width: '70%' }} />
+      <div className="skeleton-shimmer" style={{ height: '11px', borderRadius: '4px', width: '45%', marginTop: '6px' }} />
     </div>
-    <div className="pt-6 border-t border-[#FAFAFA] flex items-center justify-between">
-      <div className="flex items-center gap-2.5">
-        <div className="w-6 h-6 rounded-full bg-gray-100" />
-        <div className="h-3 bg-gray-50 rounded w-16" />
+    <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <div className="skeleton-shimmer" style={{ width: '20px', height: '20px', borderRadius: '50%' }} />
+        <div className="skeleton-shimmer" style={{ height: '11px', width: '48px', borderRadius: '4px' }} />
       </div>
-      <div className="h-3 bg-gray-50 rounded w-12" />
+      <div className="skeleton-shimmer" style={{ height: '11px', width: '36px', borderRadius: '4px' }} />
     </div>
   </div>
 );
 
 const SkeletonRow = () => (
-  <tr className="animate-pulse">
-    <td className="py-4 px-6"><div className="flex items-center gap-3"><div className="w-8 h-8 bg-gray-100 rounded-xl" /><div className="h-3.5 bg-gray-100 rounded w-32" /></div></td>
-    <td className="py-4 px-6"><div className="h-3 bg-gray-50 rounded w-12" /></td>
-    <td className="py-4 px-6"><div className="h-3 bg-gray-50 rounded w-20" /></td>
-    <td className="py-4 px-6"><div className="h-3 bg-gray-50 rounded w-16" /></td>
-    <td className="py-4 px-6"><div className="h-3 bg-gray-50 rounded w-12" /></td>
-    <td className="py-4 px-6" />
+  <tr>
+    <td style={{ padding: '0 16px', height: '44px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <div className="skeleton-shimmer" style={{ width: '16px', height: '16px', borderRadius: '3px', flexShrink: 0 }} />
+        <div className="skeleton-shimmer" style={{ height: '13px', width: '140px', borderRadius: '4px' }} />
+      </div>
+    </td>
+    <td style={{ padding: '0 16px' }}><div className="skeleton-shimmer" style={{ height: '20px', width: '44px', borderRadius: '4px' }} /></td>
+    <td style={{ padding: '0 16px' }}><div className="skeleton-shimmer" style={{ height: '13px', width: '40px', borderRadius: '4px' }} /></td>
+    <td style={{ padding: '0 16px' }}><div className="skeleton-shimmer" style={{ height: '13px', width: '60px', borderRadius: '4px' }} /></td>
+    <td style={{ padding: '0 16px' }}><div className="skeleton-shimmer" style={{ height: '13px', width: '44px', borderRadius: '4px' }} /></td>
+    <td style={{ padding: '0 16px' }} />
   </tr>
 );
+
+const tabTitles = {
+  all: 'All Files',
+  favorites: 'Favorites',
+  trash: 'Trash',
+};
 
 const Dashboard = () => {
   const [files, setFiles] = useState([]);
@@ -76,7 +94,7 @@ const Dashboard = () => {
     fetchFiles();
   }, [currentOrganization, activeTab]);
 
-  // 🔴 Real-time: join org room and handle file events
+  // Real-time: join org room and handle file events
   useEffect(() => {
     if (!currentOrganization) return;
     const orgId = currentOrganization._id;
@@ -88,11 +106,10 @@ const Dashboard = () => {
         if (prev.some((f) => f._id === file._id)) return prev;
         return [file, ...prev];
       });
-      // Show toast for files uploaded by other users
       if (file.uploader?._id !== user?._id) {
         toast.success(`${file.uploader?.name || 'Someone'} uploaded "${file.originalName}"`, {
           icon: '📄',
-          style: { borderRadius: '12px', padding: '12px 16px' }
+          style: { borderRadius: '8px', padding: '10px 14px', fontSize: '13px' }
         });
       }
     };
@@ -236,10 +253,7 @@ const Dashboard = () => {
       });
 
       setFiles([response.data, ...files]);
-      toast.success('File uploaded successfully', {
-        icon: '✅',
-        style: { borderRadius: '12px' }
-      });
+      toast.success('File uploaded successfully');
       setShowUploadModal(false);
       setUploadFile(null);
       setUploadProgress(0);
@@ -255,16 +269,14 @@ const Dashboard = () => {
   
   const handleView = async (file) => {
     try {
-      // For images and PDFs, we need a signed VIEW url to avoid 401s in Strict mode
       if (file.fileType === 'pdf' || file.fileType === 'image') {
         setSelectedFile(file);
-        setPreviewUrl(''); // Reset while loading
+        setPreviewUrl('');
         setShowPreviewModal(true);
         
         const response = await api.get(`/files/view/${file._id}`);
         setPreviewUrl(response.data.viewUrl);
       } else {
-        // Fallback for other types
         window.open(file.path, '_blank', 'noopener,noreferrer');
       }
     } catch (error) {
@@ -324,65 +336,60 @@ const Dashboard = () => {
     }
   };
 
-  // Recently uploaded (last 24h) for the highlight section
-  const recentFiles = files.filter(f => {
-    const uploadedAt = new Date(f.createdAt);
-    const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-    return uploadedAt > dayAgo;
-  });
+  const emptyStateConfig = {
+    all: {
+      icon: <File size={24} style={{ color: 'var(--text-tertiary)' }} strokeWidth={1.5} />,
+      title: searchQuery || typeFilter !== 'all' ? 'No matches found' : 'No files yet',
+      subtitle: searchQuery || typeFilter !== 'all'
+        ? 'Try adjusting your search or filters.'
+        : 'Upload your first file to get started.',
+      showUpload: !searchQuery && typeFilter === 'all' && (userRole === 'admin' || userRole === 'editor'),
+    },
+    favorites: {
+      icon: <File size={24} style={{ color: 'var(--text-tertiary)' }} strokeWidth={1.5} />,
+      title: 'No favorites yet',
+      subtitle: 'Star files to access them quickly here.',
+      showUpload: false,
+    },
+    trash: {
+      icon: (
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--text-tertiary)' }}>
+          <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+        </svg>
+      ),
+      title: 'Trash is empty',
+      subtitle: 'Deleted files appear here for 30 days.',
+      showUpload: false,
+    },
+  };
+
+  const emptyConfig = emptyStateConfig[activeTab] || emptyStateConfig.all;
 
   return (
-    <div className="flex h-screen bg-[#FAFAFA]">
+    <div style={{ display: 'flex', height: '100vh', background: 'var(--bg-base)' }}>
       <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
       
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', marginLeft: '200px' }}>
         <Topbar 
           onOpenAdminModal={() => setShowManageOrgModal(true)} 
           onOpenCreateOrgModal={() => setShowCreateOrgModal(true)}
           socket={socket}
         />
         
-        <main className="flex-1 overflow-y-auto p-12 ml-64">
-          <div className="max-w-[1400px] mx-auto">
-            <div className="mb-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
-              <h1 className="text-3xl font-bold text-black mb-2 tracking-tight">
-                {activeTab === 'all' ? `Welcome back, ${user?.name?.split(' ')[0]}` : 
-                 activeTab === 'favorites' ? 'Your Favorites' : 'Trash'}
-              </h1>
-              <p className="text-sm text-gray-400 font-medium">
-                {activeTab === 'all' ? 'Manage and organize your team\'s digital assets with ease.' : 
-                 activeTab === 'favorites' ? 'Quickly access the files you care about most.' : 'Items here will be permanently deleted after 30 days.'}
-              </p>
-            </div>
+        <main style={{ flex: 1, overflowY: 'auto', background: 'var(--bg-base)' }}>
+          {/* Page header */}
+          <div style={{ paddingTop: '32px', paddingLeft: '32px', paddingRight: '32px' }}>
+            <h1 style={{ fontSize: '20px', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>
+              {tabTitles[activeTab]}
+            </h1>
+            <p style={{ fontSize: '12px', fontWeight: 400, color: 'var(--text-secondary)', margin: '2px 0 0' }}>
+              {currentOrganization?.name}
+              {activeTab === 'all' && ` · ${files.length} ${files.length === 1 ? 'file' : 'files'}`}
+            </p>
+          </div>
 
-            {/* Recently Uploaded Highlight */}
-            {activeTab === 'all' && !loading && recentFiles.length > 0 && recentFiles.length < files.length && (
-              <div className="mb-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
-                <div className="flex items-center gap-2 mb-4">
-                  <Sparkles size={14} className="text-amber-400" />
-                  <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Recently uploaded</span>
-                  <span className="text-[10px] bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full font-bold">{recentFiles.length}</span>
-                </div>
-                <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-                  {recentFiles.slice(0, 5).map(file => (
-                    <button
-                      key={file._id}
-                      onClick={() => handleDownload(file)}
-                      className="flex-shrink-0 flex items-center gap-3 bg-white border border-[#F0F0F0] rounded-2xl px-4 py-3 hover:border-black hover:shadow-md transition-all duration-200 group"
-                    >
-                      <div className="w-8 h-8 bg-gray-50 rounded-xl flex items-center justify-center text-gray-400 group-hover:bg-black group-hover:text-white transition-all duration-200">
-                        <File size={14} strokeWidth={2.5} />
-                      </div>
-                      <div className="text-left">
-                        <p className="text-xs font-bold text-black truncate max-w-[120px]">{file.originalName}</p>
-                        <p className="text-[10px] text-gray-400">{file.uploader?.name?.split(' ')[0]}</p>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
+          {/* Controls */}
+          <div style={{ marginTop: '20px', padding: '0 32px' }}>
             <DashboardControls
               searchQuery={searchQuery}
               setSearchQuery={setSearchQuery}
@@ -393,66 +400,103 @@ const Dashboard = () => {
               onUpload={handleUploadClick}
               userRole={userRole}
             />
+          </div>
 
-            <div className="mt-8">
-              {loading ? (
-                viewMode === 'grid' ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-                    {[...Array(8)].map((_, i) => <SkeletonCard key={i} />)}
-                  </div>
-                ) : (
-                  <div className="bg-white border border-[#F0F0F0] rounded-[24px] overflow-hidden shadow-sm">
-                    <table className="w-full">
-                      <thead className="bg-[#FAFAFA] border-b border-[#F0F0F0]">
-                        <tr>
-                          <th className="py-4 px-6 text-left text-[11px] font-bold text-gray-400 uppercase tracking-wider">Name</th>
-                          <th className="py-4 px-6 text-left text-[11px] font-bold text-gray-400 uppercase tracking-wider">Type</th>
-                          <th className="py-4 px-6 text-left text-[11px] font-bold text-gray-400 uppercase tracking-wider">User</th>
-                          <th className="py-4 px-6 text-left text-[11px] font-bold text-gray-400 uppercase tracking-wider">Uploaded</th>
-                          <th className="py-4 px-6 text-left text-[11px] font-bold text-gray-400 uppercase tracking-wider">Size</th>
-                          <th className="py-4 px-6" />
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-[#F5F5F5]">
-                        {[...Array(6)].map((_, i) => <SkeletonRow key={i} />)}
-                      </tbody>
-                    </table>
-                  </div>
-                )
-              ) : filteredFiles.length === 0 ? (
-                <div className="text-center py-32 bg-white rounded-[32px] border border-[#F0F0F0] border-dashed">
-                  <div className="w-20 h-20 bg-gradient-to-br from-gray-50 to-gray-100 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-inner">
-                    {activeTab === 'trash' ? (
-                      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-gray-300">
-                        <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                      </svg>
-                    ) : (
-                      <File size={36} className="text-gray-200" strokeWidth={1.5} />
-                    )}
-                  </div>
-                  <h3 className="text-lg font-bold text-black mb-2">
-                    {searchQuery || typeFilter !== 'all' ? 'No matches found' : 
-                     activeTab === 'trash' ? 'Trash is empty' : 'Empty workspace'}
-                  </h3>
-                  <p className="text-sm text-gray-400 max-w-[280px] mx-auto leading-relaxed mb-6">
-                    {searchQuery || typeFilter !== 'all' 
-                      ? 'Try adjusting your search or filters to find what you\'re looking for.' 
-                      : activeTab === 'trash' 
-                        ? 'Deleted files will appear here for 30 days before being permanently removed.' 
-                        : 'Start by uploading your first file to this organization.'}
-                  </p>
-                  {activeTab === 'all' && !searchQuery && typeFilter === 'all' && (userRole === 'admin' || userRole === 'editor') && (
-                    <button onClick={handleUploadClick} className="btn-primary mx-auto">
-                      <Plus size={16} strokeWidth={3} />
-                      Upload your first file
-                    </button>
-                  )}
+          {/* File list / grid / empty / skeleton */}
+          <div style={{ padding: '20px 32px' }}>
+            {loading ? (
+              viewMode === 'grid' ? (
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+                  gap: '12px',
+                }}>
+                  {[...Array(8)].map((_, i) => <SkeletonCard key={i} />)}
                 </div>
-              ) : viewMode === 'grid' ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-                  {filteredFiles.map((file, index) => (
-                    <div key={file._id} className="animate-in fade-in zoom-in-95 duration-500" style={{ animationDelay: `${Math.min(index * 50, 400)}ms` }}>
-                      <FileCard
+              ) : (
+                <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: '12px', overflow: 'hidden' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                    <thead>
+                      <tr style={{ borderBottom: '1px solid var(--border-strong)', background: 'var(--bg-base)' }}>
+                        {['Name', 'Type', 'Size', 'Uploaded by', 'Date', ''].map((h, i) => (
+                          <th key={i} style={{ padding: '0 16px', height: '36px', textAlign: 'left', fontSize: '11px', fontWeight: 500, color: 'var(--text-tertiary)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+                            {h}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {[...Array(6)].map((_, i) => <SkeletonRow key={i} />)}
+                    </tbody>
+                  </table>
+                </div>
+              )
+            ) : filteredFiles.length === 0 ? (
+              /* Empty state */
+              <div style={{
+                minHeight: '360px', display: 'flex', flexDirection: 'column',
+                alignItems: 'center', justifyContent: 'center',
+                background: 'var(--bg-surface)', border: '1px solid var(--border)',
+                borderRadius: '12px',
+              }}>
+                <div style={{
+                  width: '48px', height: '48px', borderRadius: '12px',
+                  background: 'var(--bg-hover)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  {emptyConfig.icon}
+                </div>
+                <p style={{ fontSize: '14px', fontWeight: 500, color: 'var(--text-primary)', margin: '12px 0 0' }}>
+                  {emptyConfig.title}
+                </p>
+                <p style={{ fontSize: '12px', fontWeight: 400, color: 'var(--text-secondary)', margin: '4px 0 0', maxWidth: '240px', textAlign: 'center' }}>
+                  {emptyConfig.subtitle}
+                </p>
+                {emptyConfig.showUpload && (
+                  <button onClick={handleUploadClick} className="btn-primary" style={{ marginTop: '16px', gap: '4px' }}>
+                    <Plus size={14} strokeWidth={2.5} />
+                    Upload file
+                  </button>
+                )}
+              </div>
+            ) : viewMode === 'grid' ? (
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+                gap: '12px',
+              }}>
+                {filteredFiles.map((file) => (
+                  <FileCard
+                    key={file._id}
+                    file={file}
+                    onDownload={handleDownload}
+                    onView={handleView}
+                    onDelete={handleDelete}
+                    onToggleFavorite={handleToggleFavorite}
+                    onRestore={handleRestore}
+                    userRole={userRole}
+                    userId={user?._id}
+                    isTrash={activeTab === 'trash'}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: '12px', overflow: 'hidden' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr style={{ borderBottom: '1px solid var(--border-strong)', background: 'var(--bg-base)' }}>
+                      <th style={{ padding: '0 16px', height: '36px', textAlign: 'left', fontSize: '11px', fontWeight: 500, color: 'var(--text-tertiary)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>Name</th>
+                      <th style={{ padding: '0 16px', height: '36px', textAlign: 'left', fontSize: '11px', fontWeight: 500, color: 'var(--text-tertiary)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>Type</th>
+                      <th style={{ padding: '0 16px', height: '36px', textAlign: 'left', fontSize: '11px', fontWeight: 500, color: 'var(--text-tertiary)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>Size</th>
+                      <th style={{ padding: '0 16px', height: '36px', textAlign: 'left', fontSize: '11px', fontWeight: 500, color: 'var(--text-tertiary)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>Uploaded by</th>
+                      <th style={{ padding: '0 16px', height: '36px', textAlign: 'left', fontSize: '11px', fontWeight: 500, color: 'var(--text-tertiary)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>Date</th>
+                      <th style={{ padding: '0 16px', height: '36px' }} />
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredFiles.map((file) => (
+                      <FileRow
+                        key={file._id}
                         file={file}
                         onDownload={handleDownload}
                         onView={handleView}
@@ -463,144 +507,142 @@ const Dashboard = () => {
                         userId={user?._id}
                         isTrash={activeTab === 'trash'}
                       />
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="bg-white border border-[#F0F0F0] rounded-[24px] overflow-hidden shadow-sm">
-                  <table className="w-full">
-                    <thead className="bg-[#FAFAFA] border-b border-[#F0F0F0]">
-                      <tr>
-                        <th className="py-4 px-6 text-left text-[11px] font-bold text-gray-400 uppercase tracking-wider">Name</th>
-                        <th className="py-4 px-6 text-left text-[11px] font-bold text-gray-400 uppercase tracking-wider">Type</th>
-                        <th className="py-4 px-6 text-left text-[11px] font-bold text-gray-400 uppercase tracking-wider">User</th>
-                        <th className="py-4 px-6 text-left text-[11px] font-bold text-gray-400 uppercase tracking-wider">Uploaded</th>
-                        <th className="py-4 px-6 text-left text-[11px] font-bold text-gray-400 uppercase tracking-wider">Size</th>
-                        <th className="py-4 px-6"></th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-[#F5F5F5]">
-                      {filteredFiles.map((file) => (
-                        <FileRow
-                          key={file._id}
-                          file={file}
-                          onDownload={handleDownload}
-                          onView={handleView}
-                          onDelete={handleDelete}
-                          onToggleFavorite={handleToggleFavorite}
-                          onRestore={handleRestore}
-                          userRole={userRole}
-                          userId={user?._id}
-                          isTrash={activeTab === 'trash'}
-                        />
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         </main>
       </div>
 
-      {/* ── Upload Modal with Drag & Drop + Progress ─────────── */}
-      <Modal show={showUploadModal} onHide={() => { if (!uploading) { setShowUploadModal(false); setUploadFile(null); setUploadProgress(0); }}} centered className="premium-modal">
-        <div className="bg-white rounded-[32px] p-10 shadow-2xl border border-[#F0F0F0] max-w-lg mx-auto w-full relative">
-          <button 
-            onClick={() => { if (!uploading) { setShowUploadModal(false); setUploadFile(null); setUploadProgress(0); }}}
-            className="absolute right-8 top-8 text-gray-300 hover:text-black transition-colors duration-200 hover:rotate-90"
-            disabled={uploading}
-          >
-            <X size={20} />
-          </button>
-
-          <div className="mb-10">
-            <div className="w-14 h-14 bg-black rounded-2xl flex items-center justify-center mb-6 shadow-lg">
-              <CloudUpload size={28} className="text-white" strokeWidth={2} />
+      {/* ── Upload Modal ─────────────────────────── */}
+      <Modal
+        show={showUploadModal}
+        onHide={() => { if (!uploading) { setShowUploadModal(false); setUploadFile(null); setUploadProgress(0); }}}
+        centered
+        className="premium-modal"
+      >
+        <div style={{
+          background: 'var(--bg-surface)',
+          border: '1px solid var(--border)',
+          borderRadius: '16px',
+          padding: '24px',
+          width: '480px', maxWidth: '90vw',
+          position: 'relative',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
+        }}>
+          {/* Header */}
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '20px' }}>
+            <div>
+              <h2 style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>Upload file</h2>
+              <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: '2px 0 0' }}>
+                Adding to <strong style={{ fontWeight: 500, color: 'var(--text-primary)' }}>{currentOrganization?.name}</strong>
+              </p>
             </div>
-            <h2 className="text-2xl font-bold text-black mb-2 tracking-tight">Upload File</h2>
-            <p className="text-sm text-gray-400 font-medium">Select a file to add to <span className="text-black font-bold">{currentOrganization?.name}</span></p>
+            <button
+              onClick={() => { if (!uploading) { setShowUploadModal(false); setUploadFile(null); setUploadProgress(0); }}}
+              disabled={uploading}
+              style={{
+                width: '28px', height: '28px', borderRadius: '6px',
+                border: 'none', background: 'transparent',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: 'var(--text-tertiary)', cursor: 'pointer',
+                transition: 'background 150ms ease',
+              }}
+              onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+            >
+              <X size={14} />
+            </button>
           </div>
 
-          <div className="space-y-6">
-            <div 
-              ref={dropZoneRef}
-              onClick={() => !uploading && fileInputRef.current?.click()}
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
-              onDrop={handleDrop}
-              className={`group cursor-pointer border-2 border-dashed rounded-[24px] p-12 text-center transition-all duration-300 ${
-                isDragging 
-                  ? 'border-black bg-gray-50 scale-[1.02]' 
-                  : uploadFile 
-                    ? 'border-green-300 bg-green-50/30' 
-                    : 'border-[#EDEDED] hover:border-black hover:bg-gray-50'
-              } ${uploading ? 'pointer-events-none opacity-60' : ''}`}
+          {/* Drop zone */}
+          <div
+            ref={dropZoneRef}
+            onClick={() => !uploading && fileInputRef.current?.click()}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            style={{
+              border: `2px dashed ${isDragging ? 'var(--text-primary)' : uploadFile ? '#22C55E' : 'var(--border)'}`,
+              borderRadius: '10px',
+              padding: '32px 24px',
+              textAlign: 'center',
+              cursor: uploading ? 'not-allowed' : 'pointer',
+              background: isDragging ? 'var(--bg-hover)' : uploadFile ? '#F0FDF4' : 'transparent',
+              transition: 'all 150ms ease',
+              opacity: uploading ? 0.6 : 1,
+            }}
+          >
+            <input
+              id="file-upload"
+              ref={fileInputRef}
+              type="file"
+              onChange={handleFileSelect}
+              className="hidden"
+              disabled={uploading}
+            />
+            <div style={{
+              width: '44px', height: '44px', borderRadius: '10px',
+              background: uploadFile ? '#DCF5E7' : 'var(--bg-hover)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              margin: '0 auto 12px',
+            }}>
+              {uploadFile
+                ? <File size={22} style={{ color: '#22C55E' }} />
+                : <Upload size={22} style={{ color: 'var(--text-tertiary)' }} className={isDragging ? 'animate-bounce' : ''} />
+              }
+            </div>
+            <p style={{ fontSize: '13px', fontWeight: 500, color: 'var(--text-primary)', margin: 0 }}>
+              {uploadFile ? uploadFile.name : isDragging ? 'Drop file here' : 'Drag & drop or click to browse'}
+            </p>
+            <p style={{ fontSize: '12px', color: 'var(--text-tertiary)', margin: '4px 0 0' }}>
+              {uploadFile
+                ? `${(uploadFile.size / 1024).toFixed(1)} KB`
+                : 'PDF, image, video, CSV, or any document'}
+            </p>
+          </div>
+
+          {/* Upload progress */}
+          {uploading && (
+            <div style={{ marginTop: '16px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Uploading...</span>
+                <span style={{ fontSize: '12px', fontWeight: 500, color: 'var(--text-primary)' }}>{uploadProgress}%</span>
+              </div>
+              <div style={{ height: '4px', background: 'var(--bg-hover)', borderRadius: '2px', overflow: 'hidden' }}>
+                <div style={{
+                  height: '100%', background: 'var(--brand)', borderRadius: '2px',
+                  width: `${uploadProgress}%`, transition: 'width 300ms ease',
+                }} />
+              </div>
+            </div>
+          )}
+
+          {/* Actions */}
+          <div style={{ display: 'flex', gap: '8px', marginTop: '16px' }}>
+            <button
+              onClick={() => { setShowUploadModal(false); setUploadFile(null); setUploadProgress(0); }}
+              className="btn-secondary"
+              disabled={uploading}
+              style={{ flex: 1, justifyContent: 'center' }}
             >
-              <input
-                id="file-upload"
-                ref={fileInputRef}
-                type="file"
-                onChange={handleFileSelect}
-                className="hidden"
-                disabled={uploading}
-              />
-              <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 transition-all duration-300 ${
-                uploadFile ? 'bg-green-100 text-green-600' : 'bg-gray-50 group-hover:bg-white text-gray-300 group-hover:text-black'
-              }`}>
-                {uploadFile ? (
-                  <File size={28} />
-                ) : isDragging ? (
-                  <Upload size={28} className="animate-bounce" />
-                ) : (
-                  <Upload size={28} />
-                )}
-              </div>
-              <p className="text-sm font-bold text-black mb-1">
-                {uploadFile ? uploadFile.name : isDragging ? 'Drop file here' : 'Drag & drop or click to browse'}
-              </p>
-              <p className="text-xs text-gray-400">
-                {uploadFile ? `${(uploadFile.size / 1024).toFixed(1)} KB` : 'PDF, Image, Video, CSV, or any document'}
-              </p>
-            </div>
-
-            {/* Upload Progress */}
-            {uploading && (
-              <div className="animate-in fade-in duration-300">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Uploading...</span>
-                  <span className="text-[11px] font-bold text-black">{uploadProgress}%</span>
-                </div>
-                <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-black rounded-full transition-all duration-300 ease-out"
-                    style={{ width: `${uploadProgress}%` }}
-                  />
-                </div>
-              </div>
-            )}
-
-            <div className="flex gap-3">
-              <button
-                onClick={() => { setShowUploadModal(false); setUploadFile(null); setUploadProgress(0); }}
-                className="flex-1 btn-secondary py-3.5 justify-center text-sm"
-                disabled={uploading}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleUploadSubmit}
-                className="flex-[3] btn-primary py-3.5 justify-center text-sm"
-                disabled={uploading || !uploadFile}
-              >
-                {uploading ? (
-                  <span className="flex items-center gap-2">
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    Uploading...
-                  </span>
-                ) : 'Start Upload'}
-              </button>
-            </div>
+              Cancel
+            </button>
+            <button
+              onClick={handleUploadSubmit}
+              className="btn-primary"
+              disabled={uploading || !uploadFile}
+              style={{ flex: 3, justifyContent: 'center' }}
+            >
+              {uploading ? (
+                <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <div style={{ width: '13px', height: '13px', border: '2px solid rgba(255,255,255,0.4)', borderTopColor: 'white', borderRadius: '50%', animation: 'spin 0.6s linear infinite' }} />
+                  Uploading...
+                </span>
+              ) : 'Upload'}
+            </button>
           </div>
         </div>
       </Modal>
@@ -608,79 +650,124 @@ const Dashboard = () => {
       <ManageOrgModal show={showManageOrgModal} onHide={() => setShowManageOrgModal(false)} />
       <CreateOrgModal show={showCreateOrgModal} onHide={() => setShowCreateOrgModal(false)} />
 
-      {/* ── Preview Modal ────────────────────────────────────── */}
-      <Modal 
-        show={showPreviewModal} 
-        onHide={() => { setShowPreviewModal(false); setSelectedFile(null); }} 
-        centered 
+      {/* ── Preview Modal ─────────────────────────── */}
+      <Modal
+        show={showPreviewModal}
+        onHide={() => { setShowPreviewModal(false); setSelectedFile(null); }}
+        centered
         size="lg"
         className="premium-modal preview-modal"
       >
-        <div className="bg-white rounded-[32px] overflow-hidden shadow-2xl border border-[#F0F0F0] flex flex-col max-h-[90vh]">
-          <div className="p-6 border-b border-[#F5F5F5] flex items-center justify-between bg-white/80 backdrop-blur-md sticky top-0 z-10">
-            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 bg-black rounded-xl flex items-center justify-center text-white shadow-lg shadow-black/10">
-                <File size={18} strokeWidth={2.5} />
+        <div style={{
+          background: 'var(--bg-surface)',
+          borderRadius: '16px',
+          overflow: 'hidden',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
+          display: 'flex', flexDirection: 'column', maxHeight: '90vh',
+          border: '1px solid var(--border)',
+        }}>
+          {/* Preview header */}
+          <div style={{
+            padding: '14px 16px',
+            borderBottom: '1px solid var(--border)',
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            background: 'var(--bg-surface)',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div style={{
+                width: '32px', height: '32px', borderRadius: '8px',
+                background: 'var(--bg-hover)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                <File size={15} style={{ color: 'var(--text-secondary)' }} strokeWidth={1.75} />
               </div>
               <div>
-                <h3 className="text-sm font-bold text-black tracking-tight leading-none mb-1">{selectedFile?.originalName}</h3>
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{selectedFile?.fileType} • {(selectedFile?.size / (1024 * 1024)).toFixed(1)} MB</p>
+                <p style={{ fontSize: '13px', fontWeight: 500, color: 'var(--text-primary)', margin: 0 }}>
+                  {selectedFile?.originalName}
+                </p>
+                <p style={{ fontSize: '11px', color: 'var(--text-tertiary)', margin: '1px 0 0', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                  {selectedFile?.fileType} · {selectedFile && (selectedFile.size / (1024 * 1024)).toFixed(1)} MB
+                </p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <button 
+            <div style={{ display: 'flex', gap: '4px' }}>
+              <button
                 onClick={() => handleDownload(selectedFile)}
-                className="p-2.5 text-gray-400 hover:text-black hover:bg-gray-50 rounded-xl transition-all duration-200"
                 title="Download"
+                style={{
+                  width: '28px', height: '28px', borderRadius: '6px',
+                  border: 'none', background: 'transparent',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  color: 'var(--text-secondary)', cursor: 'pointer',
+                  transition: 'background 150ms ease',
+                }}
+                onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
+                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
               >
-                <CloudUpload size={20} />
+                <CloudUpload size={15} />
               </button>
-              <button 
+              <button
                 onClick={() => { setShowPreviewModal(false); setSelectedFile(null); }}
-                className="p-2.5 text-gray-400 hover:text-black hover:bg-gray-50 rounded-xl transition-all duration-200"
+                style={{
+                  width: '28px', height: '28px', borderRadius: '6px',
+                  border: 'none', background: 'transparent',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  color: 'var(--text-secondary)', cursor: 'pointer',
+                  transition: 'background 150ms ease',
+                }}
+                onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
+                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
               >
-                <X size={20} />
+                <X size={14} />
               </button>
             </div>
           </div>
 
-          <div className="flex-1 overflow-auto bg-[#FBFBFB] p-8 flex items-center justify-center min-h-[500px]">
+          {/* Preview body */}
+          <div style={{
+            flex: 1, overflow: 'auto', background: 'var(--bg-base)',
+            padding: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            minHeight: '400px',
+          }}>
             {!previewUrl ? (
-              <div className="flex flex-col items-center gap-4">
-                <div className="w-12 h-12 border-4 border-black border-t-transparent rounded-full animate-spin" />
-                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Securing preview...</p>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+                <div style={{ width: '28px', height: '28px', border: '2.5px solid var(--border-strong)', borderTopColor: 'var(--text-primary)', borderRadius: '50%', animation: 'spin 0.6s linear infinite' }} />
+                <p style={{ fontSize: '12px', color: 'var(--text-tertiary)', margin: 0 }}>Loading preview...</p>
               </div>
             ) : selectedFile?.fileType === 'image' ? (
-              <div className="relative group">
-                <img 
-                  src={previewUrl} 
-                  alt={selectedFile.originalName} 
-                  className="max-w-full max-h-[70vh] rounded-2xl shadow-2xl border border-white/50 object-contain animate-in fade-in zoom-in duration-500"
-                />
-              </div>
+              <img
+                src={previewUrl}
+                alt={selectedFile.originalName}
+                style={{ maxWidth: '100%', maxHeight: '65vh', borderRadius: '10px', objectFit: 'contain' }}
+              />
             ) : selectedFile?.fileType === 'pdf' ? (
               <iframe
                 src={`${previewUrl}#toolbar=0`}
-                className="w-full h-[70vh] rounded-2xl shadow-inner border border-[#F0F0F0] bg-white animate-in fade-in slide-in-from-bottom-4 duration-700"
+                style={{ width: '100%', height: '65vh', borderRadius: '8px', border: '1px solid var(--border)', background: 'white' }}
                 title="PDF Preview"
               />
             ) : (
-              <div className="text-center py-20">
-                <div className="w-20 h-20 bg-gray-100 rounded-3xl flex items-center justify-center mx-auto mb-6">
-                  <File size={32} className="text-gray-300" />
+              <div style={{ textAlign: 'center', padding: '40px 0' }}>
+                <div style={{
+                  width: '52px', height: '52px', borderRadius: '12px',
+                  background: 'var(--bg-hover)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px',
+                }}>
+                  <File size={24} style={{ color: 'var(--text-tertiary)' }} />
                 </div>
-                <p className="text-sm font-bold text-gray-400 mb-8">Preview not available for this file type</p>
-                <button 
-                  onClick={() => window.open(selectedFile.path, '_blank')}
-                  className="btn-primary mx-auto"
-                >
-                  Open in New Tab
+                <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '0 0 16px' }}>Preview not available for this file type</p>
+                <button onClick={() => window.open(selectedFile.path, '_blank')} className="btn-primary" style={{ margin: '0 auto' }}>
+                  Open in new tab
                 </button>
               </div>
             )}
           </div>
         </div>
       </Modal>
+
+      <style>{`
+        @keyframes spin { to { transform: rotate(360deg); } }
+      `}</style>
     </div>
   );
 };

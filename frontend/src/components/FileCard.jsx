@@ -1,23 +1,22 @@
-import { MoreVertical, Download, Star, Trash2, FileText, Image as ImageIcon, FileSpreadsheet, RotateCcw, Eye } from 'lucide-react';
+import { FileText, Image as ImageIcon, FileSpreadsheet, Video, MoreHorizontal, Download, Star, Trash2, RotateCcw, Eye } from 'lucide-react';
 import { Dropdown } from 'react-bootstrap';
 
 const FileCard = ({ file, onDownload, onView, onDelete, onToggleFavorite, onRestore, userRole, userId, isTrash }) => {
   const canDelete = userRole === 'admin' || file.uploader._id === userId;
   const isFavorited = file.favoritedBy?.includes(userId);
 
-  const getFileIcon = (fileType) => {
-    const iconSize = 22;
-    const iconStroke = 2.5;
-    
+  const getFileIconConfig = (fileType) => {
     switch (fileType) {
       case 'image':
-        return <ImageIcon size={iconSize} strokeWidth={iconStroke} />;
+        return { icon: ImageIcon, bg: '#F5F3FF', color: '#8B5CF6' };
       case 'csv':
-        return <FileSpreadsheet size={iconSize} strokeWidth={iconStroke} />;
+        return { icon: FileSpreadsheet, bg: '#F0FDF4', color: '#22C55E' };
       case 'pdf':
-        return <FileText size={iconSize} strokeWidth={iconStroke} />;
+        return { icon: FileText, bg: '#FEF2F2', color: '#EF4444' };
+      case 'video':
+        return { icon: Video, bg: '#EFF6FF', color: '#3B82F6' };
       default:
-        return <FileText size={iconSize} strokeWidth={iconStroke} />;
+        return { icon: FileText, bg: '#F7F7F5', color: '#6B6B6B' };
     }
   };
 
@@ -34,77 +33,156 @@ const FileCard = ({ file, onDownload, onView, onDelete, onToggleFavorite, onRest
     return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
   };
 
+  const { icon: FileIcon, bg: iconBg, color: iconColor } = getFileIconConfig(file.fileType);
+  const ext = file.fileType?.toUpperCase() ?? 'FILE';
+  const uploaderInitial = file.uploader.name.charAt(0).toUpperCase();
+  const uploaderFirstName = file.uploader.name.split(' ')[0];
+
   return (
-    <div className="card-premium group relative flex flex-col h-full bg-white">
-      <div className="p-7 flex-1 flex flex-col">
-        <div className="flex items-start justify-between mb-8">
-          <div className="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center text-gray-400 group-hover:bg-black group-hover:text-white group-hover:shadow-lg group-hover:shadow-black/10 transition-all duration-300">
-            {getFileIcon(file.fileType)}
-          </div>
-          <Dropdown align="end">
-            <Dropdown.Toggle
-              variant="link"
-              className="p-1.5 text-gray-300 hover:text-black transition-all duration-200 rounded-full hover:bg-gray-50"
-              id={`dropdown-${file._id}`}
+    <div
+      className="card-premium flex flex-col"
+      style={{ padding: '16px', cursor: 'pointer' }}
+    >
+      {/* Top row */}
+      <div className="flex items-start justify-between">
+        {/* File type icon */}
+        <div
+          style={{
+            width: '40px', height: '40px',
+            borderRadius: '8px',
+            background: iconBg,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            flexShrink: 0,
+          }}
+        >
+          <FileIcon size={20} style={{ color: iconColor }} strokeWidth={1.75} />
+        </div>
+
+        {/* Three-dot menu */}
+        <Dropdown align="end">
+          <Dropdown.Toggle
+            variant="link"
+            className="text-decoration-none p-0 border-0 bg-transparent"
+            id={`dropdown-${file._id}`}
+          >
+            <div
+              style={{
+                width: '28px', height: '28px', borderRadius: '4px',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                transition: 'background 150ms ease',
+                cursor: 'pointer',
+              }}
+              onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
             >
-              <MoreVertical size={16} strokeWidth={2.5} />
-            </Dropdown.Toggle>
-
-            <Dropdown.Menu className="shadow-2xl border border-[#F0F0F0] py-2 rounded-[18px] min-w-[180px] mt-2 animate-in fade-in slide-in-from-top-1 duration-300 overflow-hidden">
-              <div className="px-4 py-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Actions</div>
-              {!isTrash && (
-                <>
-                  <Dropdown.Item onClick={() => onView(file)} className="py-2.5 px-4 text-sm font-semibold hover:bg-[#FAFAFA] rounded-[10px] mx-1 flex items-center gap-3 transition-all duration-200">
-                    <Eye size={14} strokeWidth={2.5} className="text-gray-400" />
-                    View
-                  </Dropdown.Item>
-                  <Dropdown.Item onClick={() => onDownload(file)} className="py-2.5 px-4 text-sm font-semibold hover:bg-[#FAFAFA] rounded-[10px] mx-1 flex items-center gap-3 transition-all duration-200">
-                    <Download size={14} strokeWidth={2.5} className="text-gray-400" />
-                    Download
-                  </Dropdown.Item>
-                  <Dropdown.Item onClick={() => onToggleFavorite(file)} className="py-2.5 px-4 text-sm font-semibold hover:bg-[#FAFAFA] rounded-[10px] mx-1 flex items-center gap-3 transition-all duration-200">
-                    <Star size={14} strokeWidth={2.5} className={isFavorited ? 'text-amber-400 fill-current' : 'text-gray-400'} />
-                    {isFavorited ? 'Unfavorite' : 'Favorite'}
-                  </Dropdown.Item>
-                </>
-              )}
-              {isTrash && canDelete && (
-                <Dropdown.Item onClick={() => onRestore(file)} className="py-2.5 px-4 text-sm font-semibold hover:bg-[#FAFAFA] rounded-[10px] mx-1 flex items-center gap-3 transition-all duration-200">
-                  <RotateCcw size={14} strokeWidth={2.5} className="text-gray-400" />
-                  Restore
-                </Dropdown.Item>
-              )}
-              {canDelete && (
-                <>
-                  <div className="h-px bg-[#F5F5F5] my-2" />
-                  <Dropdown.Item onClick={() => onDelete(file)} className="py-2.5 px-4 text-sm font-bold text-red-500 hover:bg-red-50 rounded-[10px] mx-1 flex items-center gap-3 transition-all duration-200">
-                    <Trash2 size={14} strokeWidth={2.5} />
-                    {isTrash ? 'Delete Forever' : 'Move to Trash'}
-                  </Dropdown.Item>
-                </>
-              )}
-            </Dropdown.Menu>
-          </Dropdown>
-        </div>
-
-        <div className="space-y-1.5 mb-8">
-          <h3 className="text-sm font-bold text-black truncate pr-2 tracking-tight group-hover:text-gray-900 transition-colors" title={file.originalName}>
-            {file.originalName}
-          </h3>
-          <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">
-            {file.fileType} <span className="mx-1 opacity-20">•</span> {formatFileSize(file.size)}
-          </p>
-        </div>
-
-        <div className="mt-auto pt-6 border-t border-[#FAFAFA] flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-6 h-6 rounded-full bg-black text-white flex items-center justify-center text-[9px] font-bold shadow-sm">
-              {file.uploader.name.charAt(0).toUpperCase()}
+              <MoreHorizontal size={14} style={{ color: 'var(--text-tertiary)' }} />
             </div>
-            <span className="text-[11px] font-bold text-gray-500 tracking-tight">{file.uploader.name.split(' ')[0]}</span>
-          </div>
-          <span className="text-[10px] font-bold text-gray-300 uppercase tracking-tighter">{formatDate(file.createdAt)}</span>
+          </Dropdown.Toggle>
+
+          <Dropdown.Menu
+            className="shadow-lg py-1"
+            style={{
+              border: '1px solid var(--border)',
+              borderRadius: '8px',
+              minWidth: '160px',
+              background: 'var(--bg-surface)',
+            }}
+          >
+            {!isTrash && (
+              <>
+                <Dropdown.Item
+                  onClick={() => onView(file)}
+                  style={{ padding: '7px 12px', fontSize: '13px', margin: '1px 4px', borderRadius: '5px', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '8px' }}
+                >
+                  <Eye size={13} style={{ color: 'var(--text-tertiary)' }} />
+                  View
+                </Dropdown.Item>
+                <Dropdown.Item
+                  onClick={() => onDownload(file)}
+                  style={{ padding: '7px 12px', fontSize: '13px', margin: '1px 4px', borderRadius: '5px', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '8px' }}
+                >
+                  <Download size={13} style={{ color: 'var(--text-tertiary)' }} />
+                  Download
+                </Dropdown.Item>
+                <Dropdown.Item
+                  onClick={() => onToggleFavorite(file)}
+                  style={{ padding: '7px 12px', fontSize: '13px', margin: '1px 4px', borderRadius: '5px', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '8px' }}
+                >
+                  <Star size={13} style={{ color: isFavorited ? '#F59E0B' : 'var(--text-tertiary)', fill: isFavorited ? '#F59E0B' : 'none' }} />
+                  {isFavorited ? 'Unfavorite' : 'Favorite'}
+                </Dropdown.Item>
+              </>
+            )}
+            {isTrash && canDelete && (
+              <Dropdown.Item
+                onClick={() => onRestore(file)}
+                style={{ padding: '7px 12px', fontSize: '13px', margin: '1px 4px', borderRadius: '5px', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '8px' }}
+              >
+                <RotateCcw size={13} style={{ color: 'var(--text-tertiary)' }} />
+                Restore
+              </Dropdown.Item>
+            )}
+            {canDelete && (
+              <>
+                <div style={{ height: '1px', background: 'var(--border)', margin: '3px 0' }} />
+                <Dropdown.Item
+                  onClick={() => onDelete(file)}
+                  style={{ padding: '7px 12px', fontSize: '13px', margin: '1px 4px', borderRadius: '5px', color: '#EF4444', display: 'flex', alignItems: 'center', gap: '8px' }}
+                >
+                  <Trash2 size={13} />
+                  {isTrash ? 'Delete forever' : 'Move to trash'}
+                </Dropdown.Item>
+              </>
+            )}
+          </Dropdown.Menu>
+        </Dropdown>
+      </div>
+
+      {/* Middle — filename + meta */}
+      <div style={{ marginTop: '12px' }}>
+        <div
+          title={file.originalName}
+          style={{
+            fontSize: '13px', fontWeight: 500, color: 'var(--text-primary)',
+            whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+          }}
+        >
+          {file.originalName}
         </div>
+        <div style={{ marginTop: '4px', fontSize: '11px', color: 'var(--text-tertiary)' }}>
+          {ext} · {formatFileSize(file.size)}
+        </div>
+      </div>
+
+      {/* Bottom row — uploader + date */}
+      <div
+        style={{
+          marginTop: '12px', paddingTop: '12px',
+          borderTop: '1px solid var(--border)',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        }}
+      >
+        {/* Uploader */}
+        <div className="flex items-center" style={{ gap: '6px' }}>
+          <div
+            style={{
+              width: '20px', height: '20px', borderRadius: '50%',
+              background: '#E8E8E6', color: 'var(--text-secondary)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: '10px', fontWeight: 500, flexShrink: 0,
+            }}
+          >
+            {uploaderInitial}
+          </div>
+          <span style={{ fontSize: '11px', fontWeight: 400, color: 'var(--text-secondary)' }}>
+            {uploaderFirstName}
+          </span>
+        </div>
+
+        {/* Date */}
+        <span style={{ fontSize: '11px', fontWeight: 400, color: 'var(--text-tertiary)' }}>
+          {formatDate(file.createdAt)}
+        </span>
       </div>
     </div>
   );
