@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Modal } from 'react-bootstrap';
 import { toast } from 'react-hot-toast';
 import Sidebar from '../components/Sidebar';
@@ -65,6 +66,7 @@ const tabTitles = {
 
 const Dashboard = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const location = useLocation();
   const [files, setFiles] = useState([]);
   const [filteredFiles, setFilteredFiles] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -94,6 +96,13 @@ const Dashboard = () => {
     if (!currentOrganization) return;
     fetchFiles();
   }, [currentOrganization, activeTab]);
+
+  useEffect(() => {
+    if (location.state?.tab) {
+      setActiveTab(location.state.tab);
+      window.history.replaceState({}, '');
+    }
+  }, [location.state]);
 
   // Real-time: join org room and handle file events
   useEffect(() => {
@@ -370,8 +379,8 @@ const Dashboard = () => {
     <>
     <style>{`
       .dashboard-main-offset { margin-left: 200px; }
-      .dashboard-header { padding: 28px 28px 0 28px; }
-      .dashboard-controls-wrap { padding: 16px 28px 0 28px; }
+      .dashboard-header { padding: 24px 28px 0 28px; }
+      .dashboard-controls-wrap { padding: 12px 28px 0 28px; }
       .dashboard-content { padding: 0; }
       .dashboard-grid {
         display: grid;
@@ -465,12 +474,15 @@ const Dashboard = () => {
               )
             ) : filteredFiles.length === 0 ? (
               /* Empty state */
-              <div className="dashboard-empty-wrap">
-              <div style={{
-                minHeight: '360px', display: 'flex', flexDirection: 'column',
-                alignItems: 'center', justifyContent: 'center',
-                background: 'var(--bg-surface)', border: '1px solid var(--border)',
+              <div className="dashboard-empty-wrap" style={{
+                border: '1px solid #E8E8E6',
                 borderRadius: '12px',
+                background: '#FFFFFF',
+                minHeight: '320px',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
               }}>
                 <div style={{
                   width: '48px', height: '48px', borderRadius: '12px',
@@ -491,7 +503,6 @@ const Dashboard = () => {
                     Upload file
                   </button>
                 )}
-              </div>
               </div>
             ) : viewMode === 'grid' ? (
               <div className="dashboard-grid" style={{ display: 'grid' }}>

@@ -24,11 +24,12 @@ const DashboardControls = ({
           display: flex;
           align-items: center;
           gap: 8px;
-          flex-wrap: nowrap;
+          padding: 0;
+          width: 100%;
         }
         .controls-search {
           flex: 1;
-          max-width: 280px;
+          min-width: 0;
         }
         @media (max-width: 767px) {
           .controls-row {
@@ -173,6 +174,7 @@ const DashboardControls = ({
                 display: 'flex', alignItems: 'center', gap: '6px',
                 transition: 'opacity 150ms ease',
                 whiteSpace: 'nowrap',
+                marginLeft: 0,
               }}
               onMouseEnter={e => e.currentTarget.style.opacity = '0.85'}
               onMouseLeave={e => e.currentTarget.style.opacity = '1'}
@@ -181,7 +183,7 @@ const DashboardControls = ({
               Upload
             </button>
           ) : isViewer ? (
-            <div title="Viewers cannot upload files" style={{ cursor: 'not-allowed', flexShrink: 0 }}>
+            <div title="Viewers cannot upload files" style={{ cursor: 'not-allowed', flexShrink: 0, marginLeft: 0 }}>
               <button
                 disabled
                 style={{

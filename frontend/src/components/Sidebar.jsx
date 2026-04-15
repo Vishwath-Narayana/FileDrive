@@ -1,10 +1,11 @@
 import { File, Star, Trash2, X } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import logo from '../assets/logo.png';
 
 const Sidebar = ({ activeTab, setActiveTab, drawerOpen, setDrawerOpen }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { currentOrganization } = useAuth();
   
   const menuItems = [
@@ -14,7 +15,7 @@ const Sidebar = ({ activeTab, setActiveTab, drawerOpen, setDrawerOpen }) => {
   ];
 
   const handleNavClick = (id) => {
-    setActiveTab(id);
+    navigate('/dashboard', { state: { tab: id } });
     if (setDrawerOpen) setDrawerOpen(false);
   };
 
@@ -64,7 +65,7 @@ const Sidebar = ({ activeTab, setActiveTab, drawerOpen, setDrawerOpen }) => {
       <nav className="flex-1" style={{ padding: '8px 0' }}>
         {menuItems.map((item) => {
           const Icon = item.icon;
-          const isActive = activeTab === item.id;
+          const isActive = location.pathname === '/dashboard' && activeTab === item.id;
           return (
             <button
               key={item.id}

@@ -1,4 +1,4 @@
-import { ChevronDown, LogOut, Plus, User, Menu } from 'lucide-react';
+import { ChevronDown, LogOut, Plus, User, Menu, Settings, Check } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Dropdown } from 'react-bootstrap';
 import { useAuth } from '../context/AuthContext';
@@ -16,6 +16,10 @@ const Topbar = ({ onOpenAdminModal, onOpenCreateOrgModal, socket, setDrawerOpen 
   const initials = user?.name
     ? user.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
     : '?';
+
+  const isPersonalOrg = currentOrganization?._id === 
+    user?.personalOrganization?._id ||
+    currentOrganization?.name?.includes("Personal");
 
   const isAdmin = currentOrganization &&
     currentOrganization._id !== user?.personalOrganization?._id &&
@@ -101,10 +105,12 @@ const Topbar = ({ onOpenAdminModal, onOpenCreateOrgModal, socket, setDrawerOpen 
                 border: '1px solid var(--border)',
                 borderRadius: '10px',
                 minWidth: '220px',
-                background: 'var(--bg-surface)',
+                background: '#FFFFFF',
+                boxShadow: '0 4px 16px rgba(0,0,0,0.10)',
+                padding: '6px',
               }}
             >
-              <div style={{ padding: '6px 12px 4px', fontSize: '11px', fontWeight: 500, color: 'var(--text-tertiary)', letterSpacing: '0.04em' }}>
+              <div style={{ padding: '6px 10px 4px', fontSize: '11px', fontWeight: 500, color: '#9CA3AF', letterSpacing: '0.04em' }}>
                 Organizations
               </div>
               {organizations.map((org) => (
@@ -113,50 +119,42 @@ const Topbar = ({ onOpenAdminModal, onOpenCreateOrgModal, socket, setDrawerOpen 
                   onClick={() => switchOrganization(org)}
                   active={false}
                   style={{
-                    padding: '7px 12px', fontSize: '13px', margin: '1px 4px', borderRadius: '6px',
-                    background: currentOrganization?._id === org._id ? 'var(--bg-hover)' : 'transparent',
-                    color: currentOrganization?._id === org._id ? 'var(--text-primary)' : 'var(--text-secondary)',
-                    fontWeight: currentOrganization?._id === org._id ? 500 : 400,
+                    height: '32px', padding: '0 10px', fontSize: '13px', borderRadius: '6px',
+                    background: currentOrganization?._id === org._id ? '#F7F7F5' : 'transparent',
+                    color: '#1A1A1A',
+                    fontWeight: 400,
                     transition: 'background 100ms ease',
+                    display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer',
                   }}
+                  onMouseEnter={e => { if (currentOrganization?._id !== org._id) e.currentTarget.style.background = '#F7F7F5'; }}
+                  onMouseLeave={e => { if (currentOrganization?._id !== org._id) e.currentTarget.style.background = 'transparent'; }}
                 >
-                  {org.name}
+                  {currentOrganization?._id === org._id ? (
+                    <Check size={12} style={{ color: '#1A1A1A', flexShrink: 0 }} />
+                  ) : (
+                    <span style={{ width: '12px', flexShrink: 0 }} />
+                  )}
+                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {org.name}
+                  </span>
                 </Dropdown.Item>
               ))}
-              <div style={{ height: '1px', background: 'var(--border)', margin: '4px 0' }} />
+              <div style={{ height: '1px', background: '#E8E8E6', margin: '4px 0' }} />
               <Dropdown.Item
                 onClick={onOpenCreateOrgModal}
                 style={{
-                  padding: '7px 12px', fontSize: '13px', margin: '1px 4px', borderRadius: '6px',
-                  color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '8px',
+                  height: '32px', padding: '0 10px', fontSize: '13px', borderRadius: '6px',
+                  color: '#6B6B6B', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer',
                 }}
+                onMouseEnter={e => e.currentTarget.style.background = '#F7F7F5'}
+                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
               >
-                <div style={{ width: '20px', height: '20px', borderRadius: '5px', background: 'var(--bg-hover)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Plus size={12} style={{ color: 'var(--text-secondary)' }} />
-                </div>
-                Create new
+                <Plus size={13} style={{ color: '#6B6B6B', flexShrink: 0 }} />
+                Create new workspace
               </Dropdown.Item>
             </Dropdown.Menu>
           </Dropdown>
 
-          {/* Manage button */}
-          {isAdmin && (
-            <button
-              onClick={onOpenAdminModal}
-              style={{
-                fontSize: '12px', fontWeight: 400, color: '#6B6B6B',
-                background: 'transparent',
-                border: '1px solid #E8E8E6',
-                padding: '4px 10px', borderRadius: '6px',
-                cursor: 'pointer',
-                transition: 'background 150ms ease, color 150ms ease',
-              }}
-              onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg-hover)'; e.currentTarget.style.color = '#1A1A1A'; }}
-              onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#6B6B6B'; }}
-            >
-              Manage
-            </button>
-          )}
         </div>
 
         {/* ── MOBILE LEFT — hamburger ── */}
@@ -191,6 +189,28 @@ const Topbar = ({ onOpenAdminModal, onOpenCreateOrgModal, socket, setDrawerOpen 
 
         {/* ── DESKTOP RIGHT — bell + avatar ── */}
         <div className="topbar-desktop-right" style={{ alignItems: 'center', gap: '8px' }}>
+          {!isPersonalOrg && (
+            <button
+              onClick={onOpenAdminModal}
+              style={{
+                fontSize: '12px',
+                fontWeight: 500,
+                color: '#374151',
+                background: '#FFFFFF',
+                border: '1px solid #E2E8F0',
+                borderRadius: '6px',
+                padding: '5px 12px',
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+                lineHeight: '1',
+                transition: 'all 150ms ease',
+              }}
+              onMouseEnter={e => e.currentTarget.style.background = '#F8FAFC'}
+              onMouseLeave={e => e.currentTarget.style.background = '#FFFFFF'}
+            >
+              Manage organization
+            </button>
+          )}
           <NotificationBell socket={socket} />
 
           <Dropdown align="end">
