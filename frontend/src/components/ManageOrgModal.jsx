@@ -199,7 +199,32 @@ const ManageOrgModal = ({ show, onHide }) => {
 
   return (
     <Modal show={show} onHide={onHide} size="lg" centered className="premium-modal">
-      <div style={modalBody}>
+      <style>{`
+        @media (max-width: 640px) {
+          .manage-org-sheet {
+            position: fixed !important;
+            bottom: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            border-radius: 16px 16px 0 0 !important;
+            max-height: 85vh;
+            overflow-y: auto;
+            margin: 0 !important;
+          }
+        }
+      `}</style>
+      <div className="manage-org-sheet" style={{
+        background: '#FFFFFF',
+        borderRadius: '16px',
+        padding: '24px',
+        boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
+        border: '1px solid #E8E8E6',
+        maxWidth: '520px',
+        width: '90vw',
+        margin: '0 auto',
+      }}>
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '20px' }}>
           <div>
@@ -372,9 +397,9 @@ const ManageOrgModal = ({ show, onHide }) => {
                   onSubmit={handleSendInvitation}
                   style={{
                     display: 'flex', flexDirection: 'column', gap: '14px',
-                    padding: '16px',
-                    background: 'var(--bg-base)', border: '1px solid var(--border)',
-                    borderRadius: '10px',
+                    padding: '0 0 16px 0',
+                    marginBottom: '16px',
+                    borderBottom: '1px solid #E8E8E6',
                   }}
                 >
                   <div>
@@ -418,6 +443,15 @@ const ManageOrgModal = ({ show, onHide }) => {
                       type="submit"
                       className="btn-primary"
                       disabled={sending || !inviteEmail.trim()}
+                      style={{
+                        height: '32px', padding: '0 14px',
+                        background: !inviteEmail.trim() ? '#E8E8E6' : '#1A1A1A',
+                        color: !inviteEmail.trim() ? '#9CA3AF' : '#FFFFFF',
+                        border: 'none', borderRadius: '6px',
+                        fontSize: '13px', fontWeight: 500,
+                        cursor: (!inviteEmail.trim() || sending) ? 'not-allowed' : 'pointer',
+                        transition: 'background 150ms ease, color 150ms ease',
+                      }}
                     >
                       {sending ? (
                         <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -432,7 +466,7 @@ const ManageOrgModal = ({ show, onHide }) => {
             </div>
 
             <div>
-              <p style={{ fontSize: '11px', fontWeight: 500, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '10px' }}>
+              <p style={{ fontSize: '11px', fontWeight: 500, color: '#A0A0A0', marginBottom: '8px', marginTop: '16px' }}>
                 Pending invites
               </p>
               {invitations.length === 0 ? (

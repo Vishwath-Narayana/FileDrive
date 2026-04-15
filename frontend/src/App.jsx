@@ -54,64 +54,68 @@ function App() {
 
   return (
     <AuthProvider>
-      <Router>
-        <Toaster position="top-right" />
-        <Routes>
-          <Route 
-            path="/" 
-            element={
-              <PublicRoute>
-                <Landing />
-              </PublicRoute>
-            } 
-          />
-          <Route
-            path="/login"
-            element={
-              <PublicRoute>
-                <Login />
-              </PublicRoute>
-            }
-          />
-          <Route
-            path="/register"
-            element={
-              <PublicRoute>
-                <Register />
-              </PublicRoute>
-            }
-          />
-          <Route
-            path="/forgot-password"
-            element={
-              <PublicRoute>
-                <ForgotPassword />
-              </PublicRoute>
-            }
-          />
-          <Route
-            path="/reset-password"
-            element={<ResetPassword />}
-          />
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/settings"
-            element={
-              <ProtectedRoute>
-                <Settings />
-              </ProtectedRoute>
-            }
-          />
-          <Route path="/accept-invite" element={<AcceptInvite />} />
-        </Routes>
-      </Router>
+      <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: '#F7F7F5' }}>
+        <Router>
+          <div style={{ flex: 1, overflowY: 'auto', height: '100vh', position: 'relative' }}>
+            <Toaster position="top-right" />
+            <Routes>
+              <Route 
+                path="/" 
+                element={
+                  <PublicRoute>
+                    <Landing />
+                  </PublicRoute>
+                } 
+              />
+              <Route
+                path="/login"
+                element={
+                  <PublicRoute>
+                    <Login />
+                  </PublicRoute>
+                }
+              />
+              <Route
+                path="/register"
+                element={
+                  <PublicRoute>
+                    <Register />
+                  </PublicRoute>
+                }
+              />
+              <Route
+                path="/forgot-password"
+                element={
+                  <PublicRoute>
+                    <ForgotPassword />
+                  </PublicRoute>
+                }
+              />
+              <Route
+                path="/reset-password"
+                element={<ResetPassword />}
+              />
+              <Route
+                path="/dashboard"
+                element={
+                  <ProtectedRoute>
+                    <Dashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/settings"
+                element={
+                  <ProtectedRoute>
+                    <Settings />
+                  </ProtectedRoute>
+                }
+              />
+              <Route path="/accept-invite" element={<AcceptInvite />} />
+            </Routes>
+          </div>
+        </Router>
+      </div>
     </AuthProvider>
   );
 }

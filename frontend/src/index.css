@@ -27,6 +27,10 @@
   --border-radius-md: 8px;
   --border-radius-lg: 12px;
   --border-radius-xl: 16px;
+  /* Breakpoint reference tokens */
+  --mobile: 767px;
+  --tablet: 768px;
+  --desktop: 1024px;
 }
 
 body {
@@ -357,3 +361,28 @@ select:focus-visible {
   outline: 2px solid rgba(26, 26, 26, 0.15);
   outline-offset: 2px;
 }
+
+/* ─── FIX 11: Mobile touch targets ──────────────── */
+@media (max-width: 768px) {
+  button, [role="button"] {
+    min-height: 44px;
+  }
+
+  /* Exception overrides for icon-only topbar buttons */
+  .topbar-icon-btn {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Nav items in mobile drawer */
+  .nav-item {
+    height: 44px !important;
+  }
+
+  /* File card three-dot menu */
+  .file-menu-btn {
+    width: 36px !important;
+    height: 36px !important;
+  }
+}
+

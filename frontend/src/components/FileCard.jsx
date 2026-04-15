@@ -41,7 +41,9 @@ const FileCard = ({ file, onDownload, onView, onDelete, onToggleFavorite, onRest
   return (
     <div
       className="card-premium flex flex-col"
-      style={{ padding: '16px', cursor: 'pointer' }}
+      style={{ padding: '16px', cursor: 'pointer', transition: 'all 150ms ease' }}
+      onMouseEnter={e => { e.currentTarget.style.borderColor = '#D0D0CE'; e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.06)'; }}
+      onMouseLeave={e => { e.currentTarget.style.borderColor = ''; e.currentTarget.style.boxShadow = ''; }}
     >
       {/* Top row */}
       <div className="flex items-start justify-between">
@@ -66,6 +68,7 @@ const FileCard = ({ file, onDownload, onView, onDelete, onToggleFavorite, onRest
             id={`dropdown-${file._id}`}
           >
             <div
+              className="file-menu-btn"
               style={{
                 width: '28px', height: '28px', borderRadius: '4px',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -157,8 +160,8 @@ const FileCard = ({ file, onDownload, onView, onDelete, onToggleFavorite, onRest
       {/* Bottom row — uploader + date */}
       <div
         style={{
-          marginTop: '12px', paddingTop: '12px',
-          borderTop: '1px solid var(--border)',
+          marginTop: '10px', paddingTop: '10px',
+          borderTop: '1px solid #F0F0EE',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         }}
       >

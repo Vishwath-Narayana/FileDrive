@@ -64,6 +64,7 @@ const tabTitles = {
 };
 
 const Dashboard = () => {
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const [files, setFiles] = useState([]);
   const [filteredFiles, setFilteredFiles] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -366,30 +367,65 @@ const Dashboard = () => {
   const emptyConfig = emptyStateConfig[activeTab] || emptyStateConfig.all;
 
   return (
+    <>
+    <style>{`
+      .dashboard-main-offset { margin-left: 200px; }
+      .dashboard-header { padding: 28px 28px 0 28px; }
+      .dashboard-controls-wrap { padding: 16px 28px 0 28px; }
+      .dashboard-content { padding: 0; }
+      .dashboard-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 12px;
+        padding: 16px 28px 28px 28px;
+      }
+      .dashboard-empty-wrap { margin: 16px 28px; }
+      .dashboard-table-wrap { margin: 16px 28px; }
+      @media (max-width: 1023px) and (min-width: 768px) {
+        .dashboard-grid { grid-template-columns: repeat(2, 1fr); }
+      }
+      @media (max-width: 767px) {
+        .dashboard-main-offset { margin-left: 0 !important; }
+        .dashboard-header { padding: 20px 16px 0 16px; }
+        .dashboard-controls-wrap { padding: 12px 16px 0 16px; }
+        .dashboard-grid {
+          grid-template-columns: 1fr;
+          padding: 12px 16px 24px 16px;
+        }
+        .dashboard-empty-wrap { margin: 12px 16px; }
+        .dashboard-table-wrap { margin: 12px 16px; }
+      }
+    `}</style>
     <div style={{ display: 'flex', height: '100vh', background: 'var(--bg-base)' }}>
-      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+      <Sidebar
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        drawerOpen={drawerOpen}
+        setDrawerOpen={setDrawerOpen}
+      />
       
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', marginLeft: '200px' }}>
+      <div className="dashboard-main-offset" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <Topbar 
           onOpenAdminModal={() => setShowManageOrgModal(true)} 
           onOpenCreateOrgModal={() => setShowCreateOrgModal(true)}
           socket={socket}
+          setDrawerOpen={setDrawerOpen}
         />
         
         <main style={{ flex: 1, overflowY: 'auto', background: 'var(--bg-base)' }}>
           {/* Page header */}
-          <div style={{ paddingTop: '32px', paddingLeft: '32px', paddingRight: '32px' }}>
-            <h1 style={{ fontSize: '20px', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>
+          <div className="dashboard-header">
+            <h1 style={{ fontSize: '18px', fontWeight: 600, color: '#1A1A1A', margin: 0 }}>
               {tabTitles[activeTab]}
             </h1>
-            <p style={{ fontSize: '12px', fontWeight: 400, color: 'var(--text-secondary)', margin: '2px 0 0' }}>
+            <p style={{ fontSize: '12px', color: '#9CA3AF', margin: '3px 0 0' }}>
               {currentOrganization?.name}
               {activeTab === 'all' && ` · ${files.length} ${files.length === 1 ? 'file' : 'files'}`}
             </p>
           </div>
 
           {/* Controls */}
-          <div style={{ marginTop: '20px', padding: '0 32px' }}>
+          <div className="dashboard-controls-wrap">
             <DashboardControls
               searchQuery={searchQuery}
               setSearchQuery={setSearchQuery}
@@ -403,14 +439,10 @@ const Dashboard = () => {
           </div>
 
           {/* File list / grid / empty / skeleton */}
-          <div style={{ padding: '20px 32px' }}>
+          <div className="dashboard-content">
             {loading ? (
               viewMode === 'grid' ? (
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-                  gap: '12px',
-                }}>
+                <div className="dashboard-grid" style={{ display: 'grid' }}>
                   {[...Array(8)].map((_, i) => <SkeletonCard key={i} />)}
                 </div>
               ) : (
@@ -433,6 +465,7 @@ const Dashboard = () => {
               )
             ) : filteredFiles.length === 0 ? (
               /* Empty state */
+              <div className="dashboard-empty-wrap">
               <div style={{
                 minHeight: '360px', display: 'flex', flexDirection: 'column',
                 alignItems: 'center', justifyContent: 'center',
@@ -459,12 +492,9 @@ const Dashboard = () => {
                   </button>
                 )}
               </div>
+              </div>
             ) : viewMode === 'grid' ? (
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-                gap: '12px',
-              }}>
+              <div className="dashboard-grid" style={{ display: 'grid' }}>
                 {filteredFiles.map((file) => (
                   <FileCard
                     key={file._id}
@@ -481,6 +511,7 @@ const Dashboard = () => {
                 ))}
               </div>
             ) : (
+              <div className="dashboard-table-wrap">
               <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: '12px', overflow: 'hidden' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
@@ -511,12 +542,14 @@ const Dashboard = () => {
                   </tbody>
                 </table>
               </div>
+              </div>
             )}
           </div>
         </main>
       </div>
+    </div>
 
-      {/* ── Upload Modal ─────────────────────────── */}
+    {/* ── Upload Modal ─────────────────────────── */}
       <Modal
         show={showUploadModal}
         onHide={() => { if (!uploading) { setShowUploadModal(false); setUploadFile(null); setUploadProgress(0); }}}
@@ -768,7 +801,7 @@ const Dashboard = () => {
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
       `}</style>
-    </div>
+    </>
   );
 };
 

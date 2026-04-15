@@ -50,6 +50,17 @@ const Login = () => {
         padding: '24px 16px',
       }}
     >
+      <style>{`
+        @media (max-width: 480px) {
+          .auth-card {
+            width: 100% !important;
+            border: none !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+            padding: 24px 20px !important;
+          }
+        }
+      `}</style>
       <div className="animate-slide-up">
         {/* Logo */}
         <Link to="/" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '24px', textDecoration: 'none' }}>
@@ -63,6 +74,7 @@ const Login = () => {
 
         {/* Card */}
         <div
+          className="auth-card"
           style={{
             width: '360px', maxWidth: '90vw',
             background: 'var(--bg-surface)',

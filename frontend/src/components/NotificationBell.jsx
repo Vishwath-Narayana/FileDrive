@@ -106,15 +106,25 @@ const NotificationBell = ({ socket }) => {
 
       {/* Dropdown */}
       {open && (
+        <>
+        <style>{`
+          @media (max-width: 767px) {
+            .notif-dropdown {
+              width: calc(100vw - 32px) !important;
+              right: -8px !important;
+            }
+          }
+        `}</style>
         <div
+          className="notif-dropdown"
           style={{
-            position: 'absolute', right: 0, top: '40px',
-            width: '320px',
-            background: 'var(--bg-surface)',
-            border: '1px solid var(--border)',
+            position: 'absolute', right: 0, top: 'calc(100% + 8px)',
+            width: '300px',
+            background: '#FFFFFF',
+            border: '1px solid #E8E8E6',
             borderRadius: '12px',
             boxShadow: '0 8px 24px rgba(0,0,0,0.10)',
-            zIndex: 50,
+            zIndex: 100,
             overflow: 'hidden',
           }}
         >
@@ -142,13 +152,13 @@ const NotificationBell = ({ socket }) => {
                 width: '24px', height: '24px', borderRadius: '4px',
                 border: 'none', background: 'transparent',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                color: 'var(--text-tertiary)', cursor: 'pointer',
+                color: '#9CA3AF', cursor: 'pointer',
                 transition: 'background 150ms ease',
               }}
               onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
               onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
             >
-              <X size={13} />
+              <X size={12} />
             </button>
           </div>
 
@@ -283,6 +293,7 @@ const NotificationBell = ({ socket }) => {
             </div>
           )}
         </div>
+        </>
       )}
     </div>
   );

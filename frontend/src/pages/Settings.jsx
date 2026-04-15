@@ -11,6 +11,7 @@ import { supabase } from '../services/supabaseClient';
 const Settings = () => {
   const navigate = useNavigate();
   const { user, updateAvatar, updatePassword } = useAuth();
+  const [drawerOpen, setDrawerOpen] = useState(false);
   
   const [name, setName] = useState(user?.name || '');
   const [email] = useState(user?.email || '');
@@ -139,17 +140,33 @@ const Settings = () => {
     : '?';
 
   return (
+    <>
+    <style>{`
+      .settings-main-offset { margin-left: 200px; }
+      .settings-content { max-width: 560px; margin: 0 auto; padding: 40px 24px; }
+      .settings-name-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+      .settings-passwords-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+      @media (max-width: 767px) {
+        .settings-main-offset { margin-left: 0 !important; }
+        .settings-content { padding: 20px 16px; }
+      }
+      @media (max-width: 640px) {
+        .settings-name-grid { grid-template-columns: 1fr; }
+        .settings-passwords-grid { grid-template-columns: 1fr; }
+      }
+    `}</style>
     <div style={{ display: 'flex', height: '100vh', background: 'var(--bg-base)' }}>
-      <Sidebar activeTab="settings" setActiveTab={() => {}} />
+      <Sidebar activeTab="settings" setActiveTab={() => {}} drawerOpen={drawerOpen} setDrawerOpen={setDrawerOpen} />
       
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', marginLeft: '200px' }}>
+      <div className="settings-main-offset" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <Topbar 
           onOpenAdminModal={() => {}} 
           onOpenCreateOrgModal={() => {}}
+          setDrawerOpen={setDrawerOpen}
         />
         
         <main style={{ flex: 1, overflowY: 'auto', background: 'var(--bg-base)' }}>
-          <div style={{ maxWidth: '560px', margin: '0 auto', padding: '40px 24px' }}>
+          <div className="settings-content">
             {/* Back + heading */}
             <div style={{ marginBottom: '24px' }}>
               <button
@@ -234,7 +251,7 @@ const Settings = () => {
                 </div>
 
                 {/* Name + Age */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div className="settings-name-grid">
                   <div>
                     <label htmlFor="name" style={labelStyle}>Full name</label>
                     <input
@@ -289,7 +306,7 @@ const Settings = () => {
               <p style={sectionTitle}>Security</p>
 
               <form onSubmit={handleUpdatePassword} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div className="settings-passwords-grid">
                   {/* New password */}
                   <div>
                     <label style={labelStyle}>New password</label>
@@ -388,7 +405,17 @@ const Settings = () => {
                   <button
                     type="submit"
                     disabled={updatingPassword || !newPassword || !confirmPassword}
-                    className="btn-primary"
+                    style={{
+                      height: '32px', padding: '0 14px',
+                      background: (!newPassword || !confirmPassword) ? '#E8E8E6' : '#1A1A1A',
+                      color: (!newPassword || !confirmPassword) ? '#9CA3AF' : '#FFFFFF',
+                      border: 'none', borderRadius: '6px',
+                      fontSize: '13px', fontWeight: 500,
+                      cursor: (updatingPassword || !newPassword || !confirmPassword) ? 'not-allowed' : 'pointer',
+                      pointerEvents: (!newPassword || !confirmPassword) ? 'none' : 'auto',
+                      display: 'flex', alignItems: 'center', gap: '6px',
+                      transition: 'background 150ms ease, color 150ms ease',
+                    }}
                   >
                     {updatingPassword ? (
                       <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -405,6 +432,7 @@ const Settings = () => {
       </div>
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
+    </>
   );
 };
 
