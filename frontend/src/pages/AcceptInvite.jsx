@@ -8,7 +8,7 @@ import logo from '../assets/logo.png';
 const AcceptInvite = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { isAuthenticated, loading: authLoading, refreshOrganizations, switchOrganization } = useAuth();
+  const { isAuthenticated, loading: authLoading, refreshOrganizations } = useAuth();
   const [status, setStatus] = useState('loading');
   const [message, setMessage] = useState('');
   const [inviteData, setInviteData] = useState(null);
@@ -40,9 +40,6 @@ const AcceptInvite = () => {
       setMessage(response.data.message);
 
       if (isAuthenticated) {
-        if (response.data.organization) {
-          switchOrganization(response.data.organization);
-        }
         await refreshOrganizations();
         setTimeout(() => {
           navigate('/dashboard');

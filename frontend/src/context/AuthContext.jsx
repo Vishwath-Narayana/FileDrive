@@ -132,21 +132,21 @@ export const AuthProvider = ({ children }) => {
               const inviteToken = localStorage.getItem('inviteToken');
               if (inviteToken && event === 'SIGNED_IN') {
                 try {
-                  // The backend accept-invite returns the organization object!
-                  const acceptRes = await api.post('/organizations/accept-invite', { token: inviteToken });
-                  const newOrg = acceptRes.data.organization;
-                  
-                  if (newOrg) {
-                    setCurrentOrganization(newOrg);
-                    localStorage.setItem('currentOrganization', JSON.stringify(newOrg));
-                    
-                    // Refresh the full organizations list to be sure
-                    const orgRes = await api.get('/organizations');
-                    setOrganizations(orgRes.data);
-                  }
-                  
+                  await api.post('/organizations/accept-invite', { token: inviteToken });
                   localStorage.removeItem('inviteToken');
+                  // Refresh orgs so the new one appears in sidebar
+                  const orgRes = await api.get('/organizations');
+                  setOrganizations(orgRes.data);
+                  if (orgRes.data.length > 0) {
+                    const saved = localStorage.getItem('currentOrganization');
+                    const parsedSaved = saved ? JSON.parse(saved) : null;
+                    const match = parsedSaved ? orgRes.data.find(o => o._id === parsedSaved._id) : null;
+                    const active = match || orgRes.data[0];
+                    setCurrentOrganization(active);
+                    localStorage.setItem('currentOrganization', JSON.stringify(active));
+                  }
                 } catch (err) {
+                  // If already a member or invalid token, silently clear
                   localStorage.removeItem('inviteToken');
                   console.warn('Auto-join invite failed:', err.response?.data?.message);
                 }

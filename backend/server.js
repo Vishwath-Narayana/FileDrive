@@ -32,19 +32,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/organizations', organizationRoutes);
 app.use('/api/users', userRoutes);
 
-app.get('/', async (req, res) => {
-  try {
-    const Invitation = require('./models/Invitation');
-    const User = require('./models/User');
-    const users = await User.find({}, 'email name supabaseId');
-    const invites = await Invitation.find({}, 'email status token organization');
-    console.log('--- DB DUMP START ---');
-    console.log('USERS:', users);
-    console.log('INVITES:', invites);
-    console.log('--- DB DUMP END ---');
-  } catch(e) {
-    console.error(e);
-  }
+app.get('/', (req, res) => {
   res.json({ message: 'File Sharing API is running' });
 });
 

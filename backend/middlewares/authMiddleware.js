@@ -1,8 +1,6 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const Organization = require('../models/Organization');
-const Invitation = require('../models/Invitation');
-const Notification = require('../models/Notification');
 
 const authMiddleware = async (req, res, next) => {
   try {
@@ -72,25 +70,6 @@ const authMiddleware = async (req, res, next) => {
 
       user.personalOrganization = personalOrg._id;
       await user.save();
-
-      // 🔥 RETROACTIVE LOGIC: Find any pending invites and generate notifications
-      try {
-        const pendingInvites = await Invitation.find({ email: user.email, status: 'pending' }).populate('organization');
-        for (const invite of pendingInvites) {
-          const orgName = invite.organization ? invite.organization.name : 'an organization';
-          await Notification.create({
-            recipient: user._id,
-            sender: invite.invitedBy,
-            message: `You've been invited to join ${orgName}`,
-            type: 'invite',
-            orgId: invite.organization ? invite.organization._id : null,
-            token: invite.token
-          });
-        }
-        console.log(`✅ Created ${pendingInvites.length} retroactive notifications for new user`);
-      } catch (err) {
-        console.error('⚠️ Failed to create retroactive notifications:', err.message);
-      }
     }
 
     // Attach full Mongo user to request

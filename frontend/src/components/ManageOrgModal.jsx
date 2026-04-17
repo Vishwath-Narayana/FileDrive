@@ -141,7 +141,7 @@ const ManageOrgModal = ({ show, onHide }) => {
         console.warn('Supabase OTP error (non-fatal):', otpError.message);
       }
 
-      setInviteSuccess({ email: inviteEmail, link: inviteLink });
+      setInviteSuccess({ email: inviteEmail });
       toast.success('Invitation email sent!');
       setInviteEmail('');
       setInviteRole('viewer');
@@ -299,20 +299,6 @@ const ManageOrgModal = ({ show, onHide }) => {
               <p style={{ fontSize: '12px', color: '#166534', margin: '2px 0 0' }}>
                 A magic link was emailed to <strong>{inviteSuccess.email}</strong>. They'll join automatically after clicking it.
               </p>
-              <div style={{ marginTop: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <input 
-                  readOnly 
-                  value={inviteSuccess.link} 
-                  style={{ fontSize: '11px', padding: '4px 8px', border: '1px solid #BBF7D0', borderRadius: '4px', background: 'white', flex: 1 }} 
-                  onClick={e => e.target.select()}
-                />
-                <button 
-                  onClick={() => { navigator.clipboard.writeText(inviteSuccess.link); toast.success('Link copied!'); }}
-                  style={{ fontSize: '11px', padding: '4px 8px', background: '#22C55E', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', whiteSpace: 'nowrap' }}
-                >
-                  Copy Link
-                </button>
-              </div>
             </div>
             <button onClick={() => setInviteSuccess(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#22C55E', padding: 0, display: 'flex' }}>
               <X size={14} />
