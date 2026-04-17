@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@400;700;900&family=Inter:wght@400;500&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -31,6 +31,18 @@
   --mobile: 767px;
   --tablet: 768px;
   --desktop: 1024px;
+  
+  /* New Landing UI tokens */
+  --font-display: 'Geist', sans-serif;
+  --font-body: 'Inter', sans-serif;
+  --background: 0 0% 99%;
+  --foreground: 0 0% 4%;
+  --muted: 0 0% 96%;
+  --muted-foreground: 0 0% 42%;
+  --border: 0 0% 90%;
+  --primary: 0 0% 4%;
+  --primary-foreground: 0 0% 99%;
+  --accent: 0 0% 95%;
 }
 
 body {
@@ -385,4 +397,15 @@ select:focus-visible {
     height: 36px !important;
   }
 }
+
+/* ─── Custom Landing Animations ─────────────────── */
+@keyframes fade-rise {
+  from { opacity: 0; transform: translateY(28px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-rise   { animation: fade-rise 0.9s ease-out both; }
+.animate-fade-rise-1 { animation: fade-rise 0.9s ease-out 0.15s both; }
+.animate-fade-rise-2 { animation: fade-rise 0.9s ease-out 0.3s both; }
+.animate-fade-rise-3 { animation: fade-rise 0.9s ease-out 0.5s both; }
+
 
