@@ -40,8 +40,30 @@ const NotificationBell = ({ socket }) => {
 
   const fetchNotifications = async () => {
     try {
-      const res = await api.get('/organizations/notifications');
-      setNotifications(res.data);
+      const [notifRes, invitesRes] = await Promise.all([
+        api.get('/organizations/notifications'),
+        api.get('/organizations/invitations/me')
+      ]);
+
+      const nts = notifRes.data || [];
+      const invites = (invitesRes.data || []).map(inv => ({
+        _id: 'inv_' + inv._id,
+        isDirectInvite: true,
+        type: 'invite',
+        status: 'unread',
+        message: `You've been invited to join ${inv.organization?.name || 'an organization'}`,
+        sender: inv.invitedBy,
+        createdAt: inv.createdAt,
+        token: inv.token,
+        realInviteId: inv._id
+      }));
+
+      // Deduplicate so we don't show backend-generated notifications for the exact same invite token
+      const inviteTokens = new Set(invites.map(i => i.token));
+      const filteredNts = nts.filter(n => !(n.type === 'invite' && inviteTokens.has(n.token)));
+
+      const combined = [...invites, ...filteredNts].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      setNotifications(combined);
     } catch (_) {}
   };
 
@@ -57,13 +79,27 @@ const NotificationBell = ({ socket }) => {
   const handleAcceptInvite = async (notification) => {
     try {
       await api.post('/organizations/accept-invite', { token: notification.token });
-      await markRead(notification._id);
+      if (!notification.isDirectInvite) {
+        await markRead(notification._id);
+      }
       await refreshOrganizations();
       toast.success('You joined the organization!');
       setOpen(false);
+      fetchNotifications();
     } catch (err) {
       toast.error(err.response?.data?.message || 'Could not join organization');
     }
+  };
+
+  const handleDismissInvite = async (n) => {
+    try {
+      if (n.isDirectInvite) {
+        await api.post(`/organizations/invitations/${n.realInviteId}/reject`);
+        fetchNotifications();
+      } else {
+        await markRead(n._id);
+      }
+    } catch (err) {}
   };
 
   const formatTime = (date) => {
@@ -232,7 +268,7 @@ const NotificationBell = ({ socket }) => {
                             Join
                           </button>
                           <button
-                            onClick={() => markRead(n._id)}
+                            onClick={() => handleDismissInvite(n)}
                             style={{
                               height: '24px', padding: '0 10px',
                               background: 'transparent', color: 'var(--text-secondary)',
