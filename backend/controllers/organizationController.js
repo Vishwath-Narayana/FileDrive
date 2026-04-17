@@ -87,16 +87,23 @@ exports.updateMemberRole = async (req, res) => {
       return res.status(404).json({ message: 'Organization not found' });
     }
 
+    // Allow owner to update roles, or explicitly an admin
+    const isOwner = organization.owner.toString() === req.user._id.toString();
     const requesterMember = organization.members.find(
-      m => m.user.toString() === req.user._id.toString()
+      m => m.user && m.user.toString() === req.user._id.toString()
     );
 
-    if (!requesterMember || requesterMember.role !== 'admin') {
-      return res.status(403).json({ message: 'Only admins can change roles' });
+    if (!isOwner && (!requesterMember || requesterMember.role !== 'admin')) {
+      return res.status(403).json({ message: 'Only admins and owners can change roles' });
+    }
+
+    // Prevent modifying the owner's role
+    if (organization.owner.toString() === userId) {
+      return res.status(400).json({ message: "The organization owner's role cannot be changed" });
     }
 
     const memberIndex = organization.members.findIndex(
-      m => m.user.toString() === userId
+      m => m.user && m.user.toString() === userId
     );
 
     if (memberIndex === -1) {
@@ -410,7 +417,7 @@ exports.acceptInviteByToken = async (req, res) => {
 
     // Manual dedup check instead of $addToSet for nested objects
     const alreadyMember = organization.members.some(
-      m => m.user.toString() === user._id.toString()
+      m => m.user && m.user.toString() === user._id.toString()
     );
     
     if (!alreadyMember) {
@@ -483,7 +490,7 @@ exports.removeMember = async (req, res) => {
     // Check if the requester is an admin or owner
     const isOwner = organization.owner.toString() === req.user._id.toString();
     const requesterMember = organization.members.find(
-      m => m.user.toString() === req.user._id.toString()
+      m => m.user && m.user.toString() === req.user._id.toString()
     );
 
     if (!isOwner && (!requesterMember || requesterMember.role !== 'admin')) {
@@ -503,7 +510,7 @@ exports.removeMember = async (req, res) => {
 
     const initialLength = organization.members.length;
     organization.members = organization.members.filter(
-      m => m.user.toString() !== userId
+      m => m.user && m.user.toString() !== userId
     );
 
     if (organization.members.length === initialLength) {
