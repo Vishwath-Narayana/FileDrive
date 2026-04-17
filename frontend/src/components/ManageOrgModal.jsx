@@ -49,7 +49,8 @@ const ManageOrgModal = ({ show, onHide }) => {
   const [inviteRole, setInviteRole] = useState('viewer');
   const [sending, setSending] = useState(false);
   const [inviteSuccess, setInviteSuccess] = useState(null);
-  
+  const [removingMember, setRemovingMember] = useState(false);
+
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [confirmOrgName, setConfirmOrgName] = useState('');
   const [memberToRemove, setMemberToRemove] = useState(null);
@@ -112,16 +113,32 @@ const ManageOrgModal = ({ show, onHide }) => {
 
   const confirmRemoveMember = async () => {
     if (!memberToRemove) return;
-    
+
+    // Safely extract the user ID whether member.user is a populated object or a raw string
+    const userId =
+      memberToRemove.user?._id?.toString() ||
+      memberToRemove.user?.toString();
+
+    if (!userId) {
+      toast.error('Unable to identify member — please refresh and try again.');
+      return;
+    }
+
     try {
-      await api.delete(`/organizations/${currentOrganization._id}/members/${memberToRemove.user?._id || memberToRemove.user}`);
+      setRemovingMember(true);
+      console.log('🗑️ Removing member userId:', userId, 'from org:', currentOrganization._id);
+      const res = await api.delete(`/organizations/${currentOrganization._id}/members/${userId}`);
+      console.log('✅ Remove member response:', res.data);
       toast.success('Member removed successfully');
       setShowRemoveMemberConfirm(false);
       setMemberToRemove(null);
       await fetchOrganizationData();
       await refreshOrganizations();
     } catch (error) {
+      console.error('❌ Remove member error:', error.response?.data || error.message);
       toast.error(error.response?.data?.message || 'Failed to remove member');
+    } finally {
+      setRemovingMember(false);
     }
   };
 
@@ -199,20 +216,29 @@ const ManageOrgModal = ({ show, onHide }) => {
       return;
     }
 
+    const deletedOrgId = currentOrganization._id;
+    const personalOrgId = user?.personalOrganization?.toString();
+
     try {
       setDeletingOrg(true);
-      await api.delete(`/organizations/${currentOrganization._id}`);
+      console.log('🗑️ Deleting org:', deletedOrgId);
+      await api.delete(`/organizations/${deletedOrgId}`);
+      console.log('✅ Org deleted');
       toast.success('Organization deleted successfully');
 
       localStorage.removeItem('currentOrganization');
-      await refreshOrganizations();
 
-      const remainingOrgs = organizations.filter(o => o._id !== currentOrganization._id);
+      // refreshOrganizations updates state AND returns fresh list via the API;
+      // we fetch fresh org list directly so the closure isn't stale
+      const { data: freshOrgs } = await api.get('/organizations');
+      const remainingOrgs = freshOrgs.filter(o => o._id !== deletedOrgId);
       const fallback =
-        remainingOrgs.find(o => o._id === user?.personalOrganization?.toString()) ||
-        remainingOrgs.find(o => o._id === user?.personalOrganization) ||
-        remainingOrgs[0];
+        remainingOrgs.find(o => o._id === personalOrgId) ||
+        remainingOrgs[0] ||
+        null;
 
+      // Sync context with fresh data
+      await refreshOrganizations();
       if (fallback) {
         switchOrganization(fallback);
       }
@@ -728,17 +754,20 @@ const ManageOrgModal = ({ show, onHide }) => {
               </button>
               <button
                 onClick={confirmRemoveMember}
+                disabled={removingMember}
                 style={{
                   flex: 1, height: '32px', padding: '0 14px',
                   background: '#EF4444', color: 'white',
                   border: 'none', borderRadius: '6px',
-                  fontSize: '13px', fontWeight: 500, cursor: 'pointer',
+                  fontSize: '13px', fontWeight: 500,
+                  cursor: removingMember ? 'not-allowed' : 'pointer',
+                  opacity: removingMember ? 0.6 : 1,
                   transition: 'opacity 150ms ease',
                 }}
-                onMouseEnter={e => e.currentTarget.style.opacity = '0.85'}
-                onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+                onMouseEnter={e => { if (!removingMember) e.currentTarget.style.opacity = '0.85'; }}
+                onMouseLeave={e => { if (!removingMember) e.currentTarget.style.opacity = '1'; }}
               >
-                Remove
+                {removingMember ? 'Removing...' : 'Remove'}
               </button>
             </div>
           </div>

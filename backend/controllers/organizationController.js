@@ -150,11 +150,12 @@ exports.sendInvitation = async (req, res) => {
       return res.status(404).json({ message: 'Organization not found' });
     }
 
+    const isOwner = organization.owner?.toString() === req.user._id.toString();
     const requesterMember = organization.members.find(
       m => m.user.toString() === req.user._id.toString()
     );
 
-    if (!requesterMember || requesterMember.role !== 'admin') {
+    if (!isOwner && (!requesterMember || requesterMember.role !== 'admin')) {
       return res.status(403).json({ message: 'Only admins can send invitations' });
     }
 
@@ -233,11 +234,12 @@ exports.getOrganizationInvitations = async (req, res) => {
       return res.status(404).json({ message: 'Organization not found' });
     }
 
+    const isOwner = organization.owner?.toString() === req.user._id.toString();
     const requesterMember = organization.members.find(
       m => m.user.toString() === req.user._id.toString()
     );
 
-    if (!requesterMember || requesterMember.role !== 'admin') {
+    if (!isOwner && (!requesterMember || requesterMember.role !== 'admin')) {
       return res.status(403).json({ message: 'Only admins can view invitations' });
     }
 
@@ -364,10 +366,11 @@ exports.revokeInvitation = async (req, res) => {
       return res.status(404).json({ message: 'Organization not found' });
     }
 
+    const isOwner2 = organization.owner?.toString() === req.user._id.toString();
     const requesterMember = organization.members.find(
       m => m.user.toString() === req.user._id.toString()
     );
-    if (!requesterMember || requesterMember.role !== 'admin') {
+    if (!isOwner2 && (!requesterMember || requesterMember.role !== 'admin')) {
       return res.status(403).json({ message: 'Only admins can revoke invitations' });
     }
 
@@ -492,7 +495,7 @@ exports.removeMember = async (req, res) => {
     }
 
     // Check if the requester is an admin or owner
-    const isOwner = organization.owner.toString() === req.user._id.toString();
+    const isOwner = organization.owner?.toString() === req.user._id.toString();
     const requesterMember = organization.members.find(
       m => m.user && m.user.toString() === req.user._id.toString()
     );
@@ -502,7 +505,7 @@ exports.removeMember = async (req, res) => {
     }
 
     // Prevent removing the owner
-    if (organization.owner.toString() === userId) {
+    if (organization.owner?.toString() === userId) {
       return res.status(400).json({ message: 'The organization owner cannot be removed' });
     }
 
