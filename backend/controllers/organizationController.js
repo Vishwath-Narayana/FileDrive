@@ -118,8 +118,12 @@ exports.updateMemberRole = async (req, res) => {
       .populate('owner', 'name email')
       .populate('members.user', 'name email');
 
-    const io = getIO();
-    if (io) io.to(`org:${organizationId}`).emit('org:updated', updatedOrg);
+    try {
+      const io = getIO();
+      if (io) io.to(`org:${organizationId}`).emit('org:updated', updatedOrg);
+    } catch (socketErr) {
+      console.warn('Socket emit skipped (not initialized):', socketErr.message);
+    }
 
     res.json(updatedOrg);
   } catch (error) {
@@ -524,8 +528,12 @@ exports.removeMember = async (req, res) => {
       .populate('owner', 'name email')
       .populate('members.user', 'name email');
 
-    const io = getIO();
-    if (io) io.to(`org:${organizationId}`).emit('org:updated', updatedOrg);
+    try {
+      const io = getIO();
+      if (io) io.to(`org:${organizationId}`).emit('org:updated', updatedOrg);
+    } catch (socketErr) {
+      console.warn('Socket emit skipped (not initialized):', socketErr.message);
+    }
 
     res.json(updatedOrg);
   } catch (error) {

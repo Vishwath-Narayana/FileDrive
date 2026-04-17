@@ -65,20 +65,29 @@ const ManageOrgModal = ({ show, onHide }) => {
     }
   }, [show, currentOrganization]);
 
+  // Join the socket room for real-time org updates
   useEffect(() => {
     if (!currentOrganization) return;
-    
-    console.log('Socket listener registered for org:updated');
+
+    const orgId = currentOrganization._id;
+    socket.emit('join-org', orgId);
+    console.log('🔌 Joined org room:', orgId);
+
     const handleOrgUpdated = (updatedOrg) => {
-      console.log('org:updated received:', updatedOrg._id, currentOrganization._id);
-      if (updatedOrg._id.toString() === currentOrganization._id.toString()) {
+      console.log('org:updated received:', updatedOrg._id, orgId);
+      if (updatedOrg._id.toString() === orgId.toString()) {
         setMembers(updatedOrg.members || []);
       }
     };
-    
+
     socket.on('org:updated', handleOrgUpdated);
-    return () => socket.off('org:updated', handleOrgUpdated);
-  }, [currentOrganization]);
+
+    return () => {
+      socket.off('org:updated', handleOrgUpdated);
+      socket.emit('leave-org', orgId);
+      console.log('🔌 Left org room:', orgId);
+    };
+  }, [currentOrganization?._id]);
 
   const fetchOrganizationData = async () => {
     try {
@@ -218,9 +227,10 @@ const ManageOrgModal = ({ show, onHide }) => {
     }
   };
 
-  const isOwner =
-    currentOrganization?.owner?.toString() === user?._id?.toString() ||
-    currentOrganization?.owner?._id?.toString() === user?._id?.toString();
+  const ownerId =
+    currentOrganization?.owner?._id?.toString() ||
+    currentOrganization?.owner?.toString();
+  const isOwner = ownerId === user?._id?.toString();
   const isPersonal =
     user?.personalOrganization?.toString() === currentOrganization?._id?.toString();
 
