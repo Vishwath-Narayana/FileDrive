@@ -68,8 +68,10 @@ const ManageOrgModal = ({ show, onHide }) => {
   useEffect(() => {
     if (!currentOrganization) return;
     
+    console.log('Socket listener registered for org:updated');
     const handleOrgUpdated = (updatedOrg) => {
-      if (updatedOrg._id === currentOrganization._id) {
+      console.log('org:updated received:', updatedOrg._id, currentOrganization._id);
+      if (updatedOrg._id.toString() === currentOrganization._id.toString()) {
         setMembers(updatedOrg.members || []);
       }
     };

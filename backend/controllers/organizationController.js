@@ -481,11 +481,12 @@ exports.removeMember = async (req, res) => {
     }
 
     // Check if the requester is an admin or owner
+    const isOwner = organization.owner.toString() === req.user._id.toString();
     const requesterMember = organization.members.find(
       m => m.user.toString() === req.user._id.toString()
     );
 
-    if (!requesterMember || requesterMember.role !== 'admin') {
+    if (!isOwner && (!requesterMember || requesterMember.role !== 'admin')) {
       return res.status(403).json({ message: 'Only admins/owners can remove members' });
     }
 
@@ -500,15 +501,15 @@ exports.removeMember = async (req, res) => {
       return res.status(400).json({ message: 'You cannot remove yourself. Use "Leave Organization" instead if available.' });
     }
 
-    const memberIndex = organization.members.findIndex(
-      m => m.user.toString() === userId
+    const initialLength = organization.members.length;
+    organization.members = organization.members.filter(
+      m => m.user.toString() !== userId
     );
 
-    if (memberIndex === -1) {
+    if (organization.members.length === initialLength) {
       return res.status(404).json({ message: 'User is not a member' });
     }
 
-    organization.members.splice(memberIndex, 1);
     organization.markModified('members');
     await organization.save();
 
