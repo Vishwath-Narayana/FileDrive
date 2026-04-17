@@ -367,11 +367,11 @@ exports.acceptInviteByToken = async (req, res) => {
       return res.status(400).json({ message: 'Token is required' });
     }
 
-    // Look up invitation by token in DB (no JWT verification)
-    const invitation = await Invitation.findOne({ token, status: 'pending' });
+    // Look up invitation by token in DB
+    const invitation = await Invitation.findOne({ token });
 
     if (!invitation) {
-      return res.status(400).json({ message: 'Invalid or expired invitation link' });
+      return res.status(400).json({ message: 'Invalid invitation link' });
     }
 
     // Check if invitation is older than 48 hours
@@ -400,22 +400,38 @@ exports.acceptInviteByToken = async (req, res) => {
       return res.status(404).json({ message: 'Organization not found' });
     }
 
-    // Use $addToSet to prevent duplicates
-    await Organization.findByIdAndUpdate(organizationId, {
-      $addToSet: {
-        members: {
-          user: user._id,
-          role
-        }
+    // Check if already a member
+    const isAlreadyMember = organization.members.some(
+      m => m.user.toString() === user._id.toString()
+    );
+
+    if (invitation.status === 'accepted') {
+      if (isAlreadyMember) {
+        // Idempotent success (likely the race condition from AuthContext & AcceptInvite)
+        const updatedOrg = await Organization.findById(organizationId)
+          .populate('owner', 'name email')
+          .populate('members.user', 'name email');
+          
+        return res.json({
+          message: 'Invitation accepted successfully',
+          organization: updatedOrg
+        });
+      } else {
+        return res.status(400).json({ message: 'Invitation link has expired or been processed already' });
       }
-    });
+    } else if (invitation.status !== 'pending') {
+      return res.status(400).json({ message: 'Invitation already processed' });
+    }
+
+    // Add to organization properly avoiding `$addToSet` subdocument generation edge cases
+    if (!isAlreadyMember) {
+      organization.members.push({ user: user._id, role });
+      await organization.save();
+    }
 
     // Mark as accepted and cleanup
     invitation.status = 'accepted';
     await invitation.save();
-    
-    // Optionally remove invite to prevent security issues on reuse
-    // await Invitation.deleteOne({ token });
 
     const updatedOrg = await Organization.findById(organizationId)
       .populate('owner', 'name email')
