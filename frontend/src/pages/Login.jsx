@@ -18,6 +18,12 @@ const Login = () => {
     if (location.state?.email) {
       setEmail(location.state.email);
     }
+    // Support token in URL even on login page (fallback)
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('token');
+    if (token) {
+      localStorage.setItem('inviteToken', token);
+    }
   }, [location.state?.email]);
 
   const handleSubmit = async (e) => {

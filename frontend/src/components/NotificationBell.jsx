@@ -46,7 +46,10 @@ const NotificationBell = ({ socket }) => {
       ]);
 
       const nts = notifRes.data || [];
-      const invites = (invitesRes.data || []).map(inv => ({
+      const invitesData = invitesRes.data || [];
+      console.log('🔔 BELL FETCH:', { notifs: nts.length, invites: invitesData.length });
+      
+      const invites = invitesData.map(inv => ({
         _id: 'inv_' + inv._id,
         isDirectInvite: true,
         type: 'invite',

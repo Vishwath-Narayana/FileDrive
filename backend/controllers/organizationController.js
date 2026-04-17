@@ -236,16 +236,21 @@ exports.getOrganizationInvitations = async (req, res) => {
 
 exports.getMyInvitations = async (req, res) => {
   try {
+    const userEmail = req.user.email.toLowerCase();
+    console.log(`📩 Fetching invitations for email: [${userEmail}]`);
+    
     const invitations = await Invitation.find({
-      email: req.user.email,
+      email: userEmail,
       status: 'pending'
     })
       .populate('organization', 'name')
       .populate('invitedBy', 'name email')
       .sort({ createdAt: -1 });
 
+    console.log(`✅ Found ${invitations.length} pending invitations`);
     res.json(invitations);
   } catch (error) {
+    console.error('❌ Error in getMyInvitations:', error.message);
     res.status(500).json({ message: error.message });
   }
 };
