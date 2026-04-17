@@ -111,6 +111,9 @@ exports.updateMemberRole = async (req, res) => {
       .populate('owner', 'name email')
       .populate('members.user', 'name email');
 
+    const io = getIO();
+    if (io) io.to(`org:${organizationId}`).emit('org:updated', updatedOrg);
+
     res.json(updatedOrg);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -405,15 +408,15 @@ exports.acceptInviteByToken = async (req, res) => {
       return res.status(404).json({ message: 'Organization not found' });
     }
 
-    // Use $addToSet to prevent duplicates
-    await Organization.findByIdAndUpdate(organizationId, {
-      $addToSet: {
-        members: {
-          user: user._id,
-          role
-        }
-      }
-    });
+    // Manual dedup check instead of $addToSet for nested objects
+    const alreadyMember = organization.members.some(
+      m => m.user.toString() === user._id.toString()
+    );
+    
+    if (!alreadyMember) {
+      organization.members.push({ user: user._id, role });
+      await organization.save();
+    }
 
     // Mark as accepted and cleanup
     invitation.status = 'accepted';
@@ -512,6 +515,9 @@ exports.removeMember = async (req, res) => {
     const updatedOrg = await Organization.findById(organizationId)
       .populate('owner', 'name email')
       .populate('members.user', 'name email');
+
+    const io = getIO();
+    if (io) io.to(`org:${organizationId}`).emit('org:updated', updatedOrg);
 
     res.json(updatedOrg);
   } catch (error) {

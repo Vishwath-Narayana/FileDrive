@@ -5,6 +5,7 @@ import { toast } from 'react-hot-toast';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../services/supabaseClient';
+import socket from '../services/socket';
 
 /* Role badge helper */
 /* Role badge helper */
@@ -63,6 +64,19 @@ const ManageOrgModal = ({ show, onHide }) => {
       setShowInviteForm(false);
     }
   }, [show, currentOrganization]);
+
+  useEffect(() => {
+    if (!currentOrganization) return;
+    
+    const handleOrgUpdated = (updatedOrg) => {
+      if (updatedOrg._id === currentOrganization._id) {
+        setMembers(updatedOrg.members || []);
+      }
+    };
+    
+    socket.on('org:updated', handleOrgUpdated);
+    return () => socket.off('org:updated', handleOrgUpdated);
+  }, [currentOrganization]);
 
   const fetchOrganizationData = async () => {
     try {
