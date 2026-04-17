@@ -362,6 +362,7 @@ exports.revokeInvitation = async (req, res) => {
 exports.acceptInviteByToken = async (req, res) => {
   try {
     const { token } = req.body;
+    console.log('🔗 POST /accept-invite called with token:', token);
 
     if (!token) {
       return res.status(400).json({ message: 'Token is required' });
@@ -369,6 +370,7 @@ exports.acceptInviteByToken = async (req, res) => {
 
     // Look up invitation by token in DB
     const invitation = await Invitation.findOne({ token });
+    console.log('🔍 Invitation found:', invitation ? `for ${invitation.email} (status: ${invitation.status})` : 'NOT FOUND');
 
     if (!invitation) {
       return res.status(400).json({ message: 'Invalid invitation link' });
@@ -423,9 +425,11 @@ exports.acceptInviteByToken = async (req, res) => {
       return res.status(400).json({ message: 'Invitation already processed' });
     }
 
-    // Add to organization properly avoiding `$addToSet` subdocument generation edge cases
+    // Add to organization properly
     if (!isAlreadyMember) {
+      console.log(`👤 Adding user ${user._id} to organization ${organizationId} as ${role}`);
       organization.members.push({ user: user._id, role });
+      organization.markModified('members');
       await organization.save();
     }
 

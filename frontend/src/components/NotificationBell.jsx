@@ -64,7 +64,9 @@ const NotificationBell = ({ socket }) => {
 
       const combined = [...invites, ...filteredNts].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
       setNotifications(combined);
-    } catch (_) {}
+    } catch (err) {
+      console.error('Notification fetch error:', err);
+    }
   };
 
   const markRead = async (id) => {
