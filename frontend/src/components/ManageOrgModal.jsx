@@ -126,8 +126,8 @@ const ManageOrgModal = ({ show, onHide }) => {
         role: inviteRole
       });
 
-      const token = response.data.token;
-      const inviteLink = `${window.location.origin}/accept-invite?token=${token}`;
+      const inviteToken = response.data.token;
+      const inviteLink = `https://file-drive-amber.vercel.app/accept-invite?token=${inviteToken}`;
 
       const { error: otpError } = await supabase.auth.signInWithOtp({
         email: inviteEmail,

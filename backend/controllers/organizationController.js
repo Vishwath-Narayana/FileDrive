@@ -174,13 +174,15 @@ exports.sendInvitation = async (req, res) => {
     // 🔴 Real-time: check if user exists in MongoDB to notify them in-app
     const invitedUser = await User.findOne({ email: normalizedEmail });
     if (invitedUser) {
+      console.log('invitedUser found:', invitedUser._id);
       const notification = await Notification.create({
         recipient: invitedUser._id,
         sender: req.user._id,
         message: `You've been invited to join ${organization.name}`,
         type: 'invite',
         orgId: organizationId,
-        token: inviteToken
+        token: inviteToken,
+        status: 'unread'
       });
 
       // Emit real-time notification
@@ -196,7 +198,10 @@ exports.sendInvitation = async (req, res) => {
       .populate('organization', 'name')
       .populate('invitedBy', 'name email');
 
-    res.status(201).json(populatedInvitation);
+    res.status(201).json({ 
+      ...populatedInvitation.toObject(), 
+      token: inviteToken 
+    });
 
   } catch (error) {
     console.error('Send invitation error:', error);
