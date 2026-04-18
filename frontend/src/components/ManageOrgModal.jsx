@@ -288,7 +288,7 @@ const ManageOrgModal = ({ show, onHide }) => {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          zIndex: 9999
+          zIndex: 1030
         }}
         onClick={onHide}
       >
@@ -715,6 +715,7 @@ const ManageOrgModal = ({ show, onHide }) => {
           centered
           className="confirmation-modal"
           backdropClassName="confirmation-backdrop"
+          style={{ zIndex: 1070 }}
         >
           <div
             style={{
@@ -780,6 +781,7 @@ const ManageOrgModal = ({ show, onHide }) => {
           centered
           className="confirmation-modal"
           backdropClassName="confirmation-backdrop"
+          style={{ zIndex: 1070 }}
         >
           <div
             style={{

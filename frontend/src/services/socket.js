@@ -11,7 +11,7 @@ const socket = io(BACKEND_URL, {
   reconnection: true,
   reconnectionAttempts: Infinity,
   reconnectionDelay: 1000,
-  transports: ['websocket', 'polling'],
+  transports: ['polling', 'websocket'],
 });
 
 socket.on('connect', () => {

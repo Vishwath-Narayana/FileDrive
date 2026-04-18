@@ -78,6 +78,7 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const initAuth = async () => {
+      isHandlingAuth.current = true;
       try {
         const { data } = await supabase.auth.getSession();
         const session = data?.session;
@@ -86,6 +87,7 @@ export const AuthProvider = ({ children }) => {
         if (!session) {
           setUser(null);
           setLoading(false);
+          isHandlingAuth.current = false;
           return;
         }
 
@@ -98,6 +100,7 @@ export const AuthProvider = ({ children }) => {
       }
 
       setLoading(false);
+      isHandlingAuth.current = false;
     };
 
     initAuth();
