@@ -178,7 +178,9 @@ const Dashboard = () => {
       const response = await api.get(url);
       setFiles(response.data);
     } catch (error) {
-      toast.error('Failed to fetch files');
+      if (error.response?.status !== 403) {
+        toast.error('Failed to fetch files');
+      }
     } finally {
       setLoading(false);
     }

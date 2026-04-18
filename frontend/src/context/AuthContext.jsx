@@ -182,16 +182,41 @@ export const AuthProvider = ({ children }) => {
     const handleOrgUpdated = (updatedOrg) => {
       console.log('📡 Real-time org update received:', updatedOrg.name);
       
-      // Update global currentOrganization state
-      if (updatedOrg._id === orgId) {
+      const isMatchingCurrent = updatedOrg._id === orgId;
+
+      if (isMatchingCurrent) {
+        // Check if I am still a member
+        const isStillMember = updatedOrg.members?.some(m => {
+          const memberUserId = m.user?._id?.toString() || m.user?.toString() || m.user;
+          return memberUserId === user?._id?.toString();
+        });
+
+        if (!isStillMember) {
+          console.log('🚪 You were removed from this organization. Cleaning up...');
+          setCurrentOrganization(null); // Clear immediately to stop Dashboard from fetching
+          setOrganizations(prev => prev.filter(org => org._id !== orgId)); // Remove from list immediately
+          localStorage.removeItem('currentOrganization');
+          refreshOrganizations();
+          return;
+        }
+
+        // Update global currentOrganization state
         setCurrentOrganization(updatedOrg);
         localStorage.setItem('currentOrganization', JSON.stringify(updatedOrg));
       }
 
-      // Also update the organizations list so the sidebar/switcher stays fresh
-      setOrganizations(prev => 
-        prev.map(org => org._id === updatedOrg._id ? updatedOrg : org)
-      );
+      // Update the sidebars/switcher list
+      setOrganizations(prev => {
+        const isMember = updatedOrg.members?.some(m => {
+          const memberUserId = m.user?._id?.toString() || m.user?.toString() || m.user;
+          return memberUserId === user?._id?.toString();
+        });
+
+        if (!isMember) {
+          return prev.filter(org => org._id !== updatedOrg._id);
+        }
+        return prev.map(org => org._id === updatedOrg._id ? updatedOrg : org);
+      });
     };
 
     socket.on('org:updated', handleOrgUpdated);
