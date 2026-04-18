@@ -22,10 +22,11 @@ const Topbar = ({ onOpenAdminModal, onOpenCreateOrgModal, socket, setDrawerOpen 
     currentOrganization?.name?.includes("Personal");
 
   const isAdmin = currentOrganization &&
-    currentOrganization._id !== user?.personalOrganization?._id &&
-    currentOrganization._id !== user?.personalOrganization &&
     currentOrganization.members?.find(
-      m => m.user._id === user?._id || m.user === user?._id
+      m => {
+        const memberUserId = m.user?._id?.toString() || m.user?.toString();
+        return memberUserId === user?._id?.toString();
+      }
     )?.role === 'admin';
 
   const AvatarCircle = () => (
@@ -189,7 +190,7 @@ const Topbar = ({ onOpenAdminModal, onOpenCreateOrgModal, socket, setDrawerOpen 
 
         {/* ── DESKTOP RIGHT — bell + avatar ── */}
         <div className="topbar-desktop-right" style={{ alignItems: 'center', gap: '8px' }}>
-          {!isPersonalOrg && (
+          {!isPersonalOrg && isAdmin && (
             <button
               onClick={onOpenAdminModal}
               style={{

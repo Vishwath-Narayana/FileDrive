@@ -1,6 +1,7 @@
 import { createContext, useState, useEffect, useContext, useRef } from 'react';
 import { supabase } from '../services/supabaseClient';
 import api, { setAuthToken } from '../services/api';
+import socket from '../services/socket';
 
 const AuthContext = createContext();
 
@@ -170,6 +171,36 @@ export const AuthProvider = ({ children }) => {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  useEffect(() => {
+    if (!currentOrganization) return;
+    const orgId = currentOrganization._id;
+    
+    // Join the org room for real-time updates
+    socket.emit('join-org', orgId);
+
+    const handleOrgUpdated = (updatedOrg) => {
+      console.log('📡 Real-time org update received:', updatedOrg.name);
+      
+      // Update global currentOrganization state
+      if (updatedOrg._id === orgId) {
+        setCurrentOrganization(updatedOrg);
+        localStorage.setItem('currentOrganization', JSON.stringify(updatedOrg));
+      }
+
+      // Also update the organizations list so the sidebar/switcher stays fresh
+      setOrganizations(prev => 
+        prev.map(org => org._id === updatedOrg._id ? updatedOrg : org)
+      );
+    };
+
+    socket.on('org:updated', handleOrgUpdated);
+    
+    return () => {
+      socket.off('org:updated', handleOrgUpdated);
+      socket.emit('leave-org', orgId);
+    };
+  }, [currentOrganization?._id]);
 
   const login = async (email, password) => {
     isHandlingAuth.current = true; // Block listener from double-fetching

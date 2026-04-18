@@ -303,7 +303,7 @@ const ManageOrgModal = ({ show, onHide }) => {
             maxHeight: '85vh',
             display: 'flex',
             flexDirection: 'column',
-            overflow: 'hidden',
+            overflow: 'visible',
             position: 'relative'
           }}
         >
@@ -392,7 +392,14 @@ const ManageOrgModal = ({ show, onHide }) => {
           .manage-org-body::-webkit-scrollbar-track { background: transparent; }
           .manage-org-body::-webkit-scrollbar-thumb { background: #E8E8E6; border-radius: 3px; }
         `}</style>
-        <div className="manage-org-body" style={{ flex: 1, overflowY: 'auto', padding: '20px 24px 24px 24px', minHeight: 0, scrollbarWidth: 'thin', scrollbarColor: '#E8E8E6 transparent' }}>
+        <div className="manage-org-body" style={{ 
+          flex: 1, 
+          overflowY: 'auto', 
+          padding: '20px 24px 120px 24px', // Added extra bottom padding so dropdowns don't get clipped
+          minHeight: 0, 
+          scrollbarWidth: 'thin', 
+          scrollbarColor: '#E8E8E6 transparent' 
+        }}>
           {/* Invite success banner */}
           {activeTab === 'members' && (
             <div>
