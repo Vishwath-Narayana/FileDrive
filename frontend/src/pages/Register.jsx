@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-hot-toast';
-import { Eye, EyeOff } from 'lucide-react';
+import { ArrowRight, Eye, EyeOff } from 'lucide-react';
 import logo from '../assets/logo.png';
 
 const Register = () => {
@@ -23,7 +23,7 @@ const Register = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!name || !email || !password) {
       toast.error('Please fill in all fields');
       return;
@@ -37,7 +37,7 @@ const Register = () => {
     try {
       setLoading(true);
       const data = await register(name, email, password);
-      
+
       if (data.session) {
         toast.success('Welcome to FileDrive!', { icon: '🎉' });
         navigate('/dashboard');
@@ -53,62 +53,19 @@ const Register = () => {
   };
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        background: 'var(--bg-base)',
-        display: 'flex', flexDirection: 'column',
-        alignItems: 'center', justifyContent: 'center',
-        padding: '24px 16px',
-      }}
-    >
-      <style>{`
-        @media (max-width: 480px) {
-          .auth-card {
-            width: 100% !important;
-            border: none !important;
-            border-radius: 0 !important;
-            box-shadow: none !important;
-            padding: 24px 20px !important;
-          }
-        }
-      `}</style>
-      <div className="animate-slide-up">
-        {/* Logo */}
-        <Link to="/" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '24px', textDecoration: 'none' }}>
-          <img
-            src={logo}
-            alt="FileDrive Logo"
-            style={{ width: '32px', height: '32px', objectFit: 'cover', borderRadius: '8px', marginBottom: '10px' }}
-          />
-          <span style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text-primary)' }}>FileDrive</span>
-        </Link>
+    <div className="min-h-screen bg-[#FAFAFA] flex flex-col items-center justify-center px-4">
+      <Link to="/" className="mb-8 text-center block cursor-pointer group">
+        <img src={logo} alt="FileDrive Logo" className="w-12 h-12 object-cover rounded-xl mx-auto mb-4 shadow-lg transform group-hover:-translate-y-1 transition-all duration-300" />
+        <h1 className="text-2xl font-bold tracking-tight text-black">Create account</h1>
+        <p className="text-sm text-gray-400 mt-1">Join your organization on FileDrive</p>
+      </Link>
 
-        {/* Card */}
-        <div
-          className="auth-card"
-          style={{
-            width: '360px', maxWidth: '90vw',
-            background: 'var(--bg-surface)',
-            border: '1px solid var(--border)',
-            borderRadius: '16px',
-            padding: '32px',
-          }}
-        >
-          <div style={{ marginBottom: '24px' }}>
-            <h1 style={{ fontSize: '18px', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>
-              Create account
-            </h1>
-            <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '4px 0 0' }}>
-              Join your organization on FileDrive
-            </p>
-          </div>
-
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            {/* Name */}
+      <div className="animate-slide-up w-full max-w-[400px]">
+        <div className="bg-white p-10 rounded-[24px] shadow-xl border border-[#EDEDED]">
+          <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label htmlFor="name" style={{ display: 'block', fontSize: '12px', fontWeight: 500, color: 'var(--text-primary)', marginBottom: '6px' }}>
-                Full name
+              <label htmlFor="name" className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">
+                Full Name
               </label>
               <input
                 id="name"
@@ -121,10 +78,9 @@ const Register = () => {
               />
             </div>
 
-            {/* Email */}
             <div>
-              <label htmlFor="email" style={{ display: 'block', fontSize: '12px', fontWeight: 500, color: 'var(--text-primary)', marginBottom: '6px' }}>
-                Email address
+              <label htmlFor="email" className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">
+                Email Address
               </label>
               <input
                 id="email"
@@ -137,71 +93,60 @@ const Register = () => {
               />
             </div>
 
-            {/* Password */}
             <div>
-              <label htmlFor="password" style={{ display: 'block', fontSize: '12px', fontWeight: 500, color: 'var(--text-primary)', marginBottom: '6px' }}>
+              <label htmlFor="password" className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">
                 Password
               </label>
-              <div style={{ position: 'relative' }}>
+              <div className="relative">
                 <input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="input-field"
+                  className="input-field pr-12"
                   placeholder="••••••••"
                   autoComplete="new-password"
-                  style={{ paddingRight: '40px' }}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  style={{
-                    position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)',
-                    background: 'none', border: 'none', cursor: 'pointer', padding: 0,
-                    color: 'var(--text-tertiary)', display: 'flex', alignItems: 'center',
-                  }}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black transition-colors focus:outline-none border-none bg-transparent p-0"
                 >
-                  {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
-              <p style={{ fontSize: '12px', color: 'var(--text-tertiary)', margin: '4px 0 0' }}>
-                Minimum 6 characters
-              </p>
+              <p className="text-[10px] text-gray-300 mt-2 font-medium">Minimum 6 characters</p>
             </div>
 
-            {/* Submit */}
             <button
               type="submit"
               disabled={loading}
-              className="btn-primary"
-              style={{ width: '100%', justifyContent: 'center', height: '36px', marginTop: '4px' }}
+              className="w-full btn-primary py-3.5 flex justify-center text-sm group"
             >
               {loading ? (
-                <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <div style={{ width: '13px', height: '13px', border: '2px solid rgba(255,255,255,0.4)', borderTopColor: 'white', borderRadius: '50%', animation: 'spin 0.6s linear infinite' }} />
+                <span className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                   Creating account...
                 </span>
-              ) : 'Create account'}
+              ) : (
+                <span className="flex items-center gap-2">
+                  Create account
+                  <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform duration-200" />
+                </span>
+              )}
             </button>
           </form>
 
-          <div style={{ marginTop: '20px', paddingTop: '16px', borderTop: '1px solid var(--border)', textAlign: 'center' }}>
-            <p style={{ fontSize: '12px', color: 'var(--text-tertiary)', margin: 0 }}>
+          <div className="mt-8 pt-6 border-t border-[#FAFAFA] text-center">
+            <p className="text-sm text-gray-400">
               Already have an account?{' '}
-              <Link
-                to="/login"
-                style={{ color: 'var(--text-primary)', fontWeight: 500, textDecoration: 'none' }}
-                onMouseEnter={e => e.target.style.textDecoration = 'underline'}
-                onMouseLeave={e => e.target.style.textDecoration = 'none'}
-              >
+              <Link to="/login" className="font-bold text-black hover:underline">
                 Sign in
               </Link>
             </p>
           </div>
         </div>
       </div>
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 };

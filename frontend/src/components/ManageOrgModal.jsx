@@ -6,37 +6,8 @@ import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../services/supabaseClient';
 import socket from '../services/socket';
-
-/* Role badge helper */
-/* Role badge helper */
-const RoleBadge = ({ role }) => {
-  let bg = '#FFFFFF';
-  let color = '#6B7280';
-  let border = '#E5E7EB';
-  
-  if (role === 'admin') {
-    bg = '#EFF6FF'; color = '#2563EB'; border = '#BFDBFE';
-  } else if (role === 'editor') {
-    bg = '#FFFBEB'; color = '#D97706'; border = '#FDE68A';
-  }
-  
-  return (
-    <span style={{
-      display: 'inline-flex',
-      alignItems: 'center',
-      fontSize: '11px',
-      fontWeight: 500,
-      padding: '4px 10px',
-      borderRadius: '6px',
-      background: bg,
-      color: color,
-      border: `1px solid ${border}`,
-      whiteSpace: 'nowrap'
-    }}>
-      {role.charAt(0).toUpperCase() + role.slice(1)}
-    </span>
-  );
-};
+import Avatar from './Avatar';
+import RoleBadge from './RoleBadge';
 
 const ManageOrgModal = ({ show, onHide }) => {
   const { user, currentOrganization, refreshOrganizations, switchOrganization, organizations } = useAuth();
@@ -428,15 +399,14 @@ const ManageOrgModal = ({ show, onHide }) => {
                     }}
                   >
                     {/* Avatar */}
-                    <div style={{
-                      width: '36px', height: '36px', borderRadius: '50%',
-                      background: '#F3F4F6', color: '#6B7280',
-                      fontSize: '14px', fontWeight: 600,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      flexShrink: 0
-                    }}>
-                      {member.user?.name?.charAt(0).toUpperCase() || 'U'}
-                    </div>
+                    <Avatar
+                      initials={member.user?.name?.charAt(0).toUpperCase() || 'U'}
+                      size={36}
+                      fontSize={14}
+                      fontWeight={600}
+                      background="#F3F4F6"
+                      color="#6B7280"
+                    />
 
                     {/* Info block */}
                     <div style={{ flex: 1, minWidth: 0 }}>

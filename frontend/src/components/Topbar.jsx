@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Dropdown } from 'react-bootstrap';
 import { useAuth } from '../context/AuthContext';
 import NotificationBell from './NotificationBell';
+import Avatar from './Avatar';
 
 const Topbar = ({ onOpenAdminModal, onOpenCreateOrgModal, socket, setDrawerOpen }) => {
   const { user, logout, organizations, currentOrganization, switchOrganization } = useAuth();
@@ -29,22 +30,6 @@ const Topbar = ({ onOpenAdminModal, onOpenCreateOrgModal, socket, setDrawerOpen 
       }
     )?.role === 'admin';
 
-  const AvatarCircle = () => (
-    <div
-      style={{
-        width: '28px', height: '28px', borderRadius: '50%',
-        background: '#E8E8E6', color: 'var(--text-secondary)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        fontSize: '11px', fontWeight: 500, cursor: 'pointer',
-        overflow: 'hidden', flexShrink: 0,
-      }}
-    >
-      {user?.avatar ? (
-        <img src={user.avatar} alt={user?.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-      ) : initials}
-    </div>
-  );
-
   return (
     <>
       <style>{`
@@ -63,8 +48,8 @@ const Topbar = ({ onOpenAdminModal, onOpenCreateOrgModal, socket, setDrawerOpen 
       <div
         className="glass-effect"
         style={{
-          height: '52px',
-          padding: '0 20px 0 24px',
+          height: '60px',
+          padding: '0 28px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
@@ -86,14 +71,16 @@ const Topbar = ({ onOpenAdminModal, onOpenCreateOrgModal, socket, setDrawerOpen 
               <div
                 className="flex items-center gap-1.5 cursor-pointer"
                 style={{
-                  padding: '4px 8px',
-                  borderRadius: '6px',
-                  transition: 'background 150ms ease',
+                  padding: '6px 12px',
+                  borderRadius: '8px',
+                  border: '1px solid #EDEDEC',
+                  background: '#FFFFFF',
+                  transition: 'background 150ms ease, border-color 150ms ease',
                 }}
-                onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
-                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                onMouseEnter={e => { e.currentTarget.style.background = '#FAFAFA'; e.currentTarget.style.borderColor = '#E2E2E0'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = '#FFFFFF'; e.currentTarget.style.borderColor = '#EDEDEC'; }}
               >
-                <span style={{ fontSize: '13px', fontWeight: 500, color: '#1A1A1A', maxWidth: '180px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <span style={{ fontSize: '13px', fontWeight: 600, color: '#1A1A1A', maxWidth: '180px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {currentOrganization?.name || 'Select Organization'}
                 </span>
                 <ChevronDown size={14} style={{ color: '#9CA3AF', flexShrink: 0 }} strokeWidth={2} />
@@ -120,10 +107,10 @@ const Topbar = ({ onOpenAdminModal, onOpenCreateOrgModal, socket, setDrawerOpen 
                   onClick={() => switchOrganization(org)}
                   active={false}
                   style={{
-                    height: '32px', padding: '0 10px', fontSize: '13px', borderRadius: '6px',
-                    background: currentOrganization?._id === org._id ? '#F7F7F5' : 'transparent',
-                    color: '#1A1A1A',
-                    fontWeight: 400,
+                    height: '32px', padding: '0 10px', fontSize: '13px', borderRadius: '8px',
+                    background: currentOrganization?._id === org._id ? '#EEF0FF' : 'transparent',
+                    color: currentOrganization?._id === org._id ? '#5B5BD6' : '#1A1A1A',
+                    fontWeight: currentOrganization?._id === org._id ? 500 : 400,
                     transition: 'background 100ms ease',
                     display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer',
                   }}
@@ -131,7 +118,7 @@ const Topbar = ({ onOpenAdminModal, onOpenCreateOrgModal, socket, setDrawerOpen 
                   onMouseLeave={e => { if (currentOrganization?._id !== org._id) e.currentTarget.style.background = 'transparent'; }}
                 >
                   {currentOrganization?._id === org._id ? (
-                    <Check size={12} style={{ color: '#1A1A1A', flexShrink: 0 }} />
+                    <Check size={12} style={{ color: '#5B5BD6', flexShrink: 0 }} />
                   ) : (
                     <span style={{ width: '12px', flexShrink: 0 }} />
                   )}
@@ -189,7 +176,7 @@ const Topbar = ({ onOpenAdminModal, onOpenCreateOrgModal, socket, setDrawerOpen 
         </div>
 
         {/* ── DESKTOP RIGHT — bell + avatar ── */}
-        <div className="topbar-desktop-right" style={{ alignItems: 'center', gap: '8px' }}>
+        <div className="topbar-desktop-right" style={{ alignItems: 'center', gap: '12px' }}>
           {!isPersonalOrg && isAdmin && (
             <button
               onClick={onOpenAdminModal}
@@ -199,15 +186,15 @@ const Topbar = ({ onOpenAdminModal, onOpenCreateOrgModal, socket, setDrawerOpen 
                 color: '#374151',
                 background: '#FFFFFF',
                 border: '1px solid #E2E8F0',
-                borderRadius: '6px',
+                borderRadius: '8px',
                 padding: '5px 12px',
                 cursor: 'pointer',
                 whiteSpace: 'nowrap',
                 lineHeight: '1',
                 transition: 'all 150ms ease',
               }}
-              onMouseEnter={e => e.currentTarget.style.background = '#F8FAFC'}
-              onMouseLeave={e => e.currentTarget.style.background = '#FFFFFF'}
+              onMouseEnter={e => { e.currentTarget.style.background = '#EEF0FF'; e.currentTarget.style.borderColor = '#D8D8F5'; e.currentTarget.style.color = '#5B5BD6'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = '#FFFFFF'; e.currentTarget.style.borderColor = '#E2E8F0'; e.currentTarget.style.color = '#374151'; }}
             >
               Manage organization
             </button>
@@ -220,7 +207,7 @@ const Topbar = ({ onOpenAdminModal, onOpenCreateOrgModal, socket, setDrawerOpen 
               className="text-decoration-none p-0 border-0 bg-transparent"
               id="user-dropdown"
             >
-              <AvatarCircle />
+              <Avatar initials={initials} avatarUrl={user?.avatar} alt={user?.name} />
             </Dropdown.Toggle>
 
             <Dropdown.Menu
@@ -261,7 +248,7 @@ const Topbar = ({ onOpenAdminModal, onOpenCreateOrgModal, socket, setDrawerOpen 
               className="text-decoration-none p-0 border-0 bg-transparent"
               id="user-dropdown-mobile"
             >
-              <AvatarCircle />
+              <Avatar initials={initials} avatarUrl={user?.avatar} alt={user?.name} />
             </Dropdown.Toggle>
             <Dropdown.Menu
               className="shadow-lg py-1 mt-1"

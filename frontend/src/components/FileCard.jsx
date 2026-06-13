@@ -1,5 +1,6 @@
 import { FileText, Image as ImageIcon, FileSpreadsheet, Video, MoreHorizontal, Download, Star, Trash2, RotateCcw, Eye } from 'lucide-react';
 import { Dropdown } from 'react-bootstrap';
+import Avatar from './Avatar';
 
 const FileCard = ({ file, onDownload, onView, onDelete, onToggleFavorite, onRestore, userRole, userId, isTrash }) => {
   const canDelete = userRole === 'admin' || file.uploader._id === userId;
@@ -41,23 +42,23 @@ const FileCard = ({ file, onDownload, onView, onDelete, onToggleFavorite, onRest
   return (
     <div
       className="card-premium flex flex-col"
-      style={{ padding: '16px', cursor: 'pointer', transition: 'all 150ms ease' }}
-      onMouseEnter={e => { e.currentTarget.style.borderColor = '#D0D0CE'; e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.06)'; }}
-      onMouseLeave={e => { e.currentTarget.style.borderColor = ''; e.currentTarget.style.boxShadow = ''; }}
+      style={{ padding: '20px', borderRadius: '14px', cursor: 'pointer', transition: 'all 150ms ease', boxShadow: '0 1px 2px rgba(0,0,0,0.03)' }}
+      onMouseEnter={e => { e.currentTarget.style.borderColor = '#D8D8F5'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(91,91,214,0.10)'; }}
+      onMouseLeave={e => { e.currentTarget.style.borderColor = ''; e.currentTarget.style.boxShadow = '0 1px 2px rgba(0,0,0,0.03)'; }}
     >
       {/* Top row */}
       <div className="flex items-start justify-between">
         {/* File type icon */}
         <div
           style={{
-            width: '40px', height: '40px',
-            borderRadius: '8px',
+            width: '44px', height: '44px',
+            borderRadius: '10px',
             background: iconBg,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             flexShrink: 0,
           }}
         >
-          <FileIcon size={20} style={{ color: iconColor }} strokeWidth={1.75} />
+          <FileIcon size={22} style={{ color: iconColor }} strokeWidth={1.75} />
         </div>
 
         {/* Three-dot menu */}
@@ -142,41 +143,40 @@ const FileCard = ({ file, onDownload, onView, onDelete, onToggleFavorite, onRest
       </div>
 
       {/* Middle — filename + meta */}
-      <div style={{ marginTop: '12px' }}>
+      <div style={{ marginTop: '16px' }}>
         <div
           title={file.originalName}
           style={{
-            fontSize: '13px', fontWeight: 500, color: 'var(--text-primary)',
+            fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)',
             whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
           }}
         >
           {file.originalName}
         </div>
-        <div style={{ marginTop: '4px', fontSize: '11px', color: 'var(--text-tertiary)' }}>
-          {ext} · {formatFileSize(file.size)}
+        <div style={{ marginTop: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <span style={{
+            fontSize: '11px', fontWeight: 500, padding: '2px 7px',
+            borderRadius: '5px', background: '#F5F5F4', color: '#6B6B6B',
+          }}>
+            {ext}
+          </span>
+          <span style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>
+            {formatFileSize(file.size)}
+          </span>
         </div>
       </div>
 
       {/* Bottom row — uploader + date */}
       <div
         style={{
-          marginTop: '10px', paddingTop: '10px',
+          marginTop: '14px', paddingTop: '12px',
           borderTop: '1px solid #F0F0EE',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         }}
       >
         {/* Uploader */}
         <div className="flex items-center" style={{ gap: '6px' }}>
-          <div
-            style={{
-              width: '20px', height: '20px', borderRadius: '50%',
-              background: '#E8E8E6', color: 'var(--text-secondary)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '10px', fontWeight: 500, flexShrink: 0,
-            }}
-          >
-            {uploaderInitial}
-          </div>
+          <Avatar initials={uploaderInitial} size={20} fontSize={10} />
           <span style={{ fontSize: '11px', fontWeight: 400, color: 'var(--text-secondary)' }}>
             {uploaderFirstName}
           </span>

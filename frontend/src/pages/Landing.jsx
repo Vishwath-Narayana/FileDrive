@@ -46,7 +46,7 @@ const Landing = () => {
     <div className="min-h-screen bg-[hsl(var(--background))] text-[hsl(var(--foreground))] font-[family-name:var(--font-body)] selection:bg-[hsl(var(--foreground))] selection:text-[hsl(var(--background))] overflow-x-hidden">
       
       {/* Navigation */}
-      <nav className="fixed top-0 w-full z-50 backdrop-blur-[12px] bg-[rgba(255,255,255,0.7)] border-b border-[hsl(var(--border))]">
+      <nav className="fixed top-0 w-full z-50 backdrop-blur-[12px] bg-[rgba(255,255,255,0.7)] border-b border-[hsl(var(--landing-border))]">
         <div className="max-w-[1280px] mx-auto px-8 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2 cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[hsl(var(--foreground))]"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"></path><path d="M12 12v9"></path><path d="m8 17 4 4 4-4"></path></svg>
@@ -143,7 +143,7 @@ const Landing = () => {
       </section>
 
       {/* Social Proof Bar */}
-      <section className="py-10 border-y border-[hsl(var(--border))] bg-[hsl(var(--background))]">
+      <section className="py-10 border-y border-[hsl(var(--landing-border))] bg-[hsl(var(--background))]">
         <div className="max-w-[1280px] mx-auto px-8">
           <p className="text-center text-[hsl(var(--muted-foreground))] text-sm mb-6">Used by 5,000+ businesses & teams</p>
           <div className="flex flex-wrap justify-center items-center gap-12">
@@ -171,7 +171,7 @@ const Landing = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 rounded-3xl overflow-hidden border border-[hsl(var(--border))] shadow-sm">
+          <div className="grid grid-cols-1 md:grid-cols-2 rounded-3xl overflow-hidden border border-[hsl(var(--landing-border))] shadow-sm">
             {/* Others Panel */}
             <div className="bg-white p-8 md:p-10">
               <h3 className="font-semibold text-lg text-[hsl(var(--muted-foreground))] mb-8">Others</h3>
@@ -187,7 +187,7 @@ const Landing = () => {
                   "Live Activity Updates",
                   "Fast & Responsive Interface"
                 ].map((feat, idx) => (
-                  <div key={idx} className="flex items-center justify-between py-4 border-b border-[hsl(var(--border))] last:border-0 text-sm text-[hsl(var(--muted-foreground))]">
+                  <div key={idx} className="flex items-center justify-between py-4 border-b border-[hsl(var(--landing-border))] last:border-0 text-sm text-[hsl(var(--muted-foreground))]">
                     <span>{feat}</span>
                     <span className="text-gray-400 font-bold">{idx % 3 === 0 ? "×" : "✓"}</span>
                   </div>
@@ -261,7 +261,7 @@ const Landing = () => {
                 className={`p-8 rounded-2xl flex flex-col relative transition-transform ${
                   plan.active 
                     ? 'border-2 border-[hsl(var(--foreground))] bg-[#080808] text-white md:scale-105 shadow-xl z-10' 
-                    : 'border border-[hsl(var(--border))] bg-[hsl(var(--background))] text-[hsl(var(--foreground))]'
+                    : 'border border-[hsl(var(--landing-border))] bg-[hsl(var(--background))] text-[hsl(var(--foreground))]'
                 }`}
               >
                 {plan.active && (
@@ -300,7 +300,7 @@ const Landing = () => {
                   className={`w-full py-3 rounded-xl font-semibold text-sm transition-all ${
                     plan.active 
                       ? 'bg-white text-black hover:scale-[1.02]' 
-                      : 'border border-[hsl(var(--border))] hover:bg-[hsl(var(--muted))] text-[hsl(var(--foreground))]'
+                      : 'border border-[hsl(var(--landing-border))] hover:bg-[hsl(var(--muted))] text-[hsl(var(--foreground))]'
                   }`}
                 >
                   Select {plan.name}
@@ -320,7 +320,7 @@ const Landing = () => {
           
           <div className="space-y-0">
             {faqItems.map((item, id) => (
-              <div key={id} className="border-b border-[hsl(var(--border))] py-5">
+              <div key={id} className="border-b border-[hsl(var(--landing-border))] py-5">
                 <button
                   onClick={() => setActiveFaq(activeFaq === id ? null : id)}
                   className="w-full flex items-center justify-between text-left focus:outline-none bg-transparent border-none cursor-pointer group"
@@ -360,7 +360,7 @@ const Landing = () => {
       </section>
 
       {/* Footer */}
-      <footer className="bg-[hsl(var(--muted))] border-t border-[hsl(var(--border))] py-10 px-8">
+      <footer className="bg-[hsl(var(--muted))] border-t border-[hsl(var(--landing-border))] py-10 px-8">
         <div className="max-w-[1280px] mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="flex items-center gap-2">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[hsl(var(--foreground))]"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"></path><path d="M12 12v9"></path><path d="m8 17 4 4 4-4"></path></svg>

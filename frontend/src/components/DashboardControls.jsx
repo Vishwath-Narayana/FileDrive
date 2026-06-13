@@ -75,15 +75,15 @@ const DashboardControls = ({
               padding: '0 12px 0 32px',
               background: '#FFFFFF',
               border: '1px solid #E8E8E6',
-              borderRadius: '6px',
+              borderRadius: '8px',
               fontFamily: 'inherit', fontSize: '13px',
               color: '#1A1A1A',
               outline: 'none',
               boxSizing: 'border-box',
-              transition: 'border-color 150ms ease',
+              transition: 'border-color 150ms ease, box-shadow 150ms ease',
             }}
-            onFocus={e => e.target.style.borderColor = '#1A1A1A'}
-            onBlur={e => e.target.style.borderColor = '#E8E8E6'}
+            onFocus={e => { e.target.style.borderColor = '#5B5BD6'; e.target.style.boxShadow = '0 0 0 3px #EEF0FF'; }}
+            onBlur={e => { e.target.style.borderColor = '#E8E8E6'; e.target.style.boxShadow = 'none'; }}
           />
         </div>
 
@@ -94,7 +94,7 @@ const DashboardControls = ({
             style={{
               display: 'flex',
               border: '1px solid #E8E8E6',
-              borderRadius: '6px',
+              borderRadius: '8px',
               overflow: 'hidden',
               background: '#FFFFFF',
               flexShrink: 0,
@@ -107,8 +107,8 @@ const DashboardControls = ({
                 width: '32px', height: '32px',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 border: 'none', borderRight: '1px solid #E8E8E6', cursor: 'pointer',
-                background: viewMode === 'grid' ? '#F0F0EE' : 'transparent',
-                color: viewMode === 'grid' ? '#1A1A1A' : '#9CA3AF',
+                background: viewMode === 'grid' ? '#EEF0FF' : 'transparent',
+                color: viewMode === 'grid' ? '#5B5BD6' : '#9CA3AF',
                 transition: 'background 150ms ease, color 150ms ease',
               }}
             >
@@ -121,8 +121,8 @@ const DashboardControls = ({
                 width: '32px', height: '32px',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 border: 'none', cursor: 'pointer',
-                background: viewMode === 'table' ? '#F0F0EE' : 'transparent',
-                color: viewMode === 'table' ? '#1A1A1A' : '#9CA3AF',
+                background: viewMode === 'table' ? '#EEF0FF' : 'transparent',
+                color: viewMode === 'table' ? '#5B5BD6' : '#9CA3AF',
                 transition: 'background 150ms ease, color 150ms ease',
               }}
             >
@@ -138,7 +138,7 @@ const DashboardControls = ({
               style={{
                 height: '32px',
                 border: '1px solid #E8E8E6',
-                borderRadius: '6px',
+                borderRadius: '8px',
                 background: `#FFFFFF ${CHEVRON_SVG} no-repeat right 8px center`,
                 backgroundSize: '12px',
                 padding: '0 28px 0 10px',
@@ -151,7 +151,7 @@ const DashboardControls = ({
                 minWidth: '100px',
                 transition: 'border-color 150ms ease',
               }}
-              onFocus={e => e.target.style.borderColor = '#1A1A1A'}
+              onFocus={e => e.target.style.borderColor = '#5B5BD6'}
               onBlur={e => e.target.style.borderColor = '#E8E8E6'}
             >
               <option value="all">All types</option>
@@ -167,17 +167,17 @@ const DashboardControls = ({
               onClick={onUpload}
               style={{
                 height: '32px', padding: '0 14px',
-                background: '#1A1A1A', color: '#FFFFFF',
-                border: 'none', borderRadius: '6px',
+                background: '#5B5BD6', color: '#FFFFFF',
+                border: 'none', borderRadius: '8px',
                 fontSize: '13px', fontWeight: 500,
                 cursor: 'pointer', flexShrink: 0,
                 display: 'flex', alignItems: 'center', gap: '6px',
-                transition: 'opacity 150ms ease',
+                transition: 'background 150ms ease',
                 whiteSpace: 'nowrap',
                 marginLeft: 0,
               }}
-              onMouseEnter={e => e.currentTarget.style.opacity = '0.85'}
-              onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+              onMouseEnter={e => e.currentTarget.style.background = '#4F46E5'}
+              onMouseLeave={e => e.currentTarget.style.background = '#5B5BD6'}
             >
               <Plus size={14} strokeWidth={2.5} />
               Upload
@@ -189,7 +189,7 @@ const DashboardControls = ({
                 style={{
                   height: '32px', padding: '0 14px',
                   background: '#E8E8E6', color: '#9CA3AF',
-                  border: 'none', borderRadius: '6px',
+                  border: 'none', borderRadius: '8px',
                   fontSize: '13px', fontWeight: 500,
                   cursor: 'not-allowed', pointerEvents: 'none',
                   display: 'flex', alignItems: 'center', gap: '6px',

@@ -1,6 +1,7 @@
 import { FileText, Image as ImageIcon, FileSpreadsheet, Video, MoreHorizontal, Download, Star, Trash2, RotateCcw, Eye } from 'lucide-react';
 import { Dropdown } from 'react-bootstrap';
 import { useAuth } from '../context/AuthContext';
+import Avatar from './Avatar';
 
 const FileRow = ({ file, onDownload, onView, onDelete, onToggleFavorite, onRestore, userRole, userId, isTrash }) => {
   const canDelete = userRole === 'admin' || file.uploader._id === userId;
@@ -47,7 +48,7 @@ const FileRow = ({ file, onDownload, onView, onDelete, onToggleFavorite, onResto
         borderBottom: '1px solid var(--border)',
         transition: 'background 100ms ease',
       }}
-      onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
+      onMouseEnter={e => e.currentTarget.style.background = '#F7F7FD'}
       onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
     >
       {/* Name + icon */}
@@ -90,16 +91,7 @@ const FileRow = ({ file, onDownload, onView, onDelete, onToggleFavorite, onResto
       {/* Uploader */}
       <td style={{ padding: '0 16px', height: '44px' }}>
         <div className="flex items-center gap-2">
-          <div
-            style={{
-              width: '20px', height: '20px', borderRadius: '50%',
-              background: '#E8E8E6', color: 'var(--text-secondary)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '10px', fontWeight: 500, flexShrink: 0,
-            }}
-          >
-            {uploaderInitial}
-          </div>
+          <Avatar initials={uploaderInitial} size={20} fontSize={10} />
           <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
             {file.uploader.name.split(' ')[0]}
           </span>

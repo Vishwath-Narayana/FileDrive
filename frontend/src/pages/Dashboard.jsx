@@ -350,7 +350,7 @@ const Dashboard = () => {
 
   const emptyStateConfig = {
     all: {
-      icon: <File size={24} style={{ color: 'var(--text-tertiary)' }} strokeWidth={1.5} />,
+      icon: <File size={24} style={{ color: '#5B5BD6' }} strokeWidth={1.5} />,
       title: searchQuery || typeFilter !== 'all' ? 'No matches found' : 'No files yet',
       subtitle: searchQuery || typeFilter !== 'all'
         ? 'Try adjusting your search or filters.'
@@ -358,14 +358,14 @@ const Dashboard = () => {
       showUpload: !searchQuery && typeFilter === 'all' && (userRole === 'admin' || userRole === 'editor'),
     },
     favorites: {
-      icon: <File size={24} style={{ color: 'var(--text-tertiary)' }} strokeWidth={1.5} />,
+      icon: <File size={24} style={{ color: '#5B5BD6' }} strokeWidth={1.5} />,
       title: 'No favorites yet',
       subtitle: 'Star files to access them quickly here.',
       showUpload: false,
     },
     trash: {
       icon: (
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--text-tertiary)' }}>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#5B5BD6' }}>
           <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
         </svg>
       ),
@@ -380,34 +380,34 @@ const Dashboard = () => {
   return (
     <>
     <style>{`
-      .dashboard-main-offset { margin-left: 200px; }
-      .dashboard-header { padding: 24px 28px 0 28px; }
-      .dashboard-controls-wrap { padding: 12px 28px 0 28px; }
+      .dashboard-main-offset { margin-left: 224px; }
+      .dashboard-header { padding: 32px 32px 20px 32px; border-bottom: 1px solid #F0F0EE; }
+      .dashboard-controls-wrap { padding: 20px 32px 0 32px; }
       .dashboard-content { padding: 0; }
       .dashboard-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-        gap: 12px;
-        padding: 16px 28px 28px 28px;
+        gap: 16px;
+        padding: 20px 32px 32px 32px;
       }
-      .dashboard-empty-wrap { margin: 16px 28px; }
-      .dashboard-table-wrap { margin: 16px 28px; }
+      .dashboard-empty-wrap { margin: 20px 32px; }
+      .dashboard-table-wrap { margin: 20px 32px; }
       @media (max-width: 1023px) and (min-width: 768px) {
         .dashboard-grid { grid-template-columns: repeat(2, 1fr); }
       }
       @media (max-width: 767px) {
         .dashboard-main-offset { margin-left: 0 !important; }
-        .dashboard-header { padding: 20px 16px 0 16px; }
-        .dashboard-controls-wrap { padding: 12px 16px 0 16px; }
+        .dashboard-header { padding: 20px 16px 16px 16px; border-bottom: 1px solid #F0F0EE; }
+        .dashboard-controls-wrap { padding: 16px 16px 0 16px; }
         .dashboard-grid {
           grid-template-columns: 1fr;
-          padding: 12px 16px 24px 16px;
+          padding: 16px 16px 24px 16px;
         }
-        .dashboard-empty-wrap { margin: 12px 16px; }
-        .dashboard-table-wrap { margin: 12px 16px; }
+        .dashboard-empty-wrap { margin: 16px 16px; }
+        .dashboard-table-wrap { margin: 16px 16px; }
       }
     `}</style>
-    <div style={{ display: 'flex', height: '100vh', background: 'var(--bg-base)' }}>
+    <div style={{ display: 'flex', height: '100vh', background: '#FAF9F6' }}>
       <Sidebar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
@@ -423,30 +423,45 @@ const Dashboard = () => {
           setDrawerOpen={setDrawerOpen}
         />
         
-        <main style={{ flex: 1, overflowY: 'auto', background: 'var(--bg-base)' }}>
+        <main style={{ flex: 1, overflowY: 'auto', background: '#FAF9F6' }}>
           {/* Page header */}
-          <div className="dashboard-header">
-            <h1 style={{ fontSize: '18px', fontWeight: 600, color: '#1A1A1A', margin: 0 }}>
-              {tabTitles[activeTab]}
-            </h1>
-            <p style={{ fontSize: '12px', color: '#9CA3AF', margin: '3px 0 0' }}>
-              {currentOrganization?.name}
-              {activeTab === 'all' && ` · ${files.length} ${files.length === 1 ? 'file' : 'files'}`}
-            </p>
+          <div className="dashboard-header" style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: '16px' }}>
+            <div>
+              <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#1A1A1A', margin: 0, letterSpacing: '-0.02em' }}>
+                {tabTitles[activeTab]}
+              </h1>
+              <p style={{ fontSize: '13px', color: '#9CA3AF', margin: '4px 0 0' }}>
+                {currentOrganization?.name}
+              </p>
+            </div>
+            {activeTab === 'all' && (
+              <span style={{
+                fontSize: '12px', fontWeight: 500, color: '#5B5BD6',
+                background: '#EEF0FF', padding: '4px 12px', borderRadius: '20px',
+                whiteSpace: 'nowrap', flexShrink: 0,
+              }}>
+                {files.length} {files.length === 1 ? 'file' : 'files'}
+              </span>
+            )}
           </div>
 
           {/* Controls */}
           <div className="dashboard-controls-wrap">
-            <DashboardControls
-              searchQuery={searchQuery}
-              setSearchQuery={setSearchQuery}
-              viewMode={viewMode}
-              setViewMode={setViewMode}
-              typeFilter={typeFilter}
-              setTypeFilter={setTypeFilter}
-              onUpload={handleUploadClick}
-              userRole={userRole}
-            />
+            <div style={{
+              background: '#FFFFFF', border: '1px solid #EFEFED', borderRadius: '12px',
+              padding: '10px 12px', boxShadow: '0 1px 2px rgba(0,0,0,0.02)',
+            }}>
+              <DashboardControls
+                searchQuery={searchQuery}
+                setSearchQuery={setSearchQuery}
+                viewMode={viewMode}
+                setViewMode={setViewMode}
+                typeFilter={typeFilter}
+                setTypeFilter={setTypeFilter}
+                onUpload={handleUploadClick}
+                userRole={userRole}
+              />
+            </div>
           </div>
 
           {/* File list / grid / empty / skeleton */}
@@ -460,7 +475,7 @@ const Dashboard = () => {
                 <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: '12px', overflow: 'hidden' }}>
                   <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                     <thead>
-                      <tr style={{ borderBottom: '1px solid var(--border-strong)', background: 'var(--bg-base)' }}>
+                      <tr style={{ borderBottom: '1px solid var(--border-strong)', background: '#FAF9F6' }}>
                         {['Name', 'Type', 'Size', 'Uploaded by', 'Date', ''].map((h, i) => (
                           <th key={i} style={{ padding: '0 16px', height: '36px', textAlign: 'left', fontSize: '11px', fontWeight: 500, color: 'var(--text-tertiary)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
                             {h}
@@ -488,7 +503,7 @@ const Dashboard = () => {
               }}>
                 <div style={{
                   width: '48px', height: '48px', borderRadius: '12px',
-                  background: 'var(--bg-hover)',
+                  background: '#EEF0FF',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}>
                   {emptyConfig.icon}
@@ -528,7 +543,7 @@ const Dashboard = () => {
               <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: '12px', overflow: 'hidden' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
-                    <tr style={{ borderBottom: '1px solid var(--border-strong)', background: 'var(--bg-base)' }}>
+                    <tr style={{ borderBottom: '1px solid var(--border-strong)', background: '#FAF9F6' }}>
                       <th style={{ padding: '0 16px', height: '36px', textAlign: 'left', fontSize: '11px', fontWeight: 500, color: 'var(--text-tertiary)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>Name</th>
                       <th style={{ padding: '0 16px', height: '36px', textAlign: 'left', fontSize: '11px', fontWeight: 500, color: 'var(--text-tertiary)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>Type</th>
                       <th style={{ padding: '0 16px', height: '36px', textAlign: 'left', fontSize: '11px', fontWeight: 500, color: 'var(--text-tertiary)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>Size</th>
@@ -611,12 +626,12 @@ const Dashboard = () => {
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
             style={{
-              border: `2px dashed ${isDragging ? 'var(--text-primary)' : uploadFile ? '#22C55E' : 'var(--border)'}`,
+              border: `2px dashed ${isDragging ? '#5B5BD6' : uploadFile ? '#22C55E' : 'var(--border)'}`,
               borderRadius: '10px',
               padding: '32px 24px',
               textAlign: 'center',
               cursor: uploading ? 'not-allowed' : 'pointer',
-              background: isDragging ? 'var(--bg-hover)' : uploadFile ? '#F0FDF4' : 'transparent',
+              background: isDragging ? '#EEF0FF' : uploadFile ? '#F0FDF4' : 'transparent',
               transition: 'all 150ms ease',
               opacity: uploading ? 0.6 : 1,
             }}
@@ -659,7 +674,7 @@ const Dashboard = () => {
               </div>
               <div style={{ height: '4px', background: 'var(--bg-hover)', borderRadius: '2px', overflow: 'hidden' }}>
                 <div style={{
-                  height: '100%', background: 'var(--brand)', borderRadius: '2px',
+                  height: '100%', background: '#5B5BD6', borderRadius: '2px',
                   width: `${uploadProgress}%`, transition: 'width 300ms ease',
                 }} />
               </div>
@@ -771,7 +786,7 @@ const Dashboard = () => {
 
           {/* Preview body */}
           <div style={{
-            flex: 1, overflow: 'auto', background: 'var(--bg-base)',
+            flex: 1, overflow: 'auto', background: '#FAF9F6',
             padding: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center',
             minHeight: '400px',
           }}>
