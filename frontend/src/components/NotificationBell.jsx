@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Bell, X, Check, Users } from 'lucide-react';
+import { Bell, X, Check, Users, Upload, Trash2, Star, UserPlus } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -8,6 +8,7 @@ const NotificationBell = ({ socket }) => {
   const { user, refreshOrganizations } = useAuth();
   const [notifications, setNotifications] = useState([]);
   const [open, setOpen] = useState(false);
+  const [filter, setFilter] = useState('all'); // 'all', 'unread'
   const ref = useRef(null);
 
   const unreadCount = notifications.filter(n => n.status === 'unread').length;
@@ -67,8 +68,29 @@ const NotificationBell = ({ socket }) => {
   };
 
   const formatTime = (date) => {
+    const diffMs = Date.now() - new Date(date).getTime();
+    const mins = Math.floor(diffMs / 60000);
+    if (mins < 1) return 'just now';
+    if (mins < 60) return `${mins}m`;
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return `${hours}h`;
+    const days = Math.floor(hours / 24);
+    if (days < 7) return `${days}d`;
     return new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
+
+  const getNotifIcon = (type) => {
+    switch (type) {
+      case 'invite': return <UserPlus size={13} style={{ color: 'var(--accent-indigo)' }} />;
+      case 'upload': return <Upload size={13} style={{ color: 'var(--accent-orange)' }} />;
+      case 'delete': return <Trash2 size={13} style={{ color: 'var(--accent-red)' }} />;
+      default: return <Bell size={13} style={{ color: 'var(--text-tertiary)' }} />;
+    }
+  };
+
+  const filtered = filter === 'unread'
+    ? notifications.filter(n => n.status === 'unread')
+    : notifications;
 
   return (
     <div style={{ position: 'relative' }} ref={ref}>
@@ -79,28 +101,41 @@ const NotificationBell = ({ socket }) => {
         style={{
           width: '32px', height: '32px',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          borderRadius: '6px', border: 'none',
-          background: 'transparent',
+          borderRadius: '8px', border: '1px solid var(--border)',
+          background: 'var(--bg-card)',
           color: 'var(--text-secondary)',
           cursor: 'pointer',
           position: 'relative',
-          transition: 'background 150ms ease',
+          transition: 'all 150ms ease',
         }}
-        onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
-        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+        onMouseEnter={e => {
+          e.currentTarget.style.borderColor = 'var(--border-strong)';
+          e.currentTarget.style.background = 'var(--bg-card-hover)';
+        }}
+        onMouseLeave={e => {
+          e.currentTarget.style.borderColor = 'var(--border)';
+          e.currentTarget.style.background = 'var(--bg-card)';
+        }}
       >
-        <Bell size={16} strokeWidth={1.75} />
+        <Bell size={15} strokeWidth={1.75} />
 
-        {/* Unread dot badge */}
+        {/* Unread badge */}
         {unreadCount > 0 && (
           <span
             style={{
-              position: 'absolute', top: '6px', right: '6px',
-              width: '8px', height: '8px',
-              borderRadius: '50%', background: '#EF4444',
-              border: '1.5px solid white',
+              position: 'absolute', top: '-4px', right: '-4px',
+              minWidth: '16px', height: '16px',
+              borderRadius: '8px', background: 'var(--accent-orange)',
+              border: '2px solid var(--bg-elevated)',
+              fontSize: '9px', fontWeight: 700,
+              fontFamily: 'var(--font-mono)',
+              color: '#FFFFFF',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              padding: '0 3px',
             }}
-          />
+          >
+            {unreadCount}
+          </span>
         )}
       </button>
 
@@ -119,11 +154,11 @@ const NotificationBell = ({ socket }) => {
           className="notif-dropdown"
           style={{
             position: 'absolute', right: 0, top: 'calc(100% + 8px)',
-            width: '300px',
-            background: '#FFFFFF',
-            border: '1px solid #E8E8E6',
+            width: '360px',
+            background: 'var(--bg-surface)',
+            border: '1px solid var(--border)',
             borderRadius: '12px',
-            boxShadow: '0 8px 24px rgba(0,0,0,0.10)',
+            boxShadow: '0 16px 48px rgba(0,0,0,0.5)',
             zIndex: 100,
             overflow: 'hidden',
           }}
@@ -131,28 +166,35 @@ const NotificationBell = ({ socket }) => {
           {/* Header */}
           <div
             style={{
-              padding: '12px 16px',
-              borderBottom: '1px solid var(--border)',
+              padding: '14px 16px 0',
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
             }}
           >
-            <div>
-              <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>
-                Notifications
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)' }}>
+                Notification Center
               </span>
               {unreadCount > 0 && (
-                <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginLeft: '8px' }}>
-                  {unreadCount} unread
+                <span
+                  className="sys-mono"
+                  style={{
+                    fontSize: '10px', fontWeight: 700, color: 'var(--accent-orange)',
+                    padding: '2px 6px', borderRadius: '4px',
+                    background: 'var(--accent-orange-soft)',
+                    fontFamily: 'var(--font-mono)',
+                  }}
+                >
+                  {unreadCount}
                 </span>
               )}
             </div>
             <button
               onClick={() => setOpen(false)}
               style={{
-                width: '24px', height: '24px', borderRadius: '4px',
+                width: '24px', height: '24px', borderRadius: '6px',
                 border: 'none', background: 'transparent',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                color: '#9CA3AF', cursor: 'pointer',
+                color: 'var(--text-tertiary)', cursor: 'pointer',
                 transition: 'background 150ms ease',
               }}
               onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
@@ -162,70 +204,112 @@ const NotificationBell = ({ socket }) => {
             </button>
           </div>
 
+          {/* Filter tabs */}
+          <div style={{ display: 'flex', gap: '0', padding: '8px 16px 0', borderBottom: '1px solid var(--border)' }}>
+            {[
+              { key: 'all', label: 'All' },
+              { key: 'unread', label: 'Unread' },
+            ].map(tab => (
+              <button
+                key={tab.key}
+                onClick={() => setFilter(tab.key)}
+                style={{
+                  padding: '8px 12px', marginBottom: '-1px',
+                  fontSize: '12px', fontWeight: filter === tab.key ? 600 : 400,
+                  color: filter === tab.key ? 'var(--accent-indigo)' : 'var(--text-tertiary)',
+                  background: 'transparent', border: 'none',
+                  borderBottom: filter === tab.key ? '2px solid var(--accent-indigo)' : '2px solid transparent',
+                  cursor: 'pointer', transition: 'color 150ms ease',
+                }}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
           {/* List */}
           <div style={{ maxHeight: '380px', overflowY: 'auto' }}>
-            {notifications.length === 0 ? (
-              <div style={{ padding: '40px 16px', textAlign: 'center' }}>
+            {filtered.length === 0 ? (
+              <div style={{ padding: '48px 16px', textAlign: 'center' }}>
                 <div
                   style={{
-                    width: '40px', height: '40px', borderRadius: '10px',
-                    background: 'var(--bg-hover)',
+                    width: '44px', height: '44px', borderRadius: '12px',
+                    background: 'var(--bg-card)',
+                    border: '1px solid var(--border)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    margin: '0 auto 10px',
+                    margin: '0 auto 12px',
                   }}
                 >
-                  <Bell size={18} style={{ color: 'var(--text-tertiary)' }} />
+                  <Bell size={18} style={{ color: 'var(--text-quaternary)' }} />
                 </div>
-                <p style={{ fontSize: '13px', fontWeight: 500, color: 'var(--text-primary)', margin: 0 }}>
+                <p style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)', margin: 0 }}>
                   All caught up
                 </p>
-                <p style={{ fontSize: '12px', color: 'var(--text-tertiary)', margin: '4px 0 0' }}>
-                  No notifications yet
+                <p style={{ fontSize: '12px', color: 'var(--text-quaternary)', margin: '4px 0 0' }}>
+                  No {filter === 'unread' ? 'unread ' : ''}notifications
                 </p>
               </div>
             ) : (
-              notifications.map(n => (
+              filtered.map(n => (
                 <div
                   key={n._id}
                   style={{
-                    padding: '12px 16px',
-                    borderBottom: '1px solid var(--border)',
+                    padding: '14px 16px',
+                    borderBottom: '1px solid var(--border-subtle)',
+                    background: n.status === 'unread' ? 'rgba(255, 107, 0, 0.04)' : 'transparent',
                     transition: 'background 100ms ease',
                     cursor: 'default',
                   }}
                   onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
-                  onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                  onMouseLeave={e => e.currentTarget.style.background = n.status === 'unread' ? 'rgba(255, 107, 0, 0.04)' : 'transparent'}
                 >
                   <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
-                    {/* Unread indicator dot */}
-                    <div style={{ flexShrink: 0, paddingTop: '6px' }}>
-                      {n.status === 'unread' ? (
-                        <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#3B82F6' }} />
-                      ) : (
-                        <div style={{ width: '6px', height: '6px' }} />
-                      )}
+                    {/* Icon */}
+                    <div style={{
+                      width: '28px', height: '28px', borderRadius: '8px',
+                      background: 'var(--bg-card)', border: '1px solid var(--border)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      flexShrink: 0, marginTop: '1px',
+                    }}>
+                      {getNotifIcon(n.type)}
                     </div>
 
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <p style={{ fontSize: '12px', fontWeight: 400, color: 'var(--text-primary)', margin: 0, lineHeight: 1.5 }}>
-                        {n.message}
-                      </p>
-                      <p style={{ fontSize: '11px', color: 'var(--text-tertiary)', margin: '2px 0 0' }}>
+                      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '8px' }}>
+                        <p style={{
+                          fontSize: '12px', fontWeight: n.status === 'unread' ? 500 : 400,
+                          color: 'var(--text-primary)', margin: 0, lineHeight: 1.5,
+                        }}>
+                          {n.message}
+                        </p>
+                        {n.status === 'unread' && (
+                          <div style={{
+                            width: '6px', height: '6px', borderRadius: '50%',
+                            background: 'var(--accent-indigo)',
+                            flexShrink: 0, marginTop: '6px',
+                          }} />
+                        )}
+                      </div>
+                      <p style={{
+                        fontSize: '10px', color: 'var(--text-quaternary)', margin: '3px 0 0',
+                        fontFamily: 'var(--font-mono)', letterSpacing: '0.02em',
+                      }}>
                         {n.sender?.name && `${n.sender.name} · `}{formatTime(n.createdAt)}
                       </p>
 
                       {/* Invite actions */}
                       {n.type === 'invite' && n.status === 'unread' && n.token && (
-                        <div style={{ display: 'flex', gap: '6px', marginTop: '8px' }}>
+                        <div style={{ display: 'flex', gap: '6px', marginTop: '10px' }}>
                           <button
                             onClick={() => handleAcceptInvite(n)}
                             style={{
-                              height: '24px', padding: '0 10px',
-                              background: 'var(--brand)', color: 'white',
-                              border: 'none', borderRadius: '4px',
-                              fontSize: '11px', fontWeight: 500,
+                              height: '26px', padding: '0 12px',
+                              background: 'var(--accent-indigo)', color: 'white',
+                              border: 'none', borderRadius: '6px',
+                              fontSize: '11px', fontWeight: 600,
                               cursor: 'pointer',
                               display: 'flex', alignItems: 'center', gap: '4px',
+                              transition: 'all 150ms ease',
                             }}
                           >
                             <Check size={10} strokeWidth={3} />
@@ -234,11 +318,12 @@ const NotificationBell = ({ socket }) => {
                           <button
                             onClick={() => markRead(n._id)}
                             style={{
-                              height: '24px', padding: '0 10px',
-                              background: 'transparent', color: 'var(--text-secondary)',
-                              border: '1px solid var(--border)', borderRadius: '4px',
-                              fontSize: '11px', fontWeight: 400,
+                              height: '26px', padding: '0 12px',
+                              background: 'transparent', color: 'var(--text-tertiary)',
+                              border: '1px solid var(--border)', borderRadius: '6px',
+                              fontSize: '11px', fontWeight: 500,
                               cursor: 'pointer',
+                              transition: 'all 150ms ease',
                             }}
                           >
                             Dismiss
@@ -253,14 +338,14 @@ const NotificationBell = ({ socket }) => {
                         onClick={() => markRead(n._id)}
                         title="Mark as read"
                         style={{
-                          width: '24px', height: '24px', borderRadius: '4px',
+                          width: '24px', height: '24px', borderRadius: '6px',
                           border: 'none', background: 'transparent',
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          color: 'var(--text-tertiary)', cursor: 'pointer', flexShrink: 0,
-                          transition: 'background 150ms ease',
+                          color: 'var(--text-quaternary)', cursor: 'pointer', flexShrink: 0,
+                          transition: 'all 150ms ease',
                         }}
-                        onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
-                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                        onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg-card)'; e.currentTarget.style.color = 'var(--accent-indigo)'; }}
+                        onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-quaternary)'; }}
                       >
                         <Check size={11} strokeWidth={2.5} />
                       </button>
@@ -281,14 +366,15 @@ const NotificationBell = ({ socket }) => {
                   }
                 }}
                 style={{
-                  fontSize: '12px', fontWeight: 400, color: 'var(--text-secondary)',
+                  fontSize: '11px', fontWeight: 500, color: 'var(--text-tertiary)',
                   background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+                  fontFamily: 'var(--font-mono)', letterSpacing: '0.03em',
                   transition: 'color 150ms ease',
                 }}
-                onMouseEnter={e => e.currentTarget.style.color = 'var(--text-primary)'}
-                onMouseLeave={e => e.currentTarget.style.color = 'var(--text-secondary)'}
+                onMouseEnter={e => e.currentTarget.style.color = 'var(--accent-indigo)'}
+                onMouseLeave={e => e.currentTarget.style.color = 'var(--text-tertiary)'}
               >
-                Mark all as read
+                MARK ALL READ
               </button>
             </div>
           )}

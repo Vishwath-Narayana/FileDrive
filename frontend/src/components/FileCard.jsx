@@ -9,23 +9,29 @@ const FileCard = ({ file, onDownload, onView, onDelete, onToggleFavorite, onRest
   const getFileIconConfig = (fileType) => {
     switch (fileType) {
       case 'image':
-        return { icon: ImageIcon, bg: '#F5F3FF', color: '#8B5CF6' };
+        return { icon: ImageIcon, bg: 'rgba(139, 92, 246, 0.12)', color: '#A78BFA', label: 'IMG' };
       case 'csv':
-        return { icon: FileSpreadsheet, bg: '#F0FDF4', color: '#22C55E' };
+        return { icon: FileSpreadsheet, bg: 'var(--accent-green-soft)', color: 'var(--accent-green)', label: 'CSV' };
       case 'pdf':
-        return { icon: FileText, bg: '#FEF2F2', color: '#EF4444' };
+        return { icon: FileText, bg: 'var(--accent-red-soft)', color: 'var(--accent-red)', label: 'PDF' };
       case 'video':
-        return { icon: Video, bg: '#EFF6FF', color: '#3B82F6' };
+        return { icon: Video, bg: 'var(--accent-blue-soft)', color: 'var(--accent-blue)', label: 'VID' };
       default:
-        return { icon: FileText, bg: '#F7F7F5', color: '#6B6B6B' };
+        return { icon: FileText, bg: 'var(--bg-hover)', color: 'var(--text-tertiary)', label: 'FILE' };
     }
   };
 
   const formatDate = (date) => {
-    return new Date(date).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-    });
+    const d = new Date(date);
+    const diffMs = Date.now() - d.getTime();
+    const mins = Math.floor(diffMs / 60000);
+    if (mins < 1) return 'JUST NOW';
+    if (mins < 60) return `${mins}M AGO`;
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return `${hours}H AGO`;
+    const days = Math.floor(hours / 24);
+    if (days < 7) return `${days}D AGO`;
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase();
   };
 
   const formatFileSize = (bytes) => {
@@ -34,31 +40,66 @@ const FileCard = ({ file, onDownload, onView, onDelete, onToggleFavorite, onRest
     return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
   };
 
-  const { icon: FileIcon, bg: iconBg, color: iconColor } = getFileIconConfig(file.fileType);
-  const ext = file.fileType?.toUpperCase() ?? 'FILE';
+  const { icon: FileIcon, bg: iconBg, color: iconColor, label: extLabel } = getFileIconConfig(file.fileType);
   const uploaderInitial = file.uploader.name.charAt(0).toUpperCase();
   const uploaderFirstName = file.uploader.name.split(' ')[0];
 
   return (
     <div
       className="card-premium flex flex-col"
-      style={{ padding: '20px', borderRadius: '14px', cursor: 'pointer', transition: 'all 150ms ease', boxShadow: '0 1px 2px rgba(0,0,0,0.03)' }}
-      onMouseEnter={e => { e.currentTarget.style.borderColor = '#D8D8F5'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(91,91,214,0.10)'; }}
-      onMouseLeave={e => { e.currentTarget.style.borderColor = ''; e.currentTarget.style.boxShadow = '0 1px 2px rgba(0,0,0,0.03)'; }}
+      style={{
+        padding: '0',
+        borderRadius: '12px',
+        cursor: 'pointer',
+        transition: 'all 200ms ease',
+        overflow: 'hidden',
+        position: 'relative',
+      }}
+      onMouseEnter={e => {
+        e.currentTarget.style.borderColor = 'var(--border-strong)';
+        e.currentTarget.style.boxShadow = '0 8px 32px rgba(0,0,0,0.4)';
+        e.currentTarget.style.transform = 'translateY(-2px)';
+      }}
+      onMouseLeave={e => {
+        e.currentTarget.style.borderColor = '';
+        e.currentTarget.style.boxShadow = '';
+        e.currentTarget.style.transform = 'translateY(0)';
+      }}
     >
-      {/* Top row */}
-      <div className="flex items-start justify-between">
-        {/* File type icon */}
-        <div
-          style={{
-            width: '44px', height: '44px',
-            borderRadius: '10px',
+      {/* Top edge glow */}
+      <div style={{
+        position: 'absolute', top: 0, left: 0, right: 0, height: '1px',
+        background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent)',
+      }} />
+
+      {/* Header section */}
+      <div style={{ padding: '16px 16px 12px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          {/* File type icon */}
+          <div
+            style={{
+              width: '40px', height: '40px',
+              borderRadius: '10px',
+              background: iconBg,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              flexShrink: 0,
+            }}
+          >
+            <FileIcon size={19} style={{ color: iconColor }} strokeWidth={1.75} />
+          </div>
+
+          {/* Type label */}
+          <span style={{
+            fontSize: '9px', fontWeight: 700,
+            fontFamily: 'var(--font-mono)',
+            letterSpacing: '0.08em',
+            color: iconColor,
             background: iconBg,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            flexShrink: 0,
-          }}
-        >
-          <FileIcon size={22} style={{ color: iconColor }} strokeWidth={1.75} />
+            padding: '3px 6px',
+            borderRadius: '4px',
+          }}>
+            {extLabel}
+          </span>
         </div>
 
         {/* Three-dot menu */}
@@ -71,7 +112,7 @@ const FileCard = ({ file, onDownload, onView, onDelete, onToggleFavorite, onRest
             <div
               className="file-menu-btn"
               style={{
-                width: '28px', height: '28px', borderRadius: '4px',
+                width: '28px', height: '28px', borderRadius: '6px',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 transition: 'background 150ms ease',
                 cursor: 'pointer',
@@ -79,7 +120,7 @@ const FileCard = ({ file, onDownload, onView, onDelete, onToggleFavorite, onRest
               onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
               onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
             >
-              <MoreHorizontal size={14} style={{ color: 'var(--text-tertiary)' }} />
+              <MoreHorizontal size={14} style={{ color: 'var(--text-quaternary)' }} />
             </div>
           </Dropdown.Toggle>
 
@@ -87,32 +128,39 @@ const FileCard = ({ file, onDownload, onView, onDelete, onToggleFavorite, onRest
             className="shadow-lg py-1"
             style={{
               border: '1px solid var(--border)',
-              borderRadius: '8px',
+              borderRadius: '10px',
               minWidth: '160px',
               background: 'var(--bg-surface)',
+              boxShadow: '0 12px 40px rgba(0,0,0,0.5)',
             }}
           >
             {!isTrash && (
               <>
                 <Dropdown.Item
                   onClick={() => onView(file)}
-                  style={{ padding: '7px 12px', fontSize: '13px', margin: '1px 4px', borderRadius: '5px', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '8px' }}
+                  style={{ padding: '7px 12px', fontSize: '13px', margin: '1px 4px', borderRadius: '6px', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '8px' }}
+                  onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                 >
                   <Eye size={13} style={{ color: 'var(--text-tertiary)' }} />
                   View
                 </Dropdown.Item>
                 <Dropdown.Item
                   onClick={() => onDownload(file)}
-                  style={{ padding: '7px 12px', fontSize: '13px', margin: '1px 4px', borderRadius: '5px', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '8px' }}
+                  style={{ padding: '7px 12px', fontSize: '13px', margin: '1px 4px', borderRadius: '6px', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '8px' }}
+                  onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                 >
                   <Download size={13} style={{ color: 'var(--text-tertiary)' }} />
                   Download
                 </Dropdown.Item>
                 <Dropdown.Item
                   onClick={() => onToggleFavorite(file)}
-                  style={{ padding: '7px 12px', fontSize: '13px', margin: '1px 4px', borderRadius: '5px', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '8px' }}
+                  style={{ padding: '7px 12px', fontSize: '13px', margin: '1px 4px', borderRadius: '6px', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '8px' }}
+                  onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                 >
-                  <Star size={13} style={{ color: isFavorited ? '#F59E0B' : 'var(--text-tertiary)', fill: isFavorited ? '#F59E0B' : 'none' }} />
+                  <Star size={13} style={{ color: isFavorited ? 'var(--accent-amber)' : 'var(--text-tertiary)', fill: isFavorited ? 'var(--accent-amber)' : 'none' }} />
                   {isFavorited ? 'Unfavorite' : 'Favorite'}
                 </Dropdown.Item>
               </>
@@ -120,7 +168,9 @@ const FileCard = ({ file, onDownload, onView, onDelete, onToggleFavorite, onRest
             {isTrash && canDelete && (
               <Dropdown.Item
                 onClick={() => onRestore(file)}
-                style={{ padding: '7px 12px', fontSize: '13px', margin: '1px 4px', borderRadius: '5px', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '8px' }}
+                style={{ padding: '7px 12px', fontSize: '13px', margin: '1px 4px', borderRadius: '6px', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '8px' }}
+                onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
+                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
               >
                 <RotateCcw size={13} style={{ color: 'var(--text-tertiary)' }} />
                 Restore
@@ -131,7 +181,9 @@ const FileCard = ({ file, onDownload, onView, onDelete, onToggleFavorite, onRest
                 <div style={{ height: '1px', background: 'var(--border)', margin: '3px 0' }} />
                 <Dropdown.Item
                   onClick={() => onDelete(file)}
-                  style={{ padding: '7px 12px', fontSize: '13px', margin: '1px 4px', borderRadius: '5px', color: '#EF4444', display: 'flex', alignItems: 'center', gap: '8px' }}
+                  style={{ padding: '7px 12px', fontSize: '13px', margin: '1px 4px', borderRadius: '6px', color: 'var(--accent-red)', display: 'flex', alignItems: 'center', gap: '8px' }}
+                  onMouseEnter={e => e.currentTarget.style.background = 'var(--accent-red-soft)'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                 >
                   <Trash2 size={13} />
                   {isTrash ? 'Delete forever' : 'Move to trash'}
@@ -142,48 +194,60 @@ const FileCard = ({ file, onDownload, onView, onDelete, onToggleFavorite, onRest
         </Dropdown>
       </div>
 
-      {/* Middle — filename + meta */}
-      <div style={{ marginTop: '16px' }}>
+      {/* Filename + metadata */}
+      <div style={{ padding: '0 16px 14px' }}>
         <div
           title={file.originalName}
           style={{
-            fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)',
+            fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)',
             whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+            letterSpacing: '-0.005em',
           }}
         >
           {file.originalName}
         </div>
-        <div style={{ marginTop: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <span style={{
-            fontSize: '11px', fontWeight: 500, padding: '2px 7px',
-            borderRadius: '5px', background: '#F5F5F4', color: '#6B6B6B',
-          }}>
-            {ext}
-          </span>
-          <span style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>
-            {formatFileSize(file.size)}
-          </span>
+        <div style={{
+          marginTop: '6px',
+          fontSize: '11px',
+          fontFamily: 'var(--font-mono)',
+          color: 'var(--text-quaternary)',
+          letterSpacing: '0.02em',
+        }}>
+          {formatFileSize(file.size)}
         </div>
       </div>
 
-      {/* Bottom row — uploader + date */}
+      {/* Bottom row — uploader + status */}
       <div
         style={{
-          marginTop: '14px', paddingTop: '12px',
-          borderTop: '1px solid #F0F0EE',
+          padding: '10px 16px',
+          borderTop: '1px solid var(--border-subtle)',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          background: 'rgba(255,255,255,0.01)',
         }}
       >
         {/* Uploader */}
         <div className="flex items-center" style={{ gap: '6px' }}>
-          <Avatar initials={uploaderInitial} size={20} fontSize={10} />
-          <span style={{ fontSize: '11px', fontWeight: 400, color: 'var(--text-secondary)' }}>
+          <Avatar
+            initials={uploaderInitial}
+            size={18}
+            fontSize={8}
+            fontWeight={600}
+            background="var(--bg-hover)"
+            color="var(--text-tertiary)"
+          />
+          <span style={{ fontSize: '11px', fontWeight: 500, color: 'var(--text-tertiary)' }}>
             {uploaderFirstName}
           </span>
         </div>
 
         {/* Date */}
-        <span style={{ fontSize: '11px', fontWeight: 400, color: 'var(--text-tertiary)' }}>
+        <span style={{
+          fontSize: '9px', fontWeight: 600,
+          fontFamily: 'var(--font-mono)',
+          letterSpacing: '0.06em',
+          color: 'var(--text-quaternary)',
+        }}>
           {formatDate(file.createdAt)}
         </span>
       </div>

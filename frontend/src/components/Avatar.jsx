@@ -4,9 +4,9 @@ const Avatar = ({
   alt = '',
   size = 28,
   fontSize = 11,
-  fontWeight = 500,
-  background = '#E8E8E6',
-  color = 'var(--text-secondary)',
+  fontWeight = 600,
+  background = 'var(--bg-card)',
+  color = 'var(--text-tertiary)',
   style,
 }) => (
   <div
@@ -15,7 +15,10 @@ const Avatar = ({
       background, color,
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       fontSize: `${fontSize}px`, fontWeight,
+      fontFamily: 'var(--font-mono)',
+      letterSpacing: '0.02em',
       overflow: 'hidden', flexShrink: 0,
+      border: '1px solid var(--border-subtle)',
       ...style,
     }}
   >

@@ -43,7 +43,7 @@ const AdminModal = ({ show, onHide }) => {
         <button onClick={onHide} className="btn-close" aria-label="Close"></button>
       </Modal.Header>
       <Modal.Body className="pt-2">
-        <Tabs defaultActiveKey="members" className="mb-3">
+        <Tabs defaultActiveKey="members" className="mb-3 premium-tabs">
           <Tab eventKey="members" title="Members">
             <div className="space-y-2">
               {loading ? (
@@ -54,23 +54,34 @@ const AdminModal = ({ show, onHide }) => {
                 users.map((user) => (
                   <div
                     key={user._id}
-                    className="flex items-center justify-between p-3 border border-gray-200 rounded-md hover:bg-gray-50"
+                    className="flex items-center justify-between p-3 rounded-xl"
+                    style={{ border: '1px solid var(--border)', transition: 'background 120ms ease' }}
+                    onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-gray-900 text-white flex items-center justify-center text-sm font-medium">
+                      <div
+                        className="w-10 h-10 rounded-full text-white flex items-center justify-center text-sm font-semibold"
+                        style={{ background: '#5B5BD6' }}
+                      >
                         {user.name.charAt(0).toUpperCase()}
                       </div>
                       <div>
                         <div className="text-sm font-medium text-gray-900">{user.name}</div>
-                        <div className="text-xs text-gray-500">{user.email}</div>
+                        <div className="cc-text-mono text-xs text-gray-500">{user.email}</div>
                       </div>
                     </div>
                     <Dropdown align="end">
-                      <Dropdown.Toggle variant="outline-secondary" size="sm" id={`role-dropdown-${user._id}`}>
+                      <Dropdown.Toggle
+                        variant="outline-secondary"
+                        size="sm"
+                        id={`role-dropdown-${user._id}`}
+                        style={{ borderColor: 'var(--border)', color: '#5B5BD6', fontWeight: 500, borderRadius: '8px' }}
+                      >
                         {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
                       </Dropdown.Toggle>
 
-                      <Dropdown.Menu>
+                      <Dropdown.Menu style={{ borderRadius: '12px', border: '1px solid var(--border)', boxShadow: '0 12px 32px rgba(15,17,21,0.10), 0 2px 8px rgba(15,17,21,0.04)' }}>
                         <Dropdown.Item onClick={() => handleRoleChange(user._id, 'admin')}>
                           Admin
                         </Dropdown.Item>

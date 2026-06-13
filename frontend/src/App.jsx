@@ -54,7 +54,7 @@ function App() {
 
   return (
     <AuthProvider>
-      <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: '#F7F7F5' }}>
+      <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: '#0B0B0D' }}>
         <Router>
           <div style={{ flex: 1, overflowY: 'auto', height: '100vh', position: 'relative' }}>
             <Toaster position="top-right" />

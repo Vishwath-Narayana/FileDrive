@@ -41,19 +41,31 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] flex flex-col items-center justify-center px-4">
-      <Link to="/" className="mb-8 text-center block cursor-pointer group">
-        <img src={logo} alt="FileDrive Logo" className="w-12 h-12 object-cover rounded-xl mx-auto mb-4 shadow-lg transform group-hover:-translate-y-1 transition-all duration-300" />
-        <h1 className="text-2xl font-bold tracking-tight text-black">Welcome back</h1>
-        <p className="text-sm text-gray-400 mt-1">Enter your credentials to continue</p>
+    <div style={{
+      minHeight: '100vh',
+      background: 'var(--bg-base)',
+      display: 'flex', flexDirection: 'column',
+      alignItems: 'center', justifyContent: 'center',
+      padding: '16px',
+    }}>
+      <Link to="/" style={{ marginBottom: '32px', textAlign: 'center', display: 'block', textDecoration: 'none' }}>
+        <img src={logo} alt="FileDrive Logo" style={{ width: '48px', height: '48px', objectFit: 'cover', borderRadius: '12px', margin: '0 auto 16px', boxShadow: 'var(--accent-indigo-glow)' }} />
+        <h1 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.03em' }}>Welcome back</h1>
+        <p style={{ fontSize: '12px', color: 'var(--text-quaternary)', marginTop: '6px', fontFamily: 'var(--font-mono)', letterSpacing: '0.03em' }}>ENTER YOUR CREDENTIALS TO CONTINUE</p>
       </Link>
 
-      <div className="animate-slide-up w-full max-w-[400px]">
-        <div className="bg-white p-10 rounded-[24px] shadow-xl border border-[#EDEDED]">
-          <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="animate-slide-up" style={{ width: '100%', maxWidth: '400px' }}>
+        <div style={{
+          background: 'var(--bg-surface)',
+          padding: '32px',
+          borderRadius: '16px',
+          border: '1px solid var(--border)',
+          boxShadow: '0 12px 40px rgba(0,0,0,0.4)',
+        }}>
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
             <div>
-              <label htmlFor="email" className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">
-                Email Address
+              <label htmlFor="email" className="sys-label" style={{ display: 'block', marginBottom: '8px' }}>
+                EMAIL ADDRESS
               </label>
               <input
                 id="email"
@@ -67,33 +79,48 @@ const Login = () => {
             </div>
 
             <div>
-              <div className="flex items-center justify-between mb-2">
-                <label htmlFor="password" className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">
-                  Password
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <label htmlFor="password" className="sys-label">
+                  PASSWORD
                 </label>
                 <Link
                   to="/forgot-password"
-                  className="text-xs font-semibold text-gray-400 hover:text-black transition-colors"
+                  style={{
+                    fontSize: '10px', fontWeight: 600, color: 'var(--text-quaternary)',
+                    fontFamily: 'var(--font-mono)', letterSpacing: '0.04em',
+                    textDecoration: 'none',
+                    transition: 'color 150ms ease',
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.color = 'var(--accent-indigo)'}
+                  onMouseLeave={e => e.currentTarget.style.color = 'var(--text-quaternary)'}
                 >
-                  Forgot password?
+                  FORGOT?
                 </Link>
               </div>
-              <div className="relative">
+              <div style={{ position: 'relative' }}>
                 <input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="input-field pr-12"
+                  className="input-field"
                   placeholder="••••••••"
                   autoComplete="current-password"
+                  style={{ paddingRight: '40px' }}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black transition-colors focus:outline-none border-none bg-transparent p-0"
+                  style={{
+                    position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)',
+                    background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+                    color: 'var(--text-quaternary)', display: 'flex', alignItems: 'center',
+                    transition: 'color 150ms ease',
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.color = 'var(--text-primary)'}
+                  onMouseLeave={e => e.currentTarget.style.color = 'var(--text-quaternary)'}
                 >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
             </div>
@@ -101,26 +128,33 @@ const Login = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full btn-primary py-3.5 flex justify-center text-sm group"
+              className="btn-primary"
+              style={{
+                width: '100%', justifyContent: 'center', height: '40px',
+                fontSize: '13px',
+              }}
             >
               {loading ? (
-                <span className="flex items-center gap-2">
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div style={{ width: '16px', height: '16px', border: '2px solid rgba(255,255,255,0.4)', borderTopColor: 'white', borderRadius: '50%', animation: 'spin 0.6s linear infinite' }} />
                   Signing in...
                 </span>
               ) : (
-                <span className="flex items-center gap-2">
+                <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                   Sign in
-                  <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform duration-200" />
+                  <ArrowRight size={14} />
                 </span>
               )}
             </button>
           </form>
 
-          <div className="mt-8 pt-6 border-t border-[#FAFAFA] text-center">
-            <p className="text-sm text-gray-400">
+          <div style={{ marginTop: '24px', paddingTop: '20px', textAlign: 'center', borderTop: '1px solid var(--border)' }}>
+            <p style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>
               New to FileDrive?{' '}
-              <Link to="/register" className="font-bold text-black hover:underline">
+              <Link to="/register" style={{ fontWeight: 700, color: 'var(--accent-indigo)', textDecoration: 'none' }}
+                onMouseEnter={e => e.currentTarget.style.textDecoration = 'underline'}
+                onMouseLeave={e => e.currentTarget.style.textDecoration = 'none'}
+              >
                 Create an account
               </Link>
             </p>

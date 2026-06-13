@@ -68,8 +68,8 @@ const ResetPassword = () => {
 
   if (!sessionValid || (!isRecovery && !loading)) {
     return (
-      <div className="min-h-screen bg-[#FAFAFA] flex flex-col items-center justify-center px-4">
-        <div className="bg-white p-10 rounded-[24px] shadow-xl border border-[#EDEDED] text-center max-w-[400px] w-full">
+      <div className="min-h-screen bg-[#FAFAF8] flex flex-col items-center justify-center px-4">
+        <div className="bg-white p-10 rounded-2xl text-center max-w-[400px] w-full" style={{ border: '1px solid var(--border)', boxShadow: '0 12px 32px rgba(15,17,21,0.08), 0 2px 8px rgba(15,17,21,0.04)' }}>
           <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4 text-red-500 font-bold text-2xl">
             !
           </div>
@@ -77,7 +77,13 @@ const ResetPassword = () => {
           <p className="text-sm text-gray-500 mb-6">
             The password reset link is invalid or has expired. Please request a new one.
           </p>
-          <Link to="/forgot-password" className="btn-primary py-3.5 w-full flex justify-center text-sm">
+          <Link
+            to="/forgot-password"
+            className="btn-primary py-3.5 w-full flex justify-center text-sm"
+            style={{ background: '#5B5BD6', boxShadow: '0 1px 2px rgba(91,91,214,0.25)', transition: 'background 150ms ease, box-shadow 150ms ease' }}
+            onMouseEnter={e => { e.currentTarget.style.background = '#4F46E5'; e.currentTarget.style.boxShadow = '0 2px 8px rgba(91,91,214,0.35)'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = '#5B5BD6'; e.currentTarget.style.boxShadow = '0 1px 2px rgba(91,91,214,0.25)'; }}
+          >
             Request New Link
           </Link>
         </div>
@@ -86,7 +92,7 @@ const ResetPassword = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] flex flex-col items-center justify-center px-4">
+    <div className="min-h-screen bg-[#FAFAF8] flex flex-col items-center justify-center px-4">
       <div className="animate-slide-up w-full max-w-[400px]">
         <div className="text-center mb-8">
           <img src={logo} alt="FileDrive Logo" className="w-12 h-12 object-cover rounded-xl mx-auto mb-4 shadow-lg" />
@@ -94,7 +100,7 @@ const ResetPassword = () => {
           <p className="text-sm text-gray-400 mt-1">Enter a new secure password for your account</p>
         </div>
 
-        <div className="bg-white p-10 rounded-[24px] shadow-xl border border-[#EDEDED]">
+        <div className="bg-white p-10 rounded-2xl" style={{ border: '1px solid var(--border)', boxShadow: '0 12px 32px rgba(15,17,21,0.08), 0 2px 8px rgba(15,17,21,0.04)' }}>
           {isSuccess ? (
             <div className="text-center">
               <div className="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-4 text-green-500">
@@ -108,7 +114,7 @@ const ResetPassword = () => {
           ) : (
             <form onSubmit={handleSubmit} className="space-y-5">
               <div>
-                <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">
+                <label className="cc-text-mono block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">
                   New Password
                 </label>
                 <div className="relative">
@@ -132,7 +138,7 @@ const ResetPassword = () => {
               </div>
 
               <div>
-                <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">
+                <label className="cc-text-mono block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">
                   Confirm Password
                 </label>
                 <div className="relative">
@@ -158,6 +164,9 @@ const ResetPassword = () => {
                 type="submit"
                 disabled={loading}
                 className="w-full btn-primary py-3.5 flex justify-center text-sm group"
+                style={{ background: '#5B5BD6', boxShadow: '0 1px 2px rgba(91,91,214,0.25)', transition: 'background 150ms ease, box-shadow 150ms ease' }}
+                onMouseEnter={e => { if (!loading) { e.currentTarget.style.background = '#4F46E5'; e.currentTarget.style.boxShadow = '0 2px 8px rgba(91,91,214,0.35)'; } }}
+                onMouseLeave={e => { e.currentTarget.style.background = '#5B5BD6'; e.currentTarget.style.boxShadow = '0 1px 2px rgba(91,91,214,0.25)'; }}
               >
                 {loading ? (
                   <span className="flex items-center gap-2">

@@ -34,19 +34,47 @@ const CreateOrgModal = ({ show, onHide }) => {
 
   return (
     <Modal show={show} onHide={onHide} centered className="premium-modal">
-      <div className="p-10">
-        <div className="mb-8 text-center">
-          <div className="w-12 h-12 bg-black rounded-xl mx-auto mb-4 shadow-lg flex items-center justify-center text-white">
-            <Plus size={24} strokeWidth={3} />
+      <div style={{
+        background: 'var(--bg-surface)',
+        border: '1px solid var(--border)',
+        borderRadius: '16px',
+        padding: '32px',
+        boxShadow: '0 24px 64px rgba(0,0,0,0.5)',
+      }}>
+        <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+          <div
+            style={{
+              width: '48px', height: '48px', borderRadius: '12px',
+              background: 'var(--accent-indigo-soft)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              margin: '0 auto 14px',
+              boxShadow: 'var(--accent-indigo-glow)',
+            }}
+          >
+            <Plus size={24} strokeWidth={2.5} style={{ color: 'var(--accent-indigo)' }} />
           </div>
-          <h2 className="text-xl font-bold text-black">New Organization</h2>
-          <p className="text-sm text-gray-400 mt-1">Create a shared workspace for your team</p>
+          <h2 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em' }}>
+            New Workspace
+          </h2>
+          <p style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '6px', fontFamily: 'var(--font-mono)', letterSpacing: '0.03em' }}>
+            CREATE A SHARED WORKSPACE FOR YOUR TEAM
+          </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label htmlFor="org-name" className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">
-              Workspace Name
+        <form onSubmit={handleSubmit}>
+          <div style={{ marginBottom: '20px' }}>
+            <label
+              htmlFor="org-name"
+              style={{
+                display: 'block', fontSize: '10.5px', fontWeight: 600,
+                fontFamily: 'var(--font-mono)',
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+                color: 'var(--text-tertiary)',
+                marginBottom: '8px',
+              }}
+            >
+              WORKSPACE NAME
             </label>
             <input
               id="org-name"
@@ -59,19 +87,21 @@ const CreateOrgModal = ({ show, onHide }) => {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-3 pt-2">
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
             <button
               type="button"
               onClick={onHide}
-              className="btn-secondary justify-center py-3"
+              className="btn-secondary"
               disabled={loading}
+              style={{ justifyContent: 'center' }}
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="btn-primary justify-center py-3"
+              className="btn-primary"
               disabled={loading || !name.trim()}
+              style={{ justifyContent: 'center' }}
             >
               {loading ? 'Creating...' : 'Create'}
             </button>

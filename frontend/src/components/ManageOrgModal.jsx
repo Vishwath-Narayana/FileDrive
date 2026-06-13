@@ -266,10 +266,10 @@ const ManageOrgModal = ({ show, onHide }) => {
         <div
           onClick={e => e.stopPropagation()}
           style={{
-            background: '#FFFFFF',
+            background: 'var(--bg-surface)',
             borderRadius: '16px',
-            border: '1px solid #E8E8E6',
-            boxShadow: '0 24px 80px rgba(0,0,0,0.18)',
+            border: '1px solid var(--border)',
+            boxShadow: '0 24px 64px rgba(0,0,0,0.5)',
             width: '520px',
             maxHeight: '85vh',
             display: 'flex',
@@ -283,11 +283,11 @@ const ManageOrgModal = ({ show, onHide }) => {
             padding: '24px 24px 0 24px', flexShrink: 0,
             display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start'
           }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-              <h2 style={{ fontSize: '15px', fontWeight: 600, color: '#1A1A1A', margin: 0 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+              <h2 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em' }}>
                 Manage organization
               </h2>
-              <p style={{ fontSize: '12px', fontWeight: 500, color: '#9CA3AF', margin: 0 }}>
+              <p className="cc-text-mono" style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-quaternary)', margin: 0, fontFamily: 'var(--font-mono)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
                 {currentOrganization?.name}
               </p>
             </div>
@@ -300,10 +300,10 @@ const ManageOrgModal = ({ show, onHide }) => {
                 flexShrink: 0, transition: 'background 150ms ease',
                 marginRight: '-8px', marginTop: '-4px'
               }}
-              onMouseEnter={e => e.currentTarget.style.background = '#F3F4F6'}
+              onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
               onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
             >
-              <X size={16} style={{ color: '#9CA3AF' }} />
+              <X size={16} style={{ color: 'var(--text-tertiary)' }} />
             </button>
           </div>
 
@@ -313,17 +313,17 @@ const ManageOrgModal = ({ show, onHide }) => {
             style={{
               display: 'flex', alignItems: 'flex-start', gap: '10px',
               padding: '12px 14px', margin: '16px 24px 0',
-              background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: '8px',
+              background: 'var(--accent-green-soft)', border: '1px solid rgba(34,197,94,0.3)', borderRadius: '8px',
             }}
           >
-            <Mail size={15} style={{ color: '#22C55E', flexShrink: 0, marginTop: '1px' }} />
+            <Mail size={15} style={{ color: 'var(--accent-green)', flexShrink: 0, marginTop: '1px' }} />
             <div style={{ flex: 1 }}>
-              <p style={{ fontSize: '13px', fontWeight: 500, color: '#15803D', margin: 0 }}>Invitation sent!</p>
-              <p style={{ fontSize: '12px', color: '#166534', margin: '2px 0 0' }}>
+              <p style={{ fontSize: '13px', fontWeight: 500, color: 'var(--accent-green)', margin: 0 }}>Invitation sent!</p>
+              <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: '2px 0 0' }}>
                 A magic link was emailed to <strong>{inviteSuccess.email}</strong>. They'll join automatically after clicking it.
               </p>
             </div>
-            <button onClick={() => setInviteSuccess(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#22C55E', padding: 0, display: 'flex' }}>
+            <button onClick={() => setInviteSuccess(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--accent-green)', padding: 0, display: 'flex' }}>
               <X size={14} />
             </button>
           </div>
@@ -332,7 +332,7 @@ const ManageOrgModal = ({ show, onHide }) => {
         {/* TAB BAR (does NOT scroll) */}
         <div style={{
           display: 'flex', gap: '24px', padding: '0 24px', marginTop: '16px',
-          borderBottom: '1px solid #E5E5E5', flexShrink: 0
+          borderBottom: '1px solid var(--border)', flexShrink: 0
         }}>
           {['Members', 'Pending invites', ...(isOwner && !isPersonal ? ['Settings'] : [])].map(tab => {
             const key = tab.toLowerCase().split(' ')[0];
@@ -344,10 +344,10 @@ const ManageOrgModal = ({ show, onHide }) => {
                 onClick={() => setActiveTab(tabKey)}
                 style={{
                   padding: '10px 0', marginBottom: '-1px',
-                  fontSize: '13px', color: isActive ? '#1A1A1A' : '#9CA3AF',
-                  fontWeight: isActive ? 500 : 400, background: 'transparent',
+                  fontSize: '13px', color: isActive ? 'var(--accent-indigo)' : 'var(--text-tertiary)',
+                  fontWeight: isActive ? 600 : 400, background: 'transparent',
                   border: 'none',
-                  borderBottom: isActive ? '2px solid #1A1A1A' : '2px solid transparent',
+                  borderBottom: isActive ? '2px solid var(--accent-indigo)' : '2px solid transparent',
                   cursor: 'pointer', whiteSpace: 'nowrap', transition: 'color 150ms'
                 }}
               >
@@ -361,7 +361,7 @@ const ManageOrgModal = ({ show, onHide }) => {
         <style>{`
           .manage-org-body::-webkit-scrollbar { width: 6px; }
           .manage-org-body::-webkit-scrollbar-track { background: transparent; }
-          .manage-org-body::-webkit-scrollbar-thumb { background: #E8E8E6; border-radius: 3px; }
+          .manage-org-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
         `}</style>
         <div className="manage-org-body" style={{ 
           flex: 1, 
@@ -369,7 +369,7 @@ const ManageOrgModal = ({ show, onHide }) => {
           padding: '20px 24px 120px 24px', // Added extra bottom padding so dropdowns don't get clipped
           minHeight: 0, 
           scrollbarWidth: 'thin', 
-          scrollbarColor: '#E8E8E6 transparent' 
+          scrollbarColor: 'var(--border) transparent' 
         }}>
           {/* Invite success banner */}
           {activeTab === 'members' && (
@@ -395,8 +395,12 @@ const ManageOrgModal = ({ show, onHide }) => {
                     key={member.user?._id || member.user}
                     style={{
                       display: 'flex', alignItems: 'center', gap: '14px',
-                      padding: '14px 0', borderBottom: idx === arr.length - 1 ? 'none' : '1px solid #F3F4F6'
+                      padding: '14px 10px', margin: '0 -10px', borderRadius: '10px',
+                      borderBottom: idx === arr.length - 1 ? 'none' : '1px solid var(--border-subtle)',
+                      transition: 'background 120ms ease',
                     }}
+                    onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                   >
                     {/* Avatar */}
                     <Avatar
@@ -404,20 +408,20 @@ const ManageOrgModal = ({ show, onHide }) => {
                       size={36}
                       fontSize={14}
                       fontWeight={600}
-                      background="#F3F4F6"
-                      color="#6B7280"
+                      background="var(--bg-card)"
+                      color="var(--text-tertiary)"
                     />
 
                     {/* Info block */}
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{
-                        fontSize: '14px', fontWeight: 500, color: '#111827', margin: 0,
+                        fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)', margin: 0,
                         whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
                       }}>
                         {member.user?.name || 'Unknown User'}
                       </div>
-                      <div style={{
-                        fontSize: '12px', color: '#9CA3AF', margin: '2px 0 0',
+                      <div className="cc-text-mono" style={{
+                        fontSize: '11.5px', color: 'var(--text-tertiary)', margin: '3px 0 0',
                         whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
                       }}>
                         {member.user?.email || ''}
@@ -432,17 +436,22 @@ const ManageOrgModal = ({ show, onHide }) => {
                           size="sm"
                           className="text-decoration-none p-0 border-0 bg-transparent"
                         >
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
+                          <div
+                            style={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', padding: '4px 6px', borderRadius: '6px', transition: 'background 120ms ease' }}
+                            onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
+                            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                          >
                             <RoleBadge role={member.role} />
-                            <ChevronDown size={11} style={{ color: '#9CA3AF', padding: '2px' }} />
+                            <ChevronDown size={11} style={{ color: 'var(--text-tertiary)' }} />
                           </div>
                         </Dropdown.Toggle>
 
                         <Dropdown.Menu
                           className="shadow-lg py-1"
                           style={{
-                            border: '1px solid var(--border)', borderRadius: '8px',
+                            border: '1px solid var(--border)', borderRadius: '12px',
                             minWidth: '130px', background: 'var(--bg-surface)',
+                            boxShadow: '0 12px 32px rgba(15,17,21,0.10), 0 2px 8px rgba(15,17,21,0.04)',
                           }}
                         >
                           {['admin', 'editor', 'viewer'].map(role => (
@@ -489,18 +498,19 @@ const ManageOrgModal = ({ show, onHide }) => {
             <>
               <div>
                 {!showInviteForm ? (
-                  <button 
+                  <button
                     onClick={() => setShowInviteForm(true)}
                     style={{
                       height: '32px', padding: '0 14px',
-                      background: '#111827', color: '#FFFFFF',
-                      border: 'none', borderRadius: '6px',
+                      background: 'var(--accent-indigo)', color: '#FFFFFF',
+                      border: 'none', borderRadius: '8px',
                       fontSize: '13px', fontWeight: 500,
                       cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px',
-                      marginBottom: '16px', transition: 'background 150ms ease'
+                      marginBottom: '16px', boxShadow: 'var(--accent-indigo-glow)',
+                      transition: 'background 150ms ease, box-shadow 150ms ease'
                     }}
-                    onMouseEnter={e => e.currentTarget.style.background = '#1F2937'}
-                    onMouseLeave={e => e.currentTarget.style.background = '#111827'}
+                    onMouseEnter={e => { e.currentTarget.style.background = 'var(--accent-indigo-hover)'; e.currentTarget.style.boxShadow = 'var(--accent-indigo-glow)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'var(--accent-indigo)'; e.currentTarget.style.boxShadow = 'var(--accent-indigo-glow)'; }}
                   >
                     <UserPlus size={14} strokeWidth={2} />
                     Invite member
@@ -510,9 +520,11 @@ const ManageOrgModal = ({ show, onHide }) => {
                     onSubmit={handleSendInvitation}
                     style={{
                       display: 'flex', flexDirection: 'column', gap: '14px',
-                      padding: '0 0 16px 0',
+                      padding: '16px',
                       marginBottom: '16px',
-                      borderBottom: '1px solid #E8E8E6',
+                      background: 'var(--bg-base)',
+                      border: '1px solid var(--border)',
+                      borderRadius: '12px',
                     }}
                   >
                     <div>
@@ -558,12 +570,13 @@ const ManageOrgModal = ({ show, onHide }) => {
                         disabled={sending || !inviteEmail.trim()}
                         style={{
                           height: '32px', padding: '0 14px',
-                          background: !inviteEmail.trim() ? '#E8E8E6' : '#1A1A1A',
+                          background: !inviteEmail.trim() ? '#E8E8E6' : '#5B5BD6',
                           color: !inviteEmail.trim() ? '#9CA3AF' : '#FFFFFF',
-                          border: 'none', borderRadius: '6px',
+                          border: 'none', borderRadius: '8px',
                           fontSize: '13px', fontWeight: 500,
                           cursor: (!inviteEmail.trim() || sending) ? 'not-allowed' : 'pointer',
-                          transition: 'background 150ms ease, color 150ms ease',
+                          boxShadow: !inviteEmail.trim() ? 'none' : '0 1px 2px rgba(91,91,214,0.25)',
+                          transition: 'background 150ms ease, color 150ms ease, box-shadow 150ms ease',
                         }}
                       >
                         {sending ? (
@@ -579,16 +592,17 @@ const ManageOrgModal = ({ show, onHide }) => {
               </div>
 
               <div>
-                <p style={{
-                  fontSize: '11px', fontWeight: 500, color: '#9CA3AF', 
-                  marginBottom: '8px', textTransform: 'none'
+                <p className="cc-text-mono" style={{
+                  fontSize: '11px', fontWeight: 600, color: 'var(--text-tertiary)',
+                  marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.06em'
                 }}>
                   Pending invites
                 </p>
                 {invitations.length === 0 ? (
                   <div style={{
                     textAlign: 'center', padding: '36px 20px',
-                    border: '1px dashed #E5E5E5', borderRadius: '10px'
+                    border: '1px dashed var(--border)', borderRadius: '12px',
+                    background: 'var(--bg-base)',
                   }}>
                     <Mail size={20} style={{ color: '#A3A3A3', margin: '0 auto' }} />
                     <p style={{ fontSize: '13px', color: '#737373', margin: '8px 0 4px' }}>No active invitations</p>
@@ -600,15 +614,15 @@ const ManageOrgModal = ({ show, onHide }) => {
                       key={invitation._id}
                       style={{
                         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                        height: '44px', padding: '0 8px', borderRadius: '6px',
+                        height: '48px', padding: '0 10px', margin: '0 -10px', borderRadius: '10px',
                         transition: 'background 100ms ease',
                       }}
                       onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
                       onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                     >
                       <div>
-                        <div style={{ fontSize: '13px', fontWeight: 400, color: 'var(--text-primary)' }}>{invitation.email}</div>
-                        <div style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>
+                        <div style={{ fontSize: '13px', fontWeight: 500, color: 'var(--text-primary)' }}>{invitation.email}</div>
+                        <div className="cc-text-mono" style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '2px' }}>
                           {invitation.role} ·{' '}
                           <span style={{
                             color: invitation.status === 'pending' ? '#F59E0B' : invitation.status === 'accepted' ? '#22C55E' : 'var(--text-tertiary)'
@@ -644,36 +658,36 @@ const ManageOrgModal = ({ show, onHide }) => {
             <div>
               <div
                 style={{
-                  border: '1px solid #FECACA',
-                  background: '#FFFFFF',
-                  borderRadius: '8px',
+                  border: '1px solid rgba(239,68,68,0.3)',
+                  background: 'var(--accent-red-soft)',
+                  borderRadius: '12px',
                   padding: '20px',
                 }}
               >
-                <p style={{ fontSize: '13px', fontWeight: 500, color: '#DC2626', margin: '0 0 8px' }}>
+                <p className="cc-text-mono" style={{ fontSize: '11px', fontWeight: 600, color: 'var(--accent-red)', margin: '0 0 8px', textTransform: 'uppercase', letterSpacing: '0.06em', fontFamily: 'var(--font-mono)' }}>
                   Danger zone
                 </p>
-                <p style={{ fontSize: '12px', color: '#737373', margin: '0 0 16px', lineHeight: 1.5 }}>
+                <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: '0 0 16px', lineHeight: 1.5 }}>
                   Deleting this organization will permanently remove all associated files, folders, and member access. This action{' '}
-                  <span style={{ color: '#DC2626', fontWeight: 600 }}>cannot be recovered</span>.
+                  <span style={{ color: 'var(--accent-red)', fontWeight: 600 }}>cannot be recovered</span>.
                 </p>
-                <div style={{ margin: '0 0 16px', borderTop: '1px solid #FCA5A5' }} />
+                <div style={{ margin: '0 0 16px', borderTop: '1px solid rgba(239,68,68,0.3)' }} />
                 <div>
                   <button
                     onClick={handleDeleteOrganization}
                     disabled={deletingOrg}
                     style={{
-                      height: '32px', padding: '0 12px',
-                      background: '#DC2626', color: '#FFFFFF',
-                      border: 'none', borderRadius: '6px',
-                      fontSize: '12px', fontWeight: 500,
+                      height: '32px', padding: '0 14px',
+                      background: 'var(--accent-red)', color: '#FFFFFF',
+                      border: 'none', borderRadius: '8px',
+                      fontSize: '13px', fontWeight: 500,
                       cursor: deletingOrg ? 'not-allowed' : 'pointer',
                       display: 'inline-flex', alignItems: 'center',
                       opacity: deletingOrg ? 0.5 : 1,
                       transition: 'background 150ms',
                     }}
-                    onMouseEnter={e => { if (!deletingOrg) e.currentTarget.style.background = '#B91C1C'; }}
-                    onMouseLeave={e => { if (!deletingOrg) e.currentTarget.style.background = '#DC2626'; }}
+                    onMouseEnter={e => { if (!deletingOrg) e.currentTarget.style.background = '#DC2626'; }}
+                    onMouseLeave={e => { if (!deletingOrg) e.currentTarget.style.background = 'var(--accent-red)'; }}
                   >
                     {deletingOrg ? 'Processing...' : 'Delete organization'}
                   </button>

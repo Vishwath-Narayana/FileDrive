@@ -1,28 +1,31 @@
 const RoleBadge = ({ role }) => {
-  let bg = '#FFFFFF';
-  let color = '#6B7280';
-  let border = '#E5E7EB';
+  let bg = 'var(--bg-hover)';
+  let color = 'var(--text-tertiary)';
+  let border = 'var(--border)';
 
   if (role === 'admin') {
-    bg = '#EFF6FF'; color = '#2563EB'; border = '#BFDBFE';
+    bg = 'var(--accent-indigo-soft)'; color = 'var(--accent-indigo-hover)'; border = 'rgba(255, 107, 0, 0.25)';
   } else if (role === 'editor') {
-    bg = '#FFFBEB'; color = '#D97706'; border = '#FDE68A';
+    bg = 'var(--accent-amber-soft)'; color = 'var(--accent-amber)'; border = 'rgba(245,158,11,0.25)';
   }
 
   return (
     <span style={{
       display: 'inline-flex',
       alignItems: 'center',
-      fontSize: '11px',
-      fontWeight: 500,
-      padding: '4px 10px',
-      borderRadius: '6px',
+      fontSize: '10px',
+      fontWeight: 600,
+      fontFamily: 'var(--font-mono)',
+      letterSpacing: '0.06em',
+      textTransform: 'uppercase',
+      padding: '3px 8px',
+      borderRadius: '4px',
       background: bg,
       color: color,
       border: `1px solid ${border}`,
-      whiteSpace: 'nowrap'
+      whiteSpace: 'nowrap',
     }}>
-      {role.charAt(0).toUpperCase() + role.slice(1)}
+      {role}
     </span>
   );
 };

@@ -32,9 +32,14 @@ const ForgotPassword = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] flex flex-col items-center justify-center px-4">
+    <div className="min-h-screen bg-[#FAFAF8] flex flex-col items-center justify-center px-4">
       <div className="animate-slide-up w-full max-w-[400px]">
-        <Link to="/login" className="flex items-center gap-2 text-gray-400 hover:text-black mb-8 transition-colors text-sm font-medium">
+        <Link
+          to="/login"
+          className="flex items-center gap-2 text-gray-400 mb-8 transition-colors text-sm font-medium"
+          onMouseEnter={e => e.currentTarget.style.color = '#5B5BD6'}
+          onMouseLeave={e => e.currentTarget.style.color = ''}
+        >
           <ArrowLeft size={16} strokeWidth={2.5} />
           Back to login
         </Link>
@@ -45,11 +50,11 @@ const ForgotPassword = () => {
           <p className="text-sm text-gray-400 mt-1">We'll send you a link to reset your password</p>
         </div>
 
-        <div className="bg-white p-10 rounded-[24px] shadow-xl border border-[#EDEDED]">
+        <div className="bg-white p-10 rounded-2xl border" style={{ borderColor: 'var(--border)', boxShadow: '0 12px 32px rgba(15,17,21,0.08), 0 2px 8px rgba(15,17,21,0.04)' }}>
           {!isSubmitted ? (
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
-                <label htmlFor="email" className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">
+                <label htmlFor="email" className="cc-text-mono block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">
                   Email Address
                 </label>
                 <input
@@ -67,6 +72,9 @@ const ForgotPassword = () => {
                 type="submit"
                 disabled={loading}
                 className="w-full btn-primary py-3.5 flex justify-center text-sm group"
+                style={{ background: '#5B5BD6', boxShadow: '0 1px 2px rgba(91,91,214,0.25)', transition: 'background 150ms ease, box-shadow 150ms ease' }}
+                onMouseEnter={e => { if (!loading) { e.currentTarget.style.background = '#4F46E5'; e.currentTarget.style.boxShadow = '0 2px 8px rgba(91,91,214,0.35)'; } }}
+                onMouseLeave={e => { e.currentTarget.style.background = '#5B5BD6'; e.currentTarget.style.boxShadow = '0 1px 2px rgba(91,91,214,0.25)'; }}
               >
                 {loading ? (
                   <span className="flex items-center gap-2">
@@ -92,7 +100,9 @@ const ForgotPassword = () => {
               </p>
               <button
                 onClick={() => setIsSubmitted(false)}
-                className="text-sm font-bold text-gray-400 hover:text-black transition-colors"
+                className="text-sm font-bold text-gray-400 transition-colors"
+                onMouseEnter={e => e.currentTarget.style.color = '#5B5BD6'}
+                onMouseLeave={e => e.currentTarget.style.color = ''}
               >
                 Didn't receive the email? Try again
               </button>

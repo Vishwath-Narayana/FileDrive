@@ -72,13 +72,13 @@ const AcceptInvite = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] flex flex-col items-center justify-center px-4">
+    <div className="min-h-screen bg-[#FAFAF8] flex flex-col items-center justify-center px-4">
       <Link to="/" className="mb-10 text-center block cursor-pointer group">
         <img src={logo} alt="FileDrive Logo" className="w-12 h-12 object-cover rounded-xl mx-auto mb-4 shadow-lg transform group-hover:-translate-y-1 transition-all duration-300" />
         <h1 className="text-2xl font-bold tracking-tight text-black">FileDrive</h1>
       </Link>
 
-      <div className="w-full max-w-[440px] bg-white p-10 rounded-[24px] shadow-xl border border-[#EDEDED]">
+      <div className="w-full max-w-[440px] bg-white p-10 rounded-2xl" style={{ border: '1px solid var(--border)', boxShadow: '0 12px 32px rgba(15,17,21,0.08), 0 2px 8px rgba(15,17,21,0.04)' }}>
         <div className="text-center mb-8">
           <h2 className="text-xl font-bold text-black mb-1">Organization Invite</h2>
           <p className="text-sm text-gray-400">Join your team workspace</p>
@@ -86,8 +86,8 @@ const AcceptInvite = () => {
 
         {status === 'loading' && (
           <div className="text-center py-12">
-            <Loader2 className="w-10 h-10 text-black animate-spin mx-auto mb-6 opacity-20" />
-            <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Verifying Link...</p>
+            <Loader2 className="w-10 h-10 animate-spin mx-auto mb-6" style={{ color: '#5B5BD6', opacity: 0.5 }} />
+            <p className="cc-text-mono text-[11px] font-bold text-gray-400 uppercase tracking-widest">Verifying Link...</p>
           </div>
         )}
 
@@ -101,10 +101,16 @@ const AcceptInvite = () => {
             {isAuthenticated ? (
               <div className="flex items-center justify-center gap-3 py-3 px-6 bg-gray-50 rounded-full inline-flex mx-auto">
                 <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Opening Dashboard</span>
+                <span className="cc-text-mono text-[11px] font-bold text-gray-500 uppercase tracking-wider">Opening Dashboard</span>
               </div>
             ) : (
-              <Link to="/login" className="btn-primary w-full justify-center py-3">
+              <Link
+                to="/login"
+                className="btn-primary w-full justify-center py-3"
+                style={{ background: '#5B5BD6', boxShadow: '0 1px 2px rgba(91,91,214,0.25)', transition: 'background 150ms ease, box-shadow 150ms ease' }}
+                onMouseEnter={e => { e.currentTarget.style.background = '#4F46E5'; e.currentTarget.style.boxShadow = '0 2px 8px rgba(91,91,214,0.35)'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = '#5B5BD6'; e.currentTarget.style.boxShadow = '0 1px 2px rgba(91,91,214,0.25)'; }}
+              >
                 Sign in to continue
               </Link>
             )}
@@ -140,6 +146,9 @@ const AcceptInvite = () => {
                 to="/register"
                 state={{ email: inviteData?.email, returnInviteToken: inviteData?.token }}
                 className="btn-primary w-full justify-center py-3.5 text-sm"
+                style={{ background: '#5B5BD6', boxShadow: '0 1px 2px rgba(91,91,214,0.25)', transition: 'background 150ms ease, box-shadow 150ms ease' }}
+                onMouseEnter={e => { e.currentTarget.style.background = '#4F46E5'; e.currentTarget.style.boxShadow = '0 2px 8px rgba(91,91,214,0.35)'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = '#5B5BD6'; e.currentTarget.style.boxShadow = '0 1px 2px rgba(91,91,214,0.25)'; }}
               >
                 Create new account
               </Link>
@@ -152,8 +161,8 @@ const AcceptInvite = () => {
               </Link>
             </div>
 
-            <div className="mt-10 pt-8 border-t border-[#FAFAFA]">
-              <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest leading-loose">
+            <div className="mt-10 pt-8" style={{ borderTop: '1px solid var(--border)' }}>
+              <p className="cc-text-mono text-[10px] text-gray-400 font-bold uppercase tracking-widest leading-loose">
                 Once logged in, click the link <br/>in your email again to join.
               </p>
             </div>

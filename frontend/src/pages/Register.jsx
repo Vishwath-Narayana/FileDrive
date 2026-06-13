@@ -53,7 +53,7 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] flex flex-col items-center justify-center px-4">
+    <div className="min-h-screen bg-[#FAFAF8] flex flex-col items-center justify-center px-4">
       <Link to="/" className="mb-8 text-center block cursor-pointer group">
         <img src={logo} alt="FileDrive Logo" className="w-12 h-12 object-cover rounded-xl mx-auto mb-4 shadow-lg transform group-hover:-translate-y-1 transition-all duration-300" />
         <h1 className="text-2xl font-bold tracking-tight text-black">Create account</h1>
@@ -61,10 +61,10 @@ const Register = () => {
       </Link>
 
       <div className="animate-slide-up w-full max-w-[400px]">
-        <div className="bg-white p-10 rounded-[24px] shadow-xl border border-[#EDEDED]">
+        <div className="bg-white p-10 rounded-2xl border" style={{ borderColor: 'var(--border)', boxShadow: '0 12px 32px rgba(15,17,21,0.08), 0 2px 8px rgba(15,17,21,0.04)' }}>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label htmlFor="name" className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">
+              <label htmlFor="name" className="cc-text-mono block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">
                 Full Name
               </label>
               <input
@@ -79,7 +79,7 @@ const Register = () => {
             </div>
 
             <div>
-              <label htmlFor="email" className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">
+              <label htmlFor="email" className="cc-text-mono block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">
                 Email Address
               </label>
               <input
@@ -94,7 +94,7 @@ const Register = () => {
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">
+              <label htmlFor="password" className="cc-text-mono block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">
                 Password
               </label>
               <div className="relative">
@@ -122,6 +122,9 @@ const Register = () => {
               type="submit"
               disabled={loading}
               className="w-full btn-primary py-3.5 flex justify-center text-sm group"
+              style={{ background: '#5B5BD6', boxShadow: '0 1px 2px rgba(91,91,214,0.25)', transition: 'background 150ms ease, box-shadow 150ms ease' }}
+              onMouseEnter={e => { if (!loading) { e.currentTarget.style.background = '#4F46E5'; e.currentTarget.style.boxShadow = '0 2px 8px rgba(91,91,214,0.35)'; } }}
+              onMouseLeave={e => { e.currentTarget.style.background = '#5B5BD6'; e.currentTarget.style.boxShadow = '0 1px 2px rgba(91,91,214,0.25)'; }}
             >
               {loading ? (
                 <span className="flex items-center gap-2">
@@ -137,10 +140,10 @@ const Register = () => {
             </button>
           </form>
 
-          <div className="mt-8 pt-6 border-t border-[#FAFAFA] text-center">
+          <div className="mt-8 pt-6 text-center" style={{ borderTop: '1px solid var(--border)' }}>
             <p className="text-sm text-gray-400">
               Already have an account?{' '}
-              <Link to="/login" className="font-bold text-black hover:underline">
+              <Link to="/login" className="font-bold hover:underline" style={{ color: '#5B5BD6' }}>
                 Sign in
               </Link>
             </p>

@@ -1,4 +1,4 @@
-import { File, Star, Trash2, X } from 'lucide-react';
+import { LayoutDashboard, File, Star, Trash2, Upload, Settings, X, Bell } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import logo from '../assets/logo.png';
@@ -8,14 +8,19 @@ const Sidebar = ({ activeTab, setActiveTab, drawerOpen, setDrawerOpen }) => {
   const location = useLocation();
   const { currentOrganization } = useAuth();
 
-  const menuItems = [
-    { id: 'all', label: 'All Files', icon: File },
+  const mainItems = [
+    { id: 'overview', label: 'Overview', icon: LayoutDashboard },
+    { id: 'all', label: 'Files', icon: File },
     { id: 'favorites', label: 'Favorites', icon: Star },
     { id: 'trash', label: 'Trash', icon: Trash2 },
   ];
 
   const handleNavClick = (id) => {
-    navigate('/dashboard', { state: { tab: id } });
+    if (id === 'settings') {
+      navigate('/settings');
+    } else {
+      navigate('/dashboard', { state: { tab: id } });
+    }
     if (setDrawerOpen) setDrawerOpen(false);
   };
 
@@ -24,21 +29,31 @@ const Sidebar = ({ activeTab, setActiveTab, drawerOpen, setDrawerOpen }) => {
       {/* Logo area */}
       <div
         onClick={() => { navigate('/dashboard'); if (isDrawer && setDrawerOpen) setDrawerOpen(false); }}
-        className="flex items-center gap-2 cursor-pointer flex-shrink-0"
+        className="flex items-center gap-2.5 cursor-pointer flex-shrink-0"
         style={{
           height: '60px',
           padding: '0 20px',
-          borderBottom: '1px solid rgba(255,255,255,0.06)',
-          position: 'relative',
+          borderBottom: '1px solid var(--border-subtle)',
         }}
       >
         <img
           src={logo}
           alt="FileDrive Logo"
-          style={{ width: '20px', height: '20px', objectFit: 'cover', borderRadius: '6px' }}
+          style={{ width: '22px', height: '22px', objectFit: 'cover', borderRadius: '6px' }}
         />
-        <span style={{ fontSize: '14px', fontWeight: 600, color: '#F4F4F5', letterSpacing: '-0.01em' }}>
+        <span style={{
+          fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)',
+          letterSpacing: '-0.02em',
+        }}>
           FileDrive
+        </span>
+        <span style={{
+          fontSize: '9px', fontWeight: 600, color: 'var(--accent-indigo)',
+          background: 'var(--accent-indigo-soft)',
+          padding: '2px 6px', borderRadius: '4px',
+          fontFamily: 'var(--font-mono)', letterSpacing: '0.05em',
+        }}>
+          PRO
         </span>
 
         {/* Close button (drawer only) */}
@@ -50,10 +65,10 @@ const Sidebar = ({ activeTab, setActiveTab, drawerOpen, setDrawerOpen }) => {
               width: '32px', height: '32px', borderRadius: '8px',
               border: 'none', background: 'transparent',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: '#9C9CA8', cursor: 'pointer',
+              color: 'var(--text-tertiary)', cursor: 'pointer',
               transition: 'background 150ms ease',
             }}
-            onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.06)'}
+            onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
             onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
           >
             <X size={15} />
@@ -62,15 +77,11 @@ const Sidebar = ({ activeTab, setActiveTab, drawerOpen, setDrawerOpen }) => {
       </div>
 
       {/* Nav */}
-      <nav className="flex-1" style={{ padding: '16px 0' }}>
-        <div style={{
-          fontSize: '11px', fontWeight: 600, color: '#5C5C68',
-          letterSpacing: '0.06em', textTransform: 'uppercase',
-          padding: '0 20px', margin: '0 0 8px',
-        }}>
+      <nav className="flex-1" style={{ padding: '16px 0', overflowY: 'auto' }}>
+        <div className="sys-label" style={{ padding: '0 20px', margin: '0 0 8px' }}>
           Workspace
         </div>
-        {menuItems.map((item) => {
+        {mainItems.map((item) => {
           const Icon = item.icon;
           const isActive = location.pathname === '/dashboard' && activeTab === item.id;
           return (
@@ -78,37 +89,74 @@ const Sidebar = ({ activeTab, setActiveTab, drawerOpen, setDrawerOpen }) => {
               key={item.id}
               onClick={() => handleNavClick(item.id)}
               className={`sidebar-nav-item nav-item ${isActive ? 'sidebar-nav-item-active' : ''}`}
+              style={{ position: 'relative' }}
             >
+              {isActive && (
+                <div style={{
+                  position: 'absolute',
+                  left: '0px',
+                  top: '0px',
+                  bottom: '0px',
+                  width: '3px',
+                  borderRadius: '0 4px 4px 0',
+                  background: 'var(--accent-indigo)',
+                }} />
+              )}
               <Icon size={15} strokeWidth={isActive ? 2 : 1.75} />
               <span>{item.label}</span>
             </button>
           );
         })}
+
+        <div style={{ height: '1px', background: 'var(--border-subtle)', margin: '16px 16px' }} />
+
+        <div className="sys-label" style={{ padding: '0 20px', margin: '0 0 8px' }}>
+          System
+        </div>
+        <button
+          onClick={() => handleNavClick('settings')}
+          className={`sidebar-nav-item nav-item ${location.pathname === '/settings' ? 'sidebar-nav-item-active' : ''}`}
+          style={{ position: 'relative' }}
+        >
+          {location.pathname === '/settings' && (
+            <div style={{
+              position: 'absolute',
+              left: '0px',
+              top: '0px',
+              bottom: '0px',
+              width: '3px',
+              borderRadius: '0 4px 4px 0',
+              background: 'var(--accent-indigo)',
+            }} />
+          )}
+          <Settings size={15} strokeWidth={location.pathname === '/settings' ? 2 : 1.75} />
+          <span>Settings</span>
+        </button>
       </nav>
 
-      {/* Bottom — org card */}
-      <div style={{ padding: '12px' }}>
+      {/* Bottom — org status card */}
+      <div style={{ padding: '12px', borderTop: '1px solid var(--border-subtle)' }}>
         <div
-          className="flex items-center gap-2"
+          className="flex items-center gap-3"
           style={{
-            padding: '10px 12px',
+            padding: '12px 14px',
             borderRadius: '10px',
-            background: 'rgba(255,255,255,0.04)',
-            border: '1px solid rgba(255,255,255,0.06)',
+            background: 'var(--bg-card)',
+            border: '1px solid var(--border)',
           }}
         >
-          <div
-            style={{
-              width: '8px', height: '8px',
-              borderRadius: '50%', background: '#22C55E', flexShrink: 0,
-            }}
-          />
-          <span
-            className="truncate"
-            style={{ fontSize: '13px', fontWeight: 500, color: '#D4D4D8' }}
-          >
-            {currentOrganization?.name || 'Personal'}
-          </span>
+          <div className="live-dot" />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <span
+              className="truncate"
+              style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', display: 'block' }}
+            >
+              {currentOrganization?.name || 'Personal'}
+            </span>
+            <span className="sys-label" style={{ fontSize: '9px', marginTop: '2px', display: 'block' }}>
+              ACTIVE · ONLINE
+            </span>
+          </div>
         </div>
       </div>
     </>
@@ -116,16 +164,7 @@ const Sidebar = ({ activeTab, setActiveTab, drawerOpen, setDrawerOpen }) => {
 
   return (
     <>
-      {/* ── Desktop sidebar (hidden on mobile) ── */}
-      <div
-        className="flex-col h-screen fixed left-0 top-0 z-50"
-        style={{ width: '224px', display: 'none', background: '#111114', borderRight: '1px solid rgba(255,255,255,0.06)' }}
-      >
-        {/* Desktop uses media query via the style tag below */}
-        <SidebarContents />
-      </div>
-
-      {/* Use CSS to show/hide based on screen size */}
+      {/* ── Desktop sidebar ── */}
       <style>{`
         .sidebar-desktop {
           display: flex !important;
@@ -151,27 +190,30 @@ const Sidebar = ({ activeTab, setActiveTab, drawerOpen, setDrawerOpen }) => {
           background: transparent;
           width: calc(100% - 24px);
           text-align: left;
-          color: #9C9CA8;
+          color: var(--text-tertiary);
           transition: background 120ms ease, color 120ms ease;
         }
         .sidebar-nav-item:hover {
-          background: rgba(255,255,255,0.06);
-          color: #F4F4F5;
+          background: var(--bg-hover);
+          color: var(--text-primary);
         }
         .sidebar-nav-item-active {
-          background: rgba(91,91,214,0.18);
-          color: #ADA8FF;
-          box-shadow: inset 2px 0 0 0 #7C7CF0;
+          background: var(--accent-indigo-soft);
+          color: var(--accent-indigo-hover);
         }
         .sidebar-nav-item-active:hover {
-          background: rgba(91,91,214,0.22);
-          color: #ADA8FF;
+          background: rgba(255, 107, 0, 0.2);
+          color: var(--accent-indigo-hover);
         }
       `}</style>
 
       <div
         className="sidebar-desktop h-screen fixed left-0 top-0 z-50"
-        style={{ width: '224px', background: '#111114', borderRight: '1px solid rgba(255,255,255,0.06)' }}
+        style={{
+          width: '224px',
+          background: 'var(--bg-elevated)',
+          borderRight: '1px solid var(--border-subtle)',
+        }}
       >
         <SidebarContents />
       </div>
@@ -184,7 +226,8 @@ const Sidebar = ({ activeTab, setActiveTab, drawerOpen, setDrawerOpen }) => {
             onClick={() => setDrawerOpen(false)}
             style={{
               position: 'fixed', inset: 0,
-              background: 'rgba(0,0,0,0.3)',
+              background: 'rgba(0,0,0,0.6)',
+              backdropFilter: 'blur(4px)',
               zIndex: 40,
             }}
           />
@@ -193,9 +236,9 @@ const Sidebar = ({ activeTab, setActiveTab, drawerOpen, setDrawerOpen }) => {
             style={{
               position: 'fixed', top: 0, left: 0, bottom: 0,
               width: '240px',
-              background: '#111114',
+              background: 'var(--bg-elevated)',
               zIndex: 50,
-              borderRight: '1px solid rgba(255,255,255,0.06)',
+              borderRight: '1px solid var(--border-subtle)',
               display: 'flex', flexDirection: 'column',
               transform: 'translateX(0)',
               transition: 'transform 200ms ease',
