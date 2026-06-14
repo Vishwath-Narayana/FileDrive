@@ -658,36 +658,46 @@ const ManageOrgModal = ({ show, onHide }) => {
             <div>
               <div
                 style={{
-                  border: '1px solid rgba(239,68,68,0.3)',
-                  background: 'var(--accent-red-soft)',
+                  border: '1px solid rgba(239, 68, 68, 0.2)',
+                  background: 'var(--bg-card)',
                   borderRadius: '12px',
                   padding: '20px',
                 }}
               >
-                <p className="cc-text-mono" style={{ fontSize: '11px', fontWeight: 600, color: 'var(--accent-red)', margin: '0 0 8px', textTransform: 'uppercase', letterSpacing: '0.06em', fontFamily: 'var(--font-mono)' }}>
+                <p className="cc-text-mono" style={{ fontSize: '10.5px', fontWeight: 600, color: 'var(--accent-red)', margin: '0 0 8px', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: 'var(--font-mono)' }}>
                   Danger zone
                 </p>
-                <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: '0 0 16px', lineHeight: 1.5 }}>
+                <p style={{ fontSize: '12.5px', color: 'var(--text-secondary)', margin: '0 0 16px', lineHeight: 1.5 }}>
                   Deleting this organization will permanently remove all associated files, folders, and member access. This action{' '}
                   <span style={{ color: 'var(--accent-red)', fontWeight: 600 }}>cannot be recovered</span>.
                 </p>
-                <div style={{ margin: '0 0 16px', borderTop: '1px solid rgba(239,68,68,0.3)' }} />
+                <div style={{ margin: '0 0 16px', borderTop: '1px solid var(--border-subtle)' }} />
                 <div>
                   <button
                     onClick={handleDeleteOrganization}
                     disabled={deletingOrg}
                     style={{
                       height: '32px', padding: '0 14px',
-                      background: 'var(--accent-red)', color: '#FFFFFF',
-                      border: 'none', borderRadius: '8px',
-                      fontSize: '13px', fontWeight: 500,
+                      background: 'transparent', color: 'var(--accent-red)',
+                      border: '1px solid var(--accent-red)', borderRadius: '6px',
+                      fontSize: '12.5px', fontWeight: 500,
                       cursor: deletingOrg ? 'not-allowed' : 'pointer',
                       display: 'inline-flex', alignItems: 'center',
                       opacity: deletingOrg ? 0.5 : 1,
-                      transition: 'background 150ms',
+                      transition: 'all 150ms ease',
                     }}
-                    onMouseEnter={e => { if (!deletingOrg) e.currentTarget.style.background = '#DC2626'; }}
-                    onMouseLeave={e => { if (!deletingOrg) e.currentTarget.style.background = 'var(--accent-red)'; }}
+                    onMouseEnter={e => {
+                      if (!deletingOrg) {
+                        e.currentTarget.style.background = 'var(--accent-red)';
+                        e.currentTarget.style.color = '#FFFFFF';
+                      }
+                    }}
+                    onMouseLeave={e => {
+                      if (!deletingOrg) {
+                        e.currentTarget.style.background = 'transparent';
+                        e.currentTarget.style.color = 'var(--accent-red)';
+                      }
+                    }}
                   >
                     {deletingOrg ? 'Processing...' : 'Delete organization'}
                   </button>
