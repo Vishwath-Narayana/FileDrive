@@ -65,109 +65,152 @@ const AcceptInvite = () => {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-gray-400 animate-spin" />
+      <div style={{ minHeight: '100vh', background: 'var(--bg-base)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Loader2 className="w-8 h-8 animate-spin" style={{ color: 'var(--accent-indigo)' }} />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#FAFAF8] flex flex-col items-center justify-center px-4">
-      <Link to="/" className="mb-10 text-center block cursor-pointer group">
-        <img src={logo} alt="FileDrive Logo" className="w-12 h-12 object-cover rounded-xl mx-auto mb-4 shadow-lg transform group-hover:-translate-y-1 transition-all duration-300" />
-        <h1 className="text-2xl font-bold tracking-tight text-black">FileDrive</h1>
+    <div style={{
+      minHeight: '100vh',
+      background: 'var(--bg-base)',
+      display: 'flex', flexDirection: 'column',
+      alignItems: 'center', justifyContent: 'center',
+      padding: '16px',
+    }}>
+      <Link to="/" style={{ marginBottom: '32px', textAlign: 'center', display: 'block', textDecoration: 'none' }}>
+        <img src={logo} alt="FileDrive Logo" style={{ width: '48px', height: '48px', objectFit: 'cover', borderRadius: '12px', margin: '0 auto 16px', boxShadow: 'var(--accent-indigo-glow)' }} />
+        <h1 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.03em' }}>FileDrive</h1>
+        <p style={{ fontSize: '12px', color: 'var(--text-quaternary)', marginTop: '6px', fontFamily: 'var(--font-mono)', letterSpacing: '0.03em' }}>ORGANIZATION INVITATION</p>
       </Link>
 
-      <div className="w-full max-w-[440px] bg-white p-10 rounded-2xl" style={{ border: '1px solid var(--border)', boxShadow: '0 12px 32px rgba(15,17,21,0.08), 0 2px 8px rgba(15,17,21,0.04)' }}>
-        <div className="text-center mb-8">
-          <h2 className="text-xl font-bold text-black mb-1">Organization Invite</h2>
-          <p className="text-sm text-gray-400">Join your team workspace</p>
-        </div>
-
-        {status === 'loading' && (
-          <div className="text-center py-12">
-            <Loader2 className="w-10 h-10 animate-spin mx-auto mb-6" style={{ color: '#5B5BD6', opacity: 0.5 }} />
-            <p className="cc-text-mono text-[11px] font-bold text-gray-400 uppercase tracking-widest">Verifying Link...</p>
-          </div>
-        )}
-
-        {status === 'success' && (
-          <div className="text-center py-10 animate-in zoom-in duration-500">
-            <div className="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-6">
-              <CheckCircle className="w-8 h-8 text-green-500" strokeWidth={2.5} />
+      <div className="animate-slide-up" style={{ width: '100%', maxWidth: '400px' }}>
+        <div style={{
+          background: 'var(--bg-surface)',
+          padding: '32px',
+          borderRadius: '16px',
+          border: '1px solid var(--border)',
+          boxShadow: '0 12px 40px rgba(0,0,0,0.4)',
+        }}>
+          {status === 'loading' && (
+            <div style={{ textAlign: 'center', padding: '32px 0' }}>
+              <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" style={{ color: 'var(--accent-indigo)' }} />
+              <p style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-quaternary)', fontFamily: 'var(--font-mono)', letterSpacing: '0.08em' }}>VERIFYING LINK...</p>
             </div>
-            <h3 className="text-lg font-bold text-black mb-2">Welcome Aboard</h3>
-            <p className="text-sm text-gray-500 leading-relaxed mb-8">{message}</p>
-            {isAuthenticated ? (
-              <div className="flex items-center justify-center gap-3 py-3 px-6 bg-gray-50 rounded-full inline-flex mx-auto">
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                <span className="cc-text-mono text-[11px] font-bold text-gray-500 uppercase tracking-wider">Opening Dashboard</span>
+          )}
+
+          {status === 'success' && (
+            <div style={{ textAlign: 'center', padding: '10px 0' }}>
+              <div style={{
+                width: '56px', height: '56px', borderRadius: '50%',
+                background: 'var(--accent-green-soft)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                margin: '0 auto 16px',
+                color: 'var(--accent-green)',
+              }}>
+                <CheckCircle size={22} />
               </div>
-            ) : (
-              <Link
-                to="/login"
-                className="btn-primary w-full justify-center py-3"
-                style={{ background: '#5B5BD6', boxShadow: '0 1px 2px rgba(91,91,214,0.25)', transition: 'background 150ms ease, box-shadow 150ms ease' }}
-                onMouseEnter={e => { e.currentTarget.style.background = '#4F46E5'; e.currentTarget.style.boxShadow = '0 2px 8px rgba(91,91,214,0.35)'; }}
-                onMouseLeave={e => { e.currentTarget.style.background = '#5B5BD6'; e.currentTarget.style.boxShadow = '0 1px 2px rgba(91,91,214,0.25)'; }}
-              >
-                Sign in to continue
-              </Link>
-            )}
-          </div>
-        )}
-
-        {status === 'error' && (
-          <div className="text-center py-10">
-            <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6">
-              <XCircle className="w-8 h-8 text-red-400" strokeWidth={2.5} />
+              <h3 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '8px' }}>Welcome Aboard</h3>
+              <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '24px', lineHeight: 1.5 }}>{message}</p>
+              {isAuthenticated ? (
+                <div style={{
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                  padding: '8px 16px', background: 'var(--bg-elevated)', borderRadius: '20px',
+                  border: '1px solid var(--border)', margin: '0 auto',
+                }}>
+                  <div style={{ width: '6px', height: '6px', background: 'var(--accent-green)', borderRadius: '50%', animation: 'pulse-glow 2s ease-in-out infinite' }} />
+                  <span style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)', letterSpacing: '0.04em' }}>OPENING DASHBOARD</span>
+                </div>
+              ) : (
+                <Link
+                  to="/login"
+                  className="btn-primary"
+                  style={{
+                    width: '100%', justifyContent: 'center', height: '40px',
+                    fontSize: '13px', display: 'inline-flex', textDecoration: 'none'
+                  }}
+                >
+                  Sign in to continue
+                </Link>
+              )}
             </div>
-            <h3 className="text-lg font-bold text-black mb-2">Link Invalid</h3>
-            <p className="text-sm text-gray-500 mb-8 px-4">{message}</p>
-            <Link
-              to="/dashboard"
-              className="btn-secondary w-full justify-center py-3 text-sm font-bold"
-            >
-              Back to Safety
-            </Link>
-          </div>
-        )}
+          )}
 
-        {status === 'needs-registration' && (
-          <div className="text-center">
-            <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-8 text-4xl">
-              👋
-            </div>
-            <h3 className="text-xl font-bold text-black mb-3 text-pretty">{message}</h3>
-            <p className="text-sm text-gray-400 mb-10 text-balance leading-relaxed">To join this organization, you'll need a FileDrive account associated with your email.</p>
-
-            <div className="space-y-3">
+          {status === 'error' && (
+            <div style={{ textAlign: 'center', padding: '10px 0' }}>
+              <div style={{
+                width: '56px', height: '56px', borderRadius: '50%',
+                background: 'var(--accent-red-soft)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                margin: '0 auto 16px',
+                color: 'var(--accent-red)',
+              }}>
+                <XCircle size={22} />
+              </div>
+              <h3 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '8px' }}>Link Invalid</h3>
+              <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '24px', lineHeight: 1.5 }}>{message}</p>
               <Link
-                to="/register"
-                state={{ email: inviteData?.email, returnInviteToken: inviteData?.token }}
-                className="btn-primary w-full justify-center py-3.5 text-sm"
-                style={{ background: '#5B5BD6', boxShadow: '0 1px 2px rgba(91,91,214,0.25)', transition: 'background 150ms ease, box-shadow 150ms ease' }}
-                onMouseEnter={e => { e.currentTarget.style.background = '#4F46E5'; e.currentTarget.style.boxShadow = '0 2px 8px rgba(91,91,214,0.35)'; }}
-                onMouseLeave={e => { e.currentTarget.style.background = '#5B5BD6'; e.currentTarget.style.boxShadow = '0 1px 2px rgba(91,91,214,0.25)'; }}
+                to="/dashboard"
+                className="btn-secondary"
+                style={{
+                  width: '100%', justifyContent: 'center', height: '40px',
+                  fontSize: '13px', display: 'inline-flex', textDecoration: 'none',
+                }}
               >
-                Create new account
-              </Link>
-              <Link
-                to="/login"
-                state={{ email: inviteData?.email, returnInviteToken: inviteData?.token }}
-                className="btn-secondary w-full justify-center py-3.5 text-sm"
-              >
-                Sign in to existing
+                Back to Safety
               </Link>
             </div>
+          )}
 
-            <div className="mt-10 pt-8" style={{ borderTop: '1px solid var(--border)' }}>
-              <p className="cc-text-mono text-[10px] text-gray-400 font-bold uppercase tracking-widest leading-loose">
-                Once logged in, click the link <br/>in your email again to join.
+          {status === 'needs-registration' && (
+            <div style={{ textAlign: 'center' }}>
+              <div style={{
+                width: '64px', height: '64px', borderRadius: '50%',
+                background: 'var(--bg-elevated)', border: '1px solid var(--border)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                margin: '0 auto 20px', fontSize: '24px',
+              }}>
+                👋
+              </div>
+              <h3 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '8px' }}>{message}</h3>
+              <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '24px', lineHeight: 1.5 }}>
+                To join this organization, you'll need a FileDrive account associated with your email.
               </p>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <Link
+                  to="/register"
+                  state={{ email: inviteData?.email, returnInviteToken: inviteData?.token }}
+                  className="btn-primary"
+                  style={{
+                    width: '100%', justifyContent: 'center', height: '40px',
+                    fontSize: '13px', display: 'inline-flex', textDecoration: 'none',
+                  }}
+                >
+                  Create new account
+                </Link>
+                <Link
+                  to="/login"
+                  state={{ email: inviteData?.email, returnInviteToken: inviteData?.token }}
+                  className="btn-secondary"
+                  style={{
+                    width: '100%', justifyContent: 'center', height: '40px',
+                    fontSize: '13px', display: 'inline-flex', textDecoration: 'none',
+                  }}
+                >
+                  Sign in to existing
+                </Link>
+              </div>
+
+              <div style={{ marginTop: '24px', paddingTop: '20px', borderTop: '1px solid var(--border)' }}>
+                <p style={{ fontSize: '10px', color: 'var(--text-quaternary)', fontFamily: 'var(--font-mono)', letterSpacing: '0.04em', lineHeight: 1.6 }}>
+                  ONCE LOGGED IN, CLICK THE LINK IN YOUR EMAIL AGAIN TO JOIN.
+                </p>
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );

@@ -68,21 +68,45 @@ const ResetPassword = () => {
 
   if (!sessionValid || (!isRecovery && !loading)) {
     return (
-      <div className="min-h-screen bg-[#FAFAF8] flex flex-col items-center justify-center px-4">
-        <div className="bg-white p-10 rounded-2xl text-center max-w-[400px] w-full" style={{ border: '1px solid var(--border)', boxShadow: '0 12px 32px rgba(15,17,21,0.08), 0 2px 8px rgba(15,17,21,0.04)' }}>
-          <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4 text-red-500 font-bold text-2xl">
+      <div style={{
+        minHeight: '100vh',
+        background: 'var(--bg-base)',
+        display: 'flex', flexDirection: 'column',
+        alignItems: 'center', justifyContent: 'center',
+        padding: '16px',
+      }}>
+        <div style={{
+          background: 'var(--bg-surface)',
+          padding: '32px',
+          borderRadius: '16px',
+          border: '1px solid var(--border)',
+          boxShadow: '0 12px 40px rgba(0,0,0,0.4)',
+          textAlign: 'center',
+          maxWidth: '400px',
+          width: '100%',
+        }}>
+          <div style={{
+            width: '56px', height: '56px', borderRadius: '50%',
+            background: 'var(--accent-red-soft)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            margin: '0 auto 16px',
+            color: 'var(--accent-red)',
+            fontSize: '20px',
+            fontWeight: 700,
+          }}>
             !
           </div>
-          <h2 className="text-xl font-bold text-black mb-2">Invalid or expired link</h2>
-          <p className="text-sm text-gray-500 mb-6">
+          <h2 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '8px' }}>Invalid or expired link</h2>
+          <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '24px', lineHeight: 1.5 }}>
             The password reset link is invalid or has expired. Please request a new one.
           </p>
           <Link
             to="/forgot-password"
-            className="btn-primary py-3.5 w-full flex justify-center text-sm"
-            style={{ background: '#5B5BD6', boxShadow: '0 1px 2px rgba(91,91,214,0.25)', transition: 'background 150ms ease, box-shadow 150ms ease' }}
-            onMouseEnter={e => { e.currentTarget.style.background = '#4F46E5'; e.currentTarget.style.boxShadow = '0 2px 8px rgba(91,91,214,0.35)'; }}
-            onMouseLeave={e => { e.currentTarget.style.background = '#5B5BD6'; e.currentTarget.style.boxShadow = '0 1px 2px rgba(91,91,214,0.25)'; }}
+            className="btn-primary"
+            style={{
+              width: '100%', justifyContent: 'center', height: '40px',
+              fontSize: '13px', display: 'inline-flex', textDecoration: 'none'
+            }}
           >
             Request New Link
           </Link>
@@ -92,70 +116,104 @@ const ResetPassword = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#FAFAF8] flex flex-col items-center justify-center px-4">
-      <div className="animate-slide-up w-full max-w-[400px]">
-        <div className="text-center mb-8">
-          <img src={logo} alt="FileDrive Logo" className="w-12 h-12 object-cover rounded-xl mx-auto mb-4 shadow-lg" />
-          <h1 className="text-2xl font-bold tracking-tight text-black">Create New Password</h1>
-          <p className="text-sm text-gray-400 mt-1">Enter a new secure password for your account</p>
+    <div style={{
+      minHeight: '100vh',
+      background: 'var(--bg-base)',
+      display: 'flex', flexDirection: 'column',
+      alignItems: 'center', justifyContent: 'center',
+      padding: '16px',
+    }}>
+      <div className="animate-slide-up" style={{ width: '100%', maxWidth: '400px' }}>
+        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+          <img src={logo} alt="FileDrive Logo" style={{ width: '48px', height: '48px', objectFit: 'cover', borderRadius: '12px', margin: '0 auto 16px', boxShadow: 'var(--accent-indigo-glow)' }} />
+          <h1 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.03em' }}>Create New Password</h1>
+          <p style={{ fontSize: '12px', color: 'var(--text-quaternary)', marginTop: '6px', fontFamily: 'var(--font-mono)', letterSpacing: '0.03em' }}>ENTER A NEW SECURE PASSWORD FOR YOUR ACCOUNT</p>
         </div>
 
-        <div className="bg-white p-10 rounded-2xl" style={{ border: '1px solid var(--border)', boxShadow: '0 12px 32px rgba(15,17,21,0.08), 0 2px 8px rgba(15,17,21,0.04)' }}>
+        <div style={{
+          background: 'var(--bg-surface)',
+          padding: '32px',
+          borderRadius: '16px',
+          border: '1px solid var(--border)',
+          boxShadow: '0 12px 40px rgba(0,0,0,0.4)',
+        }}>
           {isSuccess ? (
-            <div className="text-center">
-              <div className="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-4 text-green-500">
-                <CheckCircle size={28} strokeWidth={2.5} />
+            <div style={{ textAlign: 'center', padding: '10px 0' }}>
+              <div style={{
+                width: '56px', height: '56px', borderRadius: '50%',
+                background: 'var(--accent-green-soft)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                margin: '0 auto 16px',
+                color: 'var(--accent-green)',
+              }}>
+                <CheckCircle size={22} />
               </div>
-              <h3 className="text-lg font-bold text-black mb-2">Password Updated</h3>
-              <p className="text-sm text-gray-500 mb-6">
+              <h3 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '8px' }}>Password Updated</h3>
+              <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '24px', lineHeight: 1.5 }}>
                 Your password has been successfully reset. Redirecting to dashboard...
               </p>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="space-y-5">
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
               <div>
-                <label className="cc-text-mono block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">
+                <label className="sys-label" style={{ display: 'block', marginBottom: '8px' }}>
                   New Password
                 </label>
-                <div className="relative">
+                <div style={{ position: 'relative' }}>
                   <input
                     type={showPassword ? "text" : "password"}
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    className="input-field pr-12"
+                    className="input-field"
                     placeholder="••••••••"
                     autoComplete="new-password"
+                    style={{ paddingRight: '40px' }}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black transition-colors focus:outline-none border-none bg-transparent p-0"
+                    style={{
+                      position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)',
+                      background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+                      color: 'var(--text-quaternary)', display: 'flex', alignItems: 'center',
+                      transition: 'color 150ms ease',
+                    }}
+                    onMouseEnter={e => e.currentTarget.style.color = 'var(--text-primary)'}
+                    onMouseLeave={e => e.currentTarget.style.color = 'var(--text-quaternary)'}
                   >
-                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
                 </div>
-                <p className="text-[10px] text-gray-300 mt-2 font-medium">Minimum 6 characters</p>
+                <p style={{ fontSize: '10px', color: 'var(--text-quaternary)', marginTop: '8px', fontFamily: 'var(--font-mono)' }}>MINIMUM 6 CHARACTERS</p>
               </div>
 
               <div>
-                <label className="cc-text-mono block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">
+                <label className="sys-label" style={{ display: 'block', marginBottom: '8px' }}>
                   Confirm Password
                 </label>
-                <div className="relative">
+                <div style={{ position: 'relative' }}>
                   <input
                     type={showConfirmPassword ? "text" : "password"}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="input-field pr-12"
+                    className="input-field"
                     placeholder="••••••••"
                     autoComplete="new-password"
+                    style={{ paddingRight: '40px' }}
                   />
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black transition-colors focus:outline-none border-none bg-transparent p-0"
+                    style={{
+                      position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)',
+                      background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+                      color: 'var(--text-quaternary)', display: 'flex', alignItems: 'center',
+                      transition: 'color 150ms ease',
+                    }}
+                    onMouseEnter={e => e.currentTarget.style.color = 'var(--text-primary)'}
+                    onMouseLeave={e => e.currentTarget.style.color = 'var(--text-quaternary)'}
                   >
-                    {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
                 </div>
               </div>
@@ -163,20 +221,21 @@ const ResetPassword = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full btn-primary py-3.5 flex justify-center text-sm group"
-                style={{ background: '#5B5BD6', boxShadow: '0 1px 2px rgba(91,91,214,0.25)', transition: 'background 150ms ease, box-shadow 150ms ease' }}
-                onMouseEnter={e => { if (!loading) { e.currentTarget.style.background = '#4F46E5'; e.currentTarget.style.boxShadow = '0 2px 8px rgba(91,91,214,0.35)'; } }}
-                onMouseLeave={e => { e.currentTarget.style.background = '#5B5BD6'; e.currentTarget.style.boxShadow = '0 1px 2px rgba(91,91,214,0.25)'; }}
+                className="btn-primary"
+                style={{
+                  width: '100%', justifyContent: 'center', height: '40px',
+                  fontSize: '13px',
+                }}
               >
                 {loading ? (
-                  <span className="flex items-center gap-2">
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div style={{ width: '16px', height: '16px', border: '2px solid rgba(255,255,255,0.4)', borderTopColor: 'white', borderRadius: '50%', animation: 'spin 0.6s linear infinite' }} />
                     Updating...
                   </span>
                 ) : (
-                  <span className="flex items-center gap-2">
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                     Update Password
-                    <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform duration-200" />
+                    <ArrowRight size={14} />
                   </span>
                 )}
               </button>

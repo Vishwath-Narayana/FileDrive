@@ -32,29 +32,46 @@ const ForgotPassword = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAFAF8] flex flex-col items-center justify-center px-4">
-      <div className="animate-slide-up w-full max-w-[400px]">
+    <div style={{
+      minHeight: '100vh',
+      background: 'var(--bg-base)',
+      display: 'flex', flexDirection: 'column',
+      alignItems: 'center', justifyContent: 'center',
+      padding: '16px',
+    }}>
+      <div className="animate-slide-up" style={{ width: '100%', maxWidth: '400px' }}>
         <Link
           to="/login"
-          className="flex items-center gap-2 text-gray-400 mb-8 transition-colors text-sm font-medium"
-          onMouseEnter={e => e.currentTarget.style.color = '#5B5BD6'}
-          onMouseLeave={e => e.currentTarget.style.color = ''}
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: '6px',
+            color: 'var(--text-tertiary)', marginBottom: '24px',
+            textDecoration: 'none', fontSize: '13px', fontWeight: 500,
+            transition: 'color 150ms ease',
+          }}
+          onMouseEnter={e => e.currentTarget.style.color = 'var(--accent-indigo)'}
+          onMouseLeave={e => e.currentTarget.style.color = 'var(--text-tertiary)'}
         >
-          <ArrowLeft size={16} strokeWidth={2.5} />
+          <ArrowLeft size={14} />
           Back to login
         </Link>
         
-        <div className="text-center mb-8">
-          <img src={logo} alt="FileDrive Logo" className="w-12 h-12 object-cover rounded-xl mx-auto mb-4 shadow-lg" />
-          <h1 className="text-2xl font-bold tracking-tight text-black">Reset Password</h1>
-          <p className="text-sm text-gray-400 mt-1">We'll send you a link to reset your password</p>
+        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+          <img src={logo} alt="FileDrive Logo" style={{ width: '48px', height: '48px', objectFit: 'cover', borderRadius: '12px', margin: '0 auto 16px', boxShadow: 'var(--accent-indigo-glow)' }} />
+          <h1 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.03em' }}>Reset Password</h1>
+          <p style={{ fontSize: '12px', color: 'var(--text-quaternary)', marginTop: '6px', fontFamily: 'var(--font-mono)', letterSpacing: '0.03em' }}>WE'LL SEND YOU A LINK TO RESET YOUR PASSWORD</p>
         </div>
 
-        <div className="bg-white p-10 rounded-2xl border" style={{ borderColor: 'var(--border)', boxShadow: '0 12px 32px rgba(15,17,21,0.08), 0 2px 8px rgba(15,17,21,0.04)' }}>
+        <div style={{
+          background: 'var(--bg-surface)',
+          padding: '32px',
+          borderRadius: '16px',
+          border: '1px solid var(--border)',
+          boxShadow: '0 12px 40px rgba(0,0,0,0.4)',
+        }}>
           {!isSubmitted ? (
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
               <div>
-                <label htmlFor="email" className="cc-text-mono block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">
+                <label htmlFor="email" className="sys-label" style={{ display: 'block', marginBottom: '8px' }}>
                   Email Address
                 </label>
                 <input
@@ -71,38 +88,49 @@ const ForgotPassword = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full btn-primary py-3.5 flex justify-center text-sm group"
-                style={{ background: '#5B5BD6', boxShadow: '0 1px 2px rgba(91,91,214,0.25)', transition: 'background 150ms ease, box-shadow 150ms ease' }}
-                onMouseEnter={e => { if (!loading) { e.currentTarget.style.background = '#4F46E5'; e.currentTarget.style.boxShadow = '0 2px 8px rgba(91,91,214,0.35)'; } }}
-                onMouseLeave={e => { e.currentTarget.style.background = '#5B5BD6'; e.currentTarget.style.boxShadow = '0 1px 2px rgba(91,91,214,0.25)'; }}
+                className="btn-primary"
+                style={{
+                  width: '100%', justifyContent: 'center', height: '40px',
+                  fontSize: '13px',
+                }}
               >
                 {loading ? (
-                  <span className="flex items-center gap-2">
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div style={{ width: '16px', height: '16px', border: '2px solid rgba(255,255,255,0.4)', borderTopColor: 'white', borderRadius: '50%', animation: 'spin 0.6s linear infinite' }} />
                     Sending link...
                   </span>
                 ) : (
-                  <span className="flex items-center gap-2">
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                     Send Reset Link
-                    <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform duration-200" />
+                    <ArrowRight size={14} />
                   </span>
                 )}
               </button>
             </form>
           ) : (
-            <div className="text-center">
-              <div className="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-4 text-green-500">
-                <Mail size={24} strokeWidth={2.5} />
+            <div style={{ textAlign: 'center', padding: '10px 0' }}>
+              <div style={{
+                width: '56px', height: '56px', borderRadius: '50%',
+                background: 'var(--accent-green-soft)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                margin: '0 auto 16px',
+              }}>
+                <Mail size={22} style={{ color: 'var(--accent-green)' }} />
               </div>
-              <h3 className="text-lg font-bold text-black mb-2">Check your email</h3>
-              <p className="text-sm text-gray-500 mb-6">
-                We've sent a password reset link to <span className="font-semibold text-black">{email}</span>
+              <h3 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '8px' }}>Check your email</h3>
+              <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '24px', lineHeight: 1.5 }}>
+                We've sent a password reset link to <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{email}</span>
               </p>
               <button
                 onClick={() => setIsSubmitted(false)}
-                className="text-sm font-bold text-gray-400 transition-colors"
-                onMouseEnter={e => e.currentTarget.style.color = '#5B5BD6'}
-                onMouseLeave={e => e.currentTarget.style.color = ''}
+                style={{
+                  background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+                  fontSize: '12px', fontWeight: 600, color: 'var(--text-tertiary)',
+                  fontFamily: 'var(--font-mono)', letterSpacing: '0.04em',
+                  transition: 'color 150ms ease',
+                }}
+                onMouseEnter={e => e.currentTarget.style.color = 'var(--accent-indigo)'}
+                onMouseLeave={e => e.currentTarget.style.color = 'var(--text-tertiary)'}
               >
                 Didn't receive the email? Try again
               </button>
