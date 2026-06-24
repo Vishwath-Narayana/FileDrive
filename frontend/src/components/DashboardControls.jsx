@@ -154,7 +154,7 @@ const DashboardControls = ({
                 appearance: 'none',
                 cursor: 'pointer',
                 outline: 'none',
-                minWidth: '110px',
+                minWidth: '140px',
                 transition: 'border-color 150ms ease',
               }}
               onFocus={e => e.target.style.borderColor = 'var(--accent-indigo)'}
@@ -162,8 +162,14 @@ const DashboardControls = ({
             >
               <option value="all">All types</option>
               <option value="image">Images</option>
-              <option value="csv">CSV</option>
-              <option value="pdf">PDF</option>
+              <option value="pdf">PDFs</option>
+              <option value="document">Documents</option>
+              <option value="spreadsheet">Spreadsheets</option>
+              <option value="presentation">Presentations</option>
+              <option value="video">Videos</option>
+              <option value="audio">Audio</option>
+              <option value="archive">Archives</option>
+              <option value="other">Other</option>
             </select>
           </div>
 

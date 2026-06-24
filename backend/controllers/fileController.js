@@ -3,10 +3,74 @@ const Organization = require('../models/Organization');
 const { cloudinary } = require('../config/cloudinaryConfig');
 const { getIO } = require('../socket');
 
-const getFileType = (mimetype) => {
-  if (mimetype.startsWith('image/')) return 'image';
-  if (mimetype === 'application/pdf') return 'pdf';
-  if (mimetype === 'text/csv' || mimetype === 'application/vnd.ms-excel') return 'csv';
+const getFileType = (mimetype, originalname = '') => {
+  const ext = originalname.split('.').pop().toLowerCase();
+
+  // Images
+  if (mimetype?.startsWith('image/') || ['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp', 'heic', 'bmp'].includes(ext)) {
+    return 'image';
+  }
+  
+  // PDFs
+  if (mimetype === 'application/pdf' || ext === 'pdf') {
+    return 'pdf';
+  }
+  
+  // Spreadsheets
+  if (
+    mimetype === 'text/csv' ||
+    mimetype === 'application/vnd.ms-excel' ||
+    mimetype === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
+    mimetype === 'application/vnd.oasis.opendocument.spreadsheet' ||
+    ['csv', 'xls', 'xlsx', 'ods', 'tsv'].includes(ext)
+  ) {
+    return 'spreadsheet';
+  }
+
+  // Documents
+  if (
+    mimetype === 'application/msword' ||
+    mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
+    mimetype?.startsWith('text/plain') ||
+    mimetype === 'application/rtf' ||
+    mimetype === 'application/vnd.oasis.opendocument.text' ||
+    ['doc', 'docx', 'txt', 'rtf', 'odt', 'md', 'pages'].includes(ext)
+  ) {
+    return 'document';
+  }
+
+  // Presentations
+  if (
+    mimetype === 'application/vnd.ms-powerpoint' ||
+    mimetype === 'application/vnd.openxmlformats-officedocument.presentationml.presentation' ||
+    mimetype === 'application/vnd.oasis.opendocument.presentation' ||
+    ['ppt', 'pptx', 'odp', 'key'].includes(ext)
+  ) {
+    return 'presentation';
+  }
+
+  // Videos
+  if (mimetype?.startsWith('video/') || ['mp4', 'mov', 'avi', 'mkv', 'webm', 'flv', '3gp'].includes(ext)) {
+    return 'video';
+  }
+
+  // Audio
+  if (mimetype?.startsWith('audio/') || ['mp3', 'wav', 'ogg', 'm4a', 'flac', 'aac'].includes(ext)) {
+    return 'audio';
+  }
+
+  // Archives
+  if (
+    mimetype === 'application/zip' ||
+    mimetype === 'application/x-rar-compressed' ||
+    mimetype === 'application/x-7z-compressed' ||
+    mimetype === 'application/x-tar' ||
+    mimetype === 'application/gzip' ||
+    ['zip', 'rar', '7z', 'tar', 'gz', 'bz2'].includes(ext)
+  ) {
+    return 'archive';
+  }
+
   return 'other';
 };
 
@@ -35,7 +99,7 @@ exports.uploadFile = async (req, res) => {
       return res.status(403).json({ message: 'Only admins and editors can upload files' });
     }
 
-    const fileType = getFileType(req.file.mimetype);
+    const fileType = getFileType(req.file.mimetype, req.file.originalname);
 
     const file = await File.create({
       filename: req.file.filename,
@@ -103,7 +167,11 @@ exports.getFiles = async (req, res) => {
     }
 
     if (type && type !== 'all') {
-      query.fileType = type;
+      if (type === 'spreadsheet') {
+        query.fileType = { $in: ['spreadsheet', 'csv'] };
+      } else {
+        query.fileType = type;
+      }
     }
 
     const files = await File.find(query)

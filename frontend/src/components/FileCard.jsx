@@ -1,4 +1,4 @@
-import { FileText, Image as ImageIcon, FileSpreadsheet, Video, MoreHorizontal, Download, Star, Trash2, RotateCcw, Eye } from 'lucide-react';
+import { FileText, Image as ImageIcon, FileSpreadsheet, Video, MoreHorizontal, Download, Star, Trash2, RotateCcw, Eye, Presentation, FileAudio, Archive } from 'lucide-react';
 import { Dropdown } from 'react-bootstrap';
 import Avatar from './Avatar';
 
@@ -10,12 +10,21 @@ const FileCard = ({ file, onDownload, onView, onDelete, onToggleFavorite, onRest
     switch (fileType) {
       case 'image':
         return { icon: ImageIcon, bg: 'rgba(139, 92, 246, 0.12)', color: '#A78BFA', label: 'IMG' };
-      case 'csv':
-        return { icon: FileSpreadsheet, bg: 'var(--accent-green-soft)', color: 'var(--accent-green)', label: 'CSV' };
       case 'pdf':
         return { icon: FileText, bg: 'var(--accent-red-soft)', color: 'var(--accent-red)', label: 'PDF' };
+      case 'document':
+        return { icon: FileText, bg: 'var(--accent-indigo-soft)', color: 'var(--accent-indigo)', label: 'DOC' };
+      case 'csv':
+      case 'spreadsheet':
+        return { icon: FileSpreadsheet, bg: 'var(--accent-green-soft)', color: 'var(--accent-green)', label: 'SHEET' };
+      case 'presentation':
+        return { icon: Presentation, bg: 'var(--accent-amber-soft)', color: 'var(--accent-amber)', label: 'SLIDE' };
       case 'video':
-        return { icon: Video, bg: 'var(--accent-blue-soft)', color: 'var(--accent-blue)', label: 'VID' };
+        return { icon: Video, bg: 'var(--accent-blue-soft)', color: 'var(--accent-blue)', label: 'VIDEO' };
+      case 'audio':
+        return { icon: FileAudio, bg: 'rgba(6, 182, 212, 0.12)', color: '#06B6D4', label: 'AUDIO' };
+      case 'archive':
+        return { icon: Archive, bg: 'var(--accent-orange-soft)', color: 'var(--accent-orange)', label: 'ZIP' };
       default:
         return { icon: FileText, bg: 'var(--bg-hover)', color: 'var(--text-tertiary)', label: 'FILE' };
     }

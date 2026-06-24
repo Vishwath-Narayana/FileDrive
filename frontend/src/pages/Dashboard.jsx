@@ -239,7 +239,12 @@ const Dashboard = () => {
     }
 
     if (typeFilter !== 'all') {
-      filtered = filtered.filter(file => file.fileType === typeFilter);
+      filtered = filtered.filter(file => {
+        if (typeFilter === 'spreadsheet') {
+          return file.fileType === 'spreadsheet' || file.fileType === 'csv';
+        }
+        return file.fileType === typeFilter;
+      });
     }
 
     setFilteredFiles(filtered);
@@ -461,7 +466,7 @@ const Dashboard = () => {
   
   const handleView = async (file) => {
     try {
-      if (file.fileType === 'pdf' || file.fileType === 'image') {
+      if (['pdf', 'image', 'video', 'audio'].includes(file.fileType)) {
         setSelectedFile(file);
         setPreviewUrl('');
         setShowPreviewModal(true);
@@ -580,8 +585,13 @@ const Dashboard = () => {
   const typeColors = {
     image: '#A78BFA',
     pdf: 'var(--accent-red)',
+    document: 'var(--accent-indigo)',
+    spreadsheet: 'var(--accent-green)',
     csv: 'var(--accent-green)',
+    presentation: 'var(--accent-amber)',
     video: 'var(--accent-blue)',
+    audio: '#06B6D4',
+    archive: 'var(--accent-orange)',
     file: 'var(--text-tertiary)',
   };
 
@@ -1454,6 +1464,28 @@ const Dashboard = () => {
                 style={{ width: '100%', height: '65vh', borderRadius: '8px', border: '1px solid var(--border)', background: 'white' }}
                 title="PDF Preview"
               />
+            ) : selectedFile?.fileType === 'video' ? (
+              <video
+                src={previewUrl}
+                controls
+                autoPlay
+                style={{ maxWidth: '100%', maxHeight: '65vh', borderRadius: '10px', outline: 'none' }}
+              />
+            ) : selectedFile?.fileType === 'audio' ? (
+              <div style={{ width: '100%', maxWidth: '500px', padding: '40px 20px', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '12px', textAlign: 'center' }}>
+                <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: 'rgba(6, 182, 212, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
+                  <Activity size={24} style={{ color: '#06B6D4' }} />
+                </div>
+                <p style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '24px' }}>
+                  {selectedFile.originalName}
+                </p>
+                <audio
+                  src={previewUrl}
+                  controls
+                  autoPlay
+                  style={{ width: '100%' }}
+                />
+              </div>
             ) : (
               <div style={{ textAlign: 'center', padding: '40px 0' }}>
                 <div style={{
