@@ -5,7 +5,7 @@ import { toast } from 'react-hot-toast';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../services/supabaseClient';
-import socket from '../services/socket';
+import socket, { joinOrg, leaveOrg } from '../services/socket';
 import Avatar from './Avatar';
 import RoleBadge from './RoleBadge';
 
@@ -42,8 +42,7 @@ const ManageOrgModal = ({ show, onHide }) => {
     if (!currentOrganization) return;
 
     const orgId = currentOrganization._id;
-    socket.emit('join-org', orgId);
-    console.log('🔌 Joined org room:', orgId);
+    joinOrg(orgId);
 
     const handleOrgUpdated = (updatedOrg) => {
       console.log('org:updated received:', updatedOrg._id, orgId);
@@ -56,8 +55,7 @@ const ManageOrgModal = ({ show, onHide }) => {
 
     return () => {
       socket.off('org:updated', handleOrgUpdated);
-      socket.emit('leave-org', orgId);
-      console.log('🔌 Left org room:', orgId);
+      leaveOrg(orgId);
     };
   }, [currentOrganization?._id]);
 
@@ -140,7 +138,7 @@ const ManageOrgModal = ({ show, onHide }) => {
       });
 
       const inviteToken = response.data.token;
-      const inviteLink = `https://file-drive-amber.vercel.app/accept-invite?token=${inviteToken}`;
+      const inviteLink = `${window.location.origin}/accept-invite?token=${inviteToken}`;
 
       const { error: otpError } = await supabase.auth.signInWithOtp({
         email: inviteEmail,

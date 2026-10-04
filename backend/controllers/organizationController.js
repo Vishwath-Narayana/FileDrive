@@ -2,15 +2,23 @@ const Organization = require('../models/Organization');
 const Invitation = require('../models/Invitation');
 const User = require('../models/User');
 const Notification = require('../models/Notification');
-const { getIO } = require('../socket');
+const File = require('../models/File');
+const { emitToUser, emitToOrg, removeUserFromOrgRoom, closeOrgRoom } = require('../socket');
+const { deleteObjects } = require('../config/storage');
 const crypto = require('crypto');
+
+// Must match the TTL index on the Invitation model (24h) so links never "work" after Mongo purges them.
+const INVITE_TTL_HOURS = 24;
+
+const populateOrg = (id) =>
+  Organization.findById(id).populate('owner', 'name email').populate('members.user', 'name email');
 
 exports.createOrganization = async (req, res) => {
   try {
-    const { name } = req.body;
+    const name = typeof req.body.name === 'string' ? req.body.name.trim() : '';
 
-    if (!name) {
-      return res.status(400).json({ message: 'Organization name is required' });
+    if (!name || name.length > 80) {
+      return res.status(400).json({ message: 'Organization name is required (max 80 characters)' });
     }
 
     const organization = await Organization.create({
@@ -118,12 +126,7 @@ exports.updateMemberRole = async (req, res) => {
       .populate('owner', 'name email')
       .populate('members.user', 'name email');
 
-    try {
-      const io = getIO();
-      if (io) io.to(`org:${organizationId}`).emit('org:updated', updatedOrg);
-    } catch (socketErr) {
-      console.warn('Socket emit skipped (not initialized):', socketErr.message);
-    }
+    emitToOrg(organizationId, 'org:updated', updatedOrg);
 
     res.json(updatedOrg);
   } catch (error) {
@@ -159,7 +162,15 @@ exports.sendInvitation = async (req, res) => {
       return res.status(403).json({ message: 'Only admins can send invitations' });
     }
 
-    const normalizedEmail = email.toLowerCase();
+    const normalizedEmail = String(email).trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+      return res.status(400).json({ message: 'Invalid email address' });
+    }
+
+    const existingUser = await User.findOne({ email: normalizedEmail });
+    if (existingUser && organization.members.some((m) => m.user.toString() === existingUser._id.toString())) {
+      return res.status(400).json({ message: 'This user is already a member' });
+    }
 
     const existingInvitation = await Invitation.findOne({
       organization: organizationId,
@@ -187,9 +198,8 @@ exports.sendInvitation = async (req, res) => {
     });
 
     // 🔴 Real-time: check if user exists in MongoDB to notify them in-app
-    const invitedUser = await User.findOne({ email: normalizedEmail });
+    const invitedUser = existingUser;
     if (invitedUser) {
-      console.log('invitedUser found:', invitedUser._id);
       const notification = await Notification.create({
         recipient: invitedUser._id,
         sender: req.user._id,
@@ -200,12 +210,8 @@ exports.sendInvitation = async (req, res) => {
         status: 'unread'
       });
 
-      // Emit real-time notification
-      const io = getIO();
-      if (io) {
-        console.log(`📡 Emitting notification:new to user ${invitedUser._id}`);
-        io.emit(`notification:new:${invitedUser._id.toString()}`, notification);
-      }
+      // Only the invited user's own sockets receive this (was a broadcast to every client)
+      emitToUser(invitedUser._id.toString(), 'notification:new', notification);
     }
 
     // Populate for frontend
@@ -289,35 +295,28 @@ exports.acceptInvitation = async (req, res) => {
       return res.status(400).json({ message: 'Invitation already processed' });
     }
 
-    const organization = await Organization.findById(invitation.organization);
-
-    if (!organization) {
-      return res.status(404).json({ message: 'Organization not found' });
-    }
-
-    const alreadyMember = organization.members.some(
-      m => m.user.toString() === req.user._id.toString()
+    // Claim the invitation atomically so a double click / two tabs cannot join twice.
+    const claimed = await Invitation.findOneAndUpdate(
+      { _id: invitation._id, status: 'pending' },
+      { status: 'accepted' }
     );
-
-    if (alreadyMember) {
-      invitation.status = 'accepted';
-      await invitation.save();
-      return res.status(400).json({ message: 'You are already a member of this organization' });
+    if (!claimed) {
+      return res.status(400).json({ message: 'Invitation already processed' });
     }
 
-    organization.members.push({
-      user: req.user._id,
-      role: invitation.role
-    });
+    const joined = await Organization.updateOne(
+      { _id: invitation.organization, 'members.user': { $ne: req.user._id } },
+      { $push: { members: { user: req.user._id, role: invitation.role } } }
+    );
+    if (joined.matchedCount === 0) {
+      const exists = await Organization.exists({ _id: invitation.organization });
+      return res.status(exists ? 400 : 404).json({
+        message: exists ? 'You are already a member of this organization' : 'Organization not found'
+      });
+    }
 
-    await organization.save();
-
-    invitation.status = 'accepted';
-    await invitation.save();
-
-    const updatedOrg = await Organization.findById(organization._id)
-      .populate('owner', 'name email')
-      .populate('members.user', 'name email');
+    const updatedOrg = await populateOrg(invitation.organization);
+    emitToOrg(invitation.organization.toString(), 'org:updated', updatedOrg);
 
     res.json({
       message: 'Invitation accepted successfully',
@@ -374,7 +373,11 @@ exports.revokeInvitation = async (req, res) => {
       return res.status(403).json({ message: 'Only admins can revoke invitations' });
     }
 
-    await Invitation.findByIdAndDelete(invitationId);
+    // Scoped to this organization: an admin of org A must not delete org B's invitations.
+    const deleted = await Invitation.findOneAndDelete({ _id: invitationId, organization: organizationId });
+    if (!deleted) {
+      return res.status(404).json({ message: 'Invitation not found' });
+    }
     res.json({ message: 'Invitation revoked' });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -385,63 +388,45 @@ exports.acceptInviteByToken = async (req, res) => {
   try {
     const { token } = req.body;
 
-    if (!token) {
+    if (!token || typeof token !== 'string') {
       return res.status(400).json({ message: 'Token is required' });
     }
 
-    // Look up invitation by token in DB (no JWT verification)
+    // Route is authenticated: the token only works for the account it was issued to.
     const invitation = await Invitation.findOne({ token, status: 'pending' });
 
     if (!invitation) {
       return res.status(400).json({ message: 'Invalid or expired invitation link' });
     }
 
-    // Check if invitation is older than 48 hours
     const hoursSinceCreated = (Date.now() - invitation.createdAt) / (1000 * 60 * 60);
-    if (hoursSinceCreated > 48) {
+    if (hoursSinceCreated > INVITE_TTL_HOURS) {
       return res.status(400).json({ message: 'Invitation link has expired' });
     }
 
-    const { email, organization: organizationId, role } = invitation;
-
-    const user = await User.findOne({ email: email.toLowerCase() });
-
-    if (!user) {
-      return res.status(404).json({
-        message: 'User not found. Please register first.',
-        needsRegistration: true,
-        email,
-        organizationId,
-        role
-      });
+    if (invitation.email !== req.user.email) {
+      return res.status(403).json({ message: `This invitation was sent to ${invitation.email}. Sign in with that email to accept it.` });
     }
 
-    const organization = await Organization.findById(organizationId);
+    const claimed = await Invitation.findOneAndUpdate(
+      { _id: invitation._id, status: 'pending' },
+      { status: 'accepted' }
+    );
+    if (!claimed) {
+      return res.status(400).json({ message: 'Invalid or expired invitation link' });
+    }
 
-    if (!organization) {
+    const organizationId = invitation.organization;
+    const joined = await Organization.updateOne(
+      { _id: organizationId, 'members.user': { $ne: req.user._id } },
+      { $push: { members: { user: req.user._id, role: invitation.role } } }
+    );
+    if (joined.matchedCount === 0 && !(await Organization.exists({ _id: organizationId }))) {
       return res.status(404).json({ message: 'Organization not found' });
     }
 
-    // Manual dedup check instead of $addToSet for nested objects
-    const alreadyMember = organization.members.some(
-      m => m.user && m.user.toString() === user._id.toString()
-    );
-    
-    if (!alreadyMember) {
-      organization.members.push({ user: user._id, role });
-      await organization.save();
-    }
-
-    // Mark as accepted and cleanup
-    invitation.status = 'accepted';
-    await invitation.save();
-    
-    // Optionally remove invite to prevent security issues on reuse
-    // await Invitation.deleteOne({ token });
-
-    const updatedOrg = await Organization.findById(organizationId)
-      .populate('owner', 'name email')
-      .populate('members.user', 'name email');
+    const updatedOrg = await populateOrg(organizationId);
+    emitToOrg(organizationId.toString(), 'org:updated', updatedOrg);
 
     res.json({
       message: 'Invitation accepted successfully',
@@ -449,7 +434,7 @@ exports.acceptInviteByToken = async (req, res) => {
     });
   } catch (error) {
     console.error('Accept invite by token error:', error);
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: 'Failed to accept invitation' });
   }
 };
 
@@ -470,12 +455,17 @@ exports.deleteOrganization = async (req, res) => {
       return res.status(400).json({ message: 'Cannot delete your personal organization' });
     }
 
-    // Delete all files associated with this organization
-    const File = require('../models/File');
+    // Remove stored objects first (otherwise they are orphaned and keep costing money)
+    const files = await File.find({ organization: orgId }).select('storageKey');
+    await deleteObjects(files.map((f) => f.storageKey)).catch((e) => console.error('Org storage cleanup failed:', e.message));
+
     await File.deleteMany({ organization: orgId });
-    
     await Organization.findByIdAndDelete(orgId);
     await Invitation.deleteMany({ organization: orgId });
+    await Notification.deleteMany({ orgId });
+
+    emitToOrg(orgId, 'org:deleted', { orgId });
+    closeOrgRoom(orgId);
 
     res.json({ message: 'Organization deleted successfully' });
   } catch (error) {
@@ -531,12 +521,9 @@ exports.removeMember = async (req, res) => {
       .populate('owner', 'name email')
       .populate('members.user', 'name email');
 
-    try {
-      const io = getIO();
-      if (io) io.to(`org:${organizationId}`).emit('org:updated', updatedOrg);
-    } catch (socketErr) {
-      console.warn('Socket emit skipped (not initialized):', socketErr.message);
-    }
+    emitToOrg(organizationId, 'org:updated', updatedOrg);
+    // The removed member got the update above; now stop any further org events reaching them.
+    removeUserFromOrgRoom(userId, organizationId);
 
     res.json(updatedOrg);
   } catch (error) {

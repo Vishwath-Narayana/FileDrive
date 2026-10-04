@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { validatePassword } from '../utils/password';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-hot-toast';
@@ -20,19 +21,30 @@ const ResetPassword = () => {
   const [isRecovery, setIsRecovery] = useState(false);
 
   useEffect(() => {
-    // Check if we have a valid session to reset password
+    // Only a password-recovery link may use this page. The old fallback accepted ANY existing
+    // session, so a logged-in user (or someone on an unlocked laptop) could change the password
+    // here without knowing the current one.
     const checkSession = async () => {
-      const hash = window.location.hash;
+      const fromLink = window.location.hash.includes('type=recovery');
+      const recoveryFlag = sessionStorage.getItem('fd_recovery') === '1';
       const { data } = await supabase.auth.getSession();
 
-      if (hash.includes("type=recovery")) {
-        console.log("🔐 Password recovery mode explicitly detected via hash");
+      if ((fromLink || recoveryFlag) && data.session) {
         setIsRecovery(true);
         setSessionValid(true);
-      } else if (data.session) {
-        // Fallback: If session exists and we are on this URL, they might have just refreshed
-        setIsRecovery(true);
-        setSessionValid(true);
+      } else if (fromLink) {
+        // Supabase may still be exchanging the link; PASSWORD_RECOVERY (AuthContext) sets the flag
+        const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+          if (event === 'PASSWORD_RECOVERY' && session) {
+            setIsRecovery(true);
+            setSessionValid(true);
+            sub.subscription.unsubscribe();
+          }
+        });
+        setTimeout(() => {
+          sub.subscription.unsubscribe();
+          setSessionValid((valid) => valid && sessionStorage.getItem('fd_recovery') === '1');
+        }, 5000);
       } else {
         setSessionValid(false);
       }
@@ -43,8 +55,9 @@ const ResetPassword = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (newPassword.length < 6) {
-      toast.error('Password must be at least 6 characters');
+    const passwordError = validatePassword(newPassword);
+    if (passwordError) {
+      toast.error(passwordError);
       return;
     }
 

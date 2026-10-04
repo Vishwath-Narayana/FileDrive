@@ -10,7 +10,7 @@ import FileRow from '../components/FileRow';
 import ManageOrgModal from '../components/ManageOrgModal';
 import CreateOrgModal from '../components/CreateOrgModal';
 import api from '../services/api';
-import socket from '../services/socket';
+import socket, { joinOrg, leaveOrg } from '../services/socket';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { X, File, Plus, Upload, CloudUpload, HardDrive, Activity, Users, Share2, CheckCircle2, BarChart3, Clock, Zap, ArrowUpRight, TrendingUp, Folder, Trash2, MoreVertical } from 'lucide-react';
@@ -152,7 +152,7 @@ const Dashboard = () => {
     if (!currentOrganization) return;
     const orgId = currentOrganization._id;
 
-    socket.emit('join-org', orgId);
+    joinOrg(orgId);
 
     const handleFileNew = (file) => {
       setFiles((prev) => {
@@ -192,7 +192,7 @@ const Dashboard = () => {
     socket.on('file:favoriteUpdated', handleFavoriteUpdated);
 
     return () => {
-      socket.emit('leave-org', orgId);
+      leaveOrg(orgId);
       socket.off('file:new', handleFileNew);
       socket.off('file:trashed', handleFileTrashed);
       socket.off('file:deleted', handleFileDeleted);
@@ -383,9 +383,8 @@ const Dashboard = () => {
 
       const formData = new FormData();
       formData.append('file', item.file);
-      formData.append('organizationId', currentOrganization._id);
-
-      const response = await api.post('/files/upload', formData, {
+      // organizationId goes in the query string so the server can authorise BEFORE streaming the file to storage
+      const response = await api.post(`/files/upload?organizationId=${currentOrganization._id}`, formData, {
         cancelToken: source.token,
         headers: {
           'Content-Type': 'multipart/form-data',
@@ -474,7 +473,7 @@ const Dashboard = () => {
         const response = await api.get(`/files/view/${file._id}`);
         setPreviewUrl(response.data.viewUrl);
       } else {
-        window.open(file.path, '_blank', 'noopener,noreferrer');
+        await handleDownload(file);
       }
     } catch (error) {
       toast.error('Failed to open preview');

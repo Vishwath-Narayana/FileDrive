@@ -1,157 +1,82 @@
 const File = require('../models/File');
 const Organization = require('../models/Organization');
-const { cloudinary } = require('../config/cloudinaryConfig');
-const { getIO } = require('../socket');
+const { getObjectUrl, deleteObject } = require('../config/storage');
+const { emitToOrg } = require('../socket');
+const { getFileType } = require('../utils/fileType');
 
-const getFileType = (mimetype, originalname = '') => {
-  const ext = originalname.split('.').pop().toLowerCase();
+const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-  // Images
-  if (mimetype?.startsWith('image/') || ['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp', 'heic', 'bmp'].includes(ext)) {
-    return 'image';
-  }
-  
-  // PDFs
-  if (mimetype === 'application/pdf' || ext === 'pdf') {
-    return 'pdf';
-  }
-  
-  // Spreadsheets
-  if (
-    mimetype === 'text/csv' ||
-    mimetype === 'application/vnd.ms-excel' ||
-    mimetype === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
-    mimetype === 'application/vnd.oasis.opendocument.spreadsheet' ||
-    ['csv', 'xls', 'xlsx', 'ods', 'tsv'].includes(ext)
-  ) {
-    return 'spreadsheet';
-  }
+// Returns the caller's membership entry for an org, or null.
+const getMembership = async (organizationId, userId) => {
+  const org = await Organization.findById(organizationId).select('members');
+  if (!org) return { org: null, member: null };
+  const member = org.members.find((m) => m.user.toString() === userId.toString()) || null;
+  return { org, member };
+};
 
-  // Documents
-  if (
-    mimetype === 'application/msword' ||
-    mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
-    mimetype?.startsWith('text/plain') ||
-    mimetype === 'application/rtf' ||
-    mimetype === 'application/vnd.oasis.opendocument.text' ||
-    ['doc', 'docx', 'txt', 'rtf', 'odt', 'md', 'pages'].includes(ext)
-  ) {
-    return 'document';
+// Load a file and make sure the caller belongs to its organization.
+// Sends the error response itself and returns null when access is not allowed.
+const loadFileForMember = async (req, res) => {
+  const file = await File.findById(req.params.id);
+  if (!file) {
+    res.status(404).json({ message: 'File not found' });
+    return null;
   }
-
-  // Presentations
-  if (
-    mimetype === 'application/vnd.ms-powerpoint' ||
-    mimetype === 'application/vnd.openxmlformats-officedocument.presentationml.presentation' ||
-    mimetype === 'application/vnd.oasis.opendocument.presentation' ||
-    ['ppt', 'pptx', 'odp', 'key'].includes(ext)
-  ) {
-    return 'presentation';
+  const { org, member } = await getMembership(file.organization, req.user._id);
+  if (!org) {
+    res.status(404).json({ message: 'Organization not found' });
+    return null;
   }
-
-  // Videos
-  if (mimetype?.startsWith('video/') || ['mp4', 'mov', 'avi', 'mkv', 'webm', 'flv', '3gp'].includes(ext)) {
-    return 'video';
+  if (!member) {
+    res.status(403).json({ message: 'Access denied' });
+    return null;
   }
-
-  // Audio
-  if (mimetype?.startsWith('audio/') || ['mp3', 'wav', 'ogg', 'm4a', 'flac', 'aac'].includes(ext)) {
-    return 'audio';
-  }
-
-  // Archives
-  if (
-    mimetype === 'application/zip' ||
-    mimetype === 'application/x-rar-compressed' ||
-    mimetype === 'application/x-7z-compressed' ||
-    mimetype === 'application/x-tar' ||
-    mimetype === 'application/gzip' ||
-    ['zip', 'rar', '7z', 'tar', 'gz', 'bz2'].includes(ext)
-  ) {
-    return 'archive';
-  }
-
-  return 'other';
+  return { file, member };
 };
 
 exports.uploadFile = async (req, res) => {
+  // authorizeUpload already checked membership/role; the object is in the bucket by now.
   try {
     if (!req.file) {
       return res.status(400).json({ message: 'No file uploaded' });
     }
 
-    const { organizationId } = req.body;
-
-    if (!organizationId) {
-      return res.status(400).json({ message: 'Organization ID is required' });
-    }
-
-    const organization = await Organization.findById(organizationId);
-    if (!organization) {
-      return res.status(404).json({ message: 'Organization not found' });
-    }
-
-    const member = organization.members.find(
-      m => m.user.toString() === req.user._id.toString()
-    );
-
-    if (!member || (member.role !== 'admin' && member.role !== 'editor')) {
-      return res.status(403).json({ message: 'Only admins and editors can upload files' });
-    }
-
-    const fileType = getFileType(req.file.mimetype, req.file.originalname);
-
     const file = await File.create({
-      filename: req.file.filename,
+      filename: req.file.key,
       originalName: req.file.originalname,
-      path: req.file.path,
-      cloudinaryPublicId: req.file.filename,
-      resourceType: req.file.resource_type || 'auto',
-      format: req.file.format || req.file.originalname.split('.').pop().toLowerCase(),
+      path: req.file.key,
+      storageKey: req.file.key,
+      format: req.file.originalname.includes('.') ? req.file.originalname.split('.').pop().toLowerCase() : undefined,
       size: req.file.size,
-      fileType: fileType,
+      fileType: getFileType(req.file.mimetype, req.file.originalname),
       uploader: req.user._id,
-      organization: organizationId
+      organization: req.uploadOrgId,
     });
 
     const populatedFile = await File.findById(file._id).populate('uploader', 'name email');
-
     res.status(201).json(populatedFile);
-
-    // 🔴 Real-time: notify all other members in the org
-    try {
-      const room = `org:${organizationId.toString()}`;
-      console.log(`📡 Emitting file:new to room ${room}`);
-      getIO().to(room).emit('file:new', populatedFile);
-    } catch (e) { console.error('❌ Socket emit error:', e.message); }
+    emitToOrg(req.uploadOrgId, 'file:new', populatedFile);
   } catch (error) {
     console.error('Upload file error:', error);
-    res.status(500).json({ message: error.message });
+    // Do not leave an orphaned object behind when the DB write fails.
+    if (req.file?.key) deleteObject(req.file.key).catch(() => {});
+    res.status(500).json({ message: 'Upload failed' });
   }
 };
 
 exports.getFiles = async (req, res) => {
   try {
     const { search, type, organizationId, filter } = req.query;
-    
+
     if (!organizationId) {
       return res.status(400).json({ message: 'Organization ID is required' });
     }
 
-    const organization = await Organization.findById(organizationId);
-    if (!organization) {
-      return res.status(404).json({ message: 'Organization not found' });
-    }
+    const { org, member } = await getMembership(organizationId, req.user._id);
+    if (!org) return res.status(404).json({ message: 'Organization not found' });
+    if (!member) return res.status(403).json({ message: 'Access denied' });
 
-    const isMember = organization.members.some(
-      m => m.user.toString() === req.user._id.toString()
-    );
-
-    if (!isMember) {
-      return res.status(403).json({ message: 'Access denied' });
-    }
-
-    let query = { organization: organizationId };
+    const query = { organization: organizationId };
 
     if (filter === 'favorites') {
       query.favoritedBy = req.user._id;
@@ -163,227 +88,128 @@ exports.getFiles = async (req, res) => {
     }
 
     if (search) {
-      query.originalName = { $regex: search, $options: 'i' };
+      query.originalName = { $regex: escapeRegex(String(search).slice(0, 100)), $options: 'i' };
     }
 
     if (type && type !== 'all') {
-      if (type === 'spreadsheet') {
-        query.fileType = { $in: ['spreadsheet', 'csv'] };
-      } else {
-        query.fileType = type;
-      }
+      query.fileType = type === 'spreadsheet' ? { $in: ['spreadsheet', 'csv'] } : String(type);
     }
 
     const files = await File.find(query)
       .populate('uploader', 'name email')
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .limit(1000);
 
     res.json(files);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('Get files error:', error);
+    res.status(500).json({ message: 'Failed to load files' });
   }
+};
+
+const signedUrlFor = async (file, disposition) => {
+  if (!file.storageKey) {
+    const err = new Error('This file has not been migrated to the new storage yet');
+    err.status = 409;
+    throw err;
+  }
+  return getObjectUrl(file.storageKey, { filename: file.originalName, disposition });
 };
 
 exports.downloadFile = async (req, res) => {
   try {
-    const file = await File.findById(req.params.id);
-
-    if (!file) {
-      return res.status(404).json({ message: 'File not found' });
-    }
-
-    // Determine actual resource type from stored path if needed
-    let resourceType = file.resourceType;
-    if (!resourceType || resourceType === 'auto') {
-      if (file.path.includes('/image/upload/')) resourceType = 'image';
-      else if (file.path.includes('/raw/upload/')) resourceType = 'raw';
-      else if (file.path.includes('/video/upload/')) resourceType = 'video';
-    }
-
-    // Get format (extension) - use stored format or extract from originalName as fallback
-    const format = file.format || file.originalName.split('.').pop().toLowerCase();
-
-    // Generate a signed download URL using Cloudinary's specialized private_download_url
-    const downloadUrl = cloudinary.utils.private_download_url(file.cloudinaryPublicId, format, {
-      resource_type: resourceType || 'auto',
-      type: 'upload',
-      attachment: true
-    });
-    
-    console.log("DEBUG DOWNLOAD:", {
-      fileType: file.fileType,
-      resourceType,
-      format,
-      publicId: file.cloudinaryPublicId,
-      finalUrl: downloadUrl
-    });
-
-    res.json({ downloadUrl });
+    const loaded = await loadFileForMember(req, res);
+    if (!loaded) return;
+    res.json({ downloadUrl: await signedUrlFor(loaded.file, 'attachment') });
   } catch (error) {
-    console.error("DOWNLOAD ERROR:", error);
-    res.status(500).json({ message: error.message });
+    if (error.status) return res.status(error.status).json({ message: error.message });
+    console.error('Download error:', error);
+    res.status(500).json({ message: 'Failed to create download link' });
   }
 };
 
 exports.viewFile = async (req, res) => {
   try {
-    const file = await File.findById(req.params.id);
-
-    if (!file) {
-      return res.status(404).json({ message: 'File not found' });
-    }
-
-    // Determine actual resource type from stored path
-    let resourceType = file.resourceType;
-    if (!resourceType || resourceType === 'auto') {
-      if (file.path.includes('/image/upload/')) resourceType = 'image';
-      else if (file.path.includes('/raw/upload/')) resourceType = 'raw';
-      else if (file.path.includes('/video/upload/')) resourceType = 'video';
-    }
-
-    const format = file.format || file.originalName.split('.').pop().toLowerCase();
-
-    // Generate a signed URL for INLINE viewing (attachment: false)
-    const viewUrl = cloudinary.utils.private_download_url(file.cloudinaryPublicId, format, {
-      resource_type: resourceType || 'auto',
-      type: 'upload',
-      attachment: false // 🔥 Key difference: no forced download
-    });
-
-    res.json({ viewUrl });
+    const loaded = await loadFileForMember(req, res);
+    if (!loaded) return;
+    res.json({ viewUrl: await signedUrlFor(loaded.file, 'inline') });
   } catch (error) {
-    console.error("VIEW ERROR:", error);
-    res.status(500).json({ message: error.message });
+    if (error.status) return res.status(error.status).json({ message: error.message });
+    console.error('View error:', error);
+    res.status(500).json({ message: 'Failed to create preview link' });
   }
 };
 
 exports.deleteFile = async (req, res) => {
   try {
-    const file = await File.findById(req.params.id);
-
-    if (!file) {
-      return res.status(404).json({ message: 'File not found' });
-    }
-
-    const organization = await Organization.findById(file.organization);
-    if (!organization) {
-      return res.status(404).json({ message: 'Organization not found' });
-    }
-
-    const member = organization.members.find(
-      m => m.user.toString() === req.user._id.toString()
-    );
-
-    if (!member) {
-      return res.status(403).json({ message: 'Access denied' });
-    }
+    const loaded = await loadFileForMember(req, res);
+    if (!loaded) return;
+    const { file, member } = loaded;
 
     const isAdmin = member.role === 'admin';
     const isOwner = file.uploader.toString() === req.user._id.toString();
-
     if (!isAdmin && !isOwner) {
       return res.status(403).json({ message: 'You can only delete your own files' });
     }
 
+    const room = file.organization.toString();
+
     if (file.isDeleted) {
-      if (file.cloudinaryPublicId) {
-        await cloudinary.uploader.destroy(file.cloudinaryPublicId);
-      }
-      await File.findByIdAndDelete(req.params.id);
+      // Remove the DB record first so a storage hiccup cannot leave a dangling record.
+      await File.findByIdAndDelete(file._id);
+      await deleteObject(file.storageKey).catch((e) => console.error('Storage delete failed:', file.storageKey, e.message));
       res.json({ message: 'File permanently deleted' });
-      // 🔴 Real-time
-      const room = `org:${file.organization.toString()}`;
-      console.log(`📡 Emitting file:deleted to room ${room}`);
-      try { getIO().to(room).emit('file:deleted', { fileId: req.params.id }); } catch (e) { console.error('❌ Socket emit error:', e.message); }
+      emitToOrg(room, 'file:deleted', { fileId: req.params.id });
     } else {
       file.isDeleted = true;
       file.deletedAt = new Date();
       file.deletedBy = req.user._id;
       await file.save();
       res.json({ message: 'File moved to trash' });
-      // 🔴 Real-time
-      const room = `org:${file.organization.toString()}`;
-      console.log(`📡 Emitting file:trashed to room ${room}`);
-      try { getIO().to(room).emit('file:trashed', { fileId: req.params.id }); } catch (e) { console.error('❌ Socket emit error:', e.message); }
+      emitToOrg(room, 'file:trashed', { fileId: req.params.id });
     }
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('Delete file error:', error);
+    res.status(500).json({ message: 'Failed to delete file' });
   }
 };
 
 exports.toggleFavorite = async (req, res) => {
   try {
-    const file = await File.findById(req.params.id);
+    const loaded = await loadFileForMember(req, res);
+    if (!loaded) return;
+    const { file } = loaded;
 
-    if (!file) {
-      return res.status(404).json({ message: 'File not found' });
-    }
+    const userId = req.user._id.toString();
+    const isFavorited = file.favoritedBy.some((id) => id.toString() === userId);
 
-    const organization = await Organization.findById(file.organization);
-    if (!organization) {
-      return res.status(404).json({ message: 'Organization not found' });
-    }
-
-    const isMember = organization.members.some(
-      m => m.user.toString() === req.user._id.toString()
+    // Atomic update avoids lost writes when two members favorite at once.
+    await File.updateOne(
+      { _id: file._id },
+      isFavorited ? { $pull: { favoritedBy: req.user._id } } : { $addToSet: { favoritedBy: req.user._id } }
     );
 
-    if (!isMember) {
-      return res.status(403).json({ message: 'Access denied' });
-    }
-
-    const isFavorited = file.favoritedBy.includes(req.user._id);
-
-    if (isFavorited) {
-      file.favoritedBy = file.favoritedBy.filter(
-        userId => userId.toString() !== req.user._id.toString()
-      );
-    } else {
-      file.favoritedBy.push(req.user._id);
-    }
-
-    await file.save();
-
     const updatedFile = await File.findById(file._id).populate('uploader', 'name email');
-
     res.json(updatedFile);
-    // 🔴 Real-time
-    const room = `org:${file.organization.toString()}`;
-    console.log(`📡 Emitting file:favoriteUpdated to room ${room}`);
-    try { getIO().to(room).emit('file:favoriteUpdated', updatedFile); } catch (e) { console.error('❌ Socket emit error:', e.message); }
+    emitToOrg(file.organization.toString(), 'file:favoriteUpdated', updatedFile);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('Favorite error:', error);
+    res.status(500).json({ message: 'Failed to update favorite' });
   }
 };
 
 exports.restoreFile = async (req, res) => {
   try {
-    const file = await File.findById(req.params.id);
-
-    if (!file) {
-      return res.status(404).json({ message: 'File not found' });
-    }
+    const loaded = await loadFileForMember(req, res);
+    if (!loaded) return;
+    const { file, member } = loaded;
 
     if (!file.isDeleted) {
       return res.status(400).json({ message: 'File is not in trash' });
     }
 
-    const organization = await Organization.findById(file.organization);
-    if (!organization) {
-      return res.status(404).json({ message: 'Organization not found' });
-    }
-
-    const member = organization.members.find(
-      m => m.user.toString() === req.user._id.toString()
-    );
-
-    if (!member) {
-      return res.status(403).json({ message: 'Access denied' });
-    }
-
     const isAdmin = member.role === 'admin';
     const isOwner = file.uploader.toString() === req.user._id.toString();
-
     if (!isAdmin && !isOwner) {
       return res.status(403).json({ message: 'You can only restore your own files' });
     }
@@ -394,13 +220,10 @@ exports.restoreFile = async (req, res) => {
     await file.save();
 
     const updatedFile = await File.findById(file._id).populate('uploader', 'name email');
-
     res.json(updatedFile);
-    // 🔴 Real-time
-    const room = `org:${file.organization.toString()}`;
-    console.log(`📡 Emitting file:restored to room ${room}`);
-    try { getIO().to(room).emit('file:restored', updatedFile); } catch (e) { console.error('❌ Socket emit error:', e.message); }
+    emitToOrg(file.organization.toString(), 'file:restored', updatedFile);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('Restore error:', error);
+    res.status(500).json({ message: 'Failed to restore file' });
   }
 };

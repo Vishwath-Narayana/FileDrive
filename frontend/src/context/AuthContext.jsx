@@ -1,7 +1,7 @@
 import { createContext, useState, useEffect, useContext, useRef } from 'react';
-import { supabase } from '../services/supabaseClient';
+import { supabase, createEphemeralClient } from '../services/supabaseClient';
 import api, { setAuthToken } from '../services/api';
-import socket from '../services/socket';
+import socket, { joinOrg, leaveOrg, connectSocket, disconnectSocket } from '../services/socket';
 
 const AuthContext = createContext();
 
@@ -13,22 +13,57 @@ export const useAuth = () => {
   return context;
 };
 
+// Session needs a second factor if the user enrolled TOTP but this session is still aal1.
+const getPendingMfa = async () => {
+  const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+  if (aal?.nextLevel === 'aal2' && aal.currentLevel !== 'aal2') {
+    const { data: factors } = await supabase.auth.mfa.listFactors();
+    const totp = factors?.totp?.[0];
+    if (totp) return { factorId: totp.id };
+  }
+  return null;
+};
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [organizations, setOrganizations] = useState([]);
   const [currentOrganization, setCurrentOrganization] = useState(null);
   const [loading, setLoading] = useState(true);
+  // Set when the password step passed but the 2FA code has not been entered yet
+  const [mfaPending, setMfaPending] = useState(null);
 
   // Prevent double-fetch when login() and onAuthStateChange both fire
   const isHandlingAuth = useRef(false);
 
+  const clearLocalState = () => {
+    setAuthToken(null);
+    setUser(null);
+    setOrganizations([]);
+    setCurrentOrganization(null);
+    localStorage.removeItem('currentOrganization');
+  };
+
+  const pickOrganization = (orgs) => {
+    let saved = null;
+    try {
+      saved = JSON.parse(localStorage.getItem('currentOrganization'));
+    } catch {
+      localStorage.removeItem('currentOrganization');
+    }
+    const active = orgs.find((o) => o._id === saved?._id) || orgs[0];
+    if (active) {
+      setCurrentOrganization(active);
+      localStorage.setItem('currentOrganization', JSON.stringify(active));
+    } else {
+      setCurrentOrganization(null);
+    }
+  };
+
   // Fetch MongoDB user data via backend
   const fetchUserData = async () => {
     try {
-      console.log('📡 Fetching /auth/me...');
       const response = await api.get('/auth/me');
       const userData = response.data;
-      console.log('✅ Got user data:', userData.email);
 
       setUser({
         _id: userData._id,
@@ -40,40 +75,33 @@ export const AuthProvider = ({ children }) => {
       });
 
       setOrganizations(userData.organizations || []);
-
-      const savedCurrentOrg = localStorage.getItem('currentOrganization');
-      if (savedCurrentOrg) {
-        try {
-          const parsedOrg = JSON.parse(savedCurrentOrg);
-          const freshOrg = userData.organizations?.find(org => org._id === parsedOrg._id);
-
-          if (freshOrg) {
-            setCurrentOrganization(freshOrg);
-            localStorage.setItem('currentOrganization', JSON.stringify(freshOrg));
-          } else if (userData.organizations && userData.organizations.length > 0) {
-            setCurrentOrganization(userData.organizations[0]);
-            localStorage.setItem('currentOrganization', JSON.stringify(userData.organizations[0]));
-          }
-        } catch (_) {
-          localStorage.removeItem('currentOrganization');
-          if (userData.organizations && userData.organizations.length > 0) {
-            setCurrentOrganization(userData.organizations[0]);
-            localStorage.setItem('currentOrganization', JSON.stringify(userData.organizations[0]));
-          }
-        }
-      } else if (userData.organizations && userData.organizations.length > 0) {
-        setCurrentOrganization(userData.organizations[0]);
-        localStorage.setItem('currentOrganization', JSON.stringify(userData.organizations[0]));
-      }
+      pickOrganization(userData.organizations || []);
 
       return userData;
     } catch (error) {
-      console.error('❌ Failed to fetch user data:', error);
-      setUser(null);
-      setOrganizations([]);
-      setCurrentOrganization(null);
-      localStorage.removeItem('currentOrganization');
+      if (error.response?.data?.code === 'MFA_REQUIRED') {
+        setMfaPending(await getPendingMfa());
+      } else {
+        console.error('Failed to fetch user data:', error);
+      }
+      clearLocalState();
       return null;
+    }
+  };
+
+  // Consume an invite token saved from an /accept-invite?token=... link
+  const joinPendingInvite = async () => {
+    const inviteToken = localStorage.getItem('inviteToken');
+    if (!inviteToken) return;
+    try {
+      await api.post('/organizations/accept-invite', { token: inviteToken });
+      const orgRes = await api.get('/organizations');
+      setOrganizations(orgRes.data);
+      pickOrganization(orgRes.data);
+    } catch (err) {
+      console.warn('Auto-join invite failed:', err.response?.data?.message);
+    } finally {
+      localStorage.removeItem('inviteToken');
     }
   };
 
@@ -83,18 +111,19 @@ export const AuthProvider = ({ children }) => {
       try {
         const { data } = await supabase.auth.getSession();
         const session = data?.session;
-        console.log('🔐 INIT SESSION:', session ? 'exists' : 'null');
 
         if (!session) {
           setUser(null);
-          setLoading(false);
-          isHandlingAuth.current = false;
-          return;
+        } else {
+          setAuthToken(session.access_token);
+          const pending = await getPendingMfa();
+          if (pending) {
+            // Page was reloaded half-way through login: ask for the code again
+            setMfaPending(pending);
+          } else {
+            await fetchUserData();
+          }
         }
-
-        // Cache token BEFORE fetching user data
-        setAuthToken(session.access_token);
-        await fetchUserData();
       } catch (error) {
         console.error('Auth init error:', error);
         setUser(null);
@@ -106,158 +135,190 @@ export const AuthProvider = ({ children }) => {
 
     initAuth();
 
-    // Listen for auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('🔄 AUTH EVENT:', event, session ? '(session exists)' : '(no session)');
-
-        // Skip if login() or register() is already handling this
-        if (isHandlingAuth.current) {
-          console.log('⏭️ Skipping — login/register is handling auth');
-          return;
+    const handleAuthEvent = async (event, session) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        // Remember that this session came from a reset link (ResetPassword requires it)
+        sessionStorage.setItem('fd_recovery', '1');
+        if (window.location.pathname !== '/reset-password') {
+          window.location.href = '/reset-password';
         }
+        return;
+      }
 
-        if (event === 'PASSWORD_RECOVERY') {
-          console.log('🔐 Recovery session detected');
-          if (window.location.pathname !== '/reset-password') {
-            window.location.href = '/reset-password';
+      // Skip if login() / verifyMfa() / register() is already handling this
+      if (isHandlingAuth.current) return;
+
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        if (session) {
+          setAuthToken(session.access_token);
+          if (window.location.pathname === '/reset-password') return;
+          const pending = await getPendingMfa();
+          if (pending) {
+            setMfaPending(pending);
+            return;
           }
-          return;
-        }
-
-        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-          if (session) {
-            setAuthToken(session.access_token);
-            // Skip fetching backend data if on reset password page
-            if (window.location.pathname !== '/reset-password') {
-              await fetchUserData();
-
-              // 🔥 Auto-join: check if an invite token was stored (from magic link)
-              const inviteToken = localStorage.getItem('inviteToken');
-              if (inviteToken && event === 'SIGNED_IN') {
-                try {
-                  await api.post('/organizations/accept-invite', { token: inviteToken });
-                  localStorage.removeItem('inviteToken');
-                  // Refresh orgs so the new one appears in sidebar
-                  const orgRes = await api.get('/organizations');
-                  setOrganizations(orgRes.data);
-                  if (orgRes.data.length > 0) {
-                    const saved = localStorage.getItem('currentOrganization');
-                    const parsedSaved = saved ? JSON.parse(saved) : null;
-                    const match = parsedSaved ? orgRes.data.find(o => o._id === parsedSaved._id) : null;
-                    const active = match || orgRes.data[0];
-                    setCurrentOrganization(active);
-                    localStorage.setItem('currentOrganization', JSON.stringify(active));
-                  }
-                } catch (err) {
-                  // If already a member or invalid token, silently clear
-                  localStorage.removeItem('inviteToken');
-                  console.warn('Auto-join invite failed:', err.response?.data?.message);
-                }
-              }
-            }
-          }
-        }
-
-        if (event === 'SIGNED_OUT') {
-          setAuthToken(null);
-          setUser(null);
-          setOrganizations([]);
-          setCurrentOrganization(null);
-          localStorage.removeItem('currentOrganization');
+          await fetchUserData();
+          if (event === 'SIGNED_IN') await joinPendingInvite();
         }
       }
-    );
+
+      if (event === 'SIGNED_OUT') {
+        clearLocalState();
+        setMfaPending(null);
+      }
+    };
+
+    // The callback must not await Supabase calls directly (it can deadlock the auth lock),
+    // so defer the work to the next tick.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setTimeout(() => handleAuthEvent(event, session), 0);
+    });
 
     return () => subscription.unsubscribe();
   }, []);
 
+  // Socket lives only while logged in
+  useEffect(() => {
+    if (user?._id) connectSocket();
+    else disconnectSocket();
+  }, [user?._id]);
+
+  const refreshOrganizations = async () => {
+    try {
+      const response = await api.get('/organizations');
+      setOrganizations(response.data);
+
+      if (currentOrganization) {
+        const updatedCurrentOrg = response.data.find(org => org._id === currentOrganization._id);
+        if (updatedCurrentOrg) {
+          setCurrentOrganization(updatedCurrentOrg);
+          localStorage.setItem('currentOrganization', JSON.stringify(updatedCurrentOrg));
+        } else if (response.data.length > 0) {
+          // Current org was deleted — fall back to personal org or first available
+          const fallback =
+            response.data.find(o => o._id === user?.personalOrganization?.toString()) ||
+            response.data.find(o => o._id === user?.personalOrganization) ||
+            response.data[0];
+          setCurrentOrganization(fallback);
+          localStorage.setItem('currentOrganization', JSON.stringify(fallback));
+        } else {
+          setCurrentOrganization(null);
+          localStorage.removeItem('currentOrganization');
+        }
+      }
+    } catch (error) {
+      console.error('Failed to refresh organizations:', error);
+    }
+  };
+
   useEffect(() => {
     if (!currentOrganization) return;
     const orgId = currentOrganization._id;
-    
-    // Join the org room for real-time updates
-    socket.emit('join-org', orgId);
+
+    // Reference-counted and re-joined automatically after reconnects
+    joinOrg(orgId);
+
+    const isMe = (m) => {
+      const memberUserId = m.user?._id?.toString() || m.user?.toString() || m.user;
+      return memberUserId === user?._id?.toString();
+    };
 
     const handleOrgUpdated = (updatedOrg) => {
-      console.log('📡 Real-time org update received:', updatedOrg.name);
-      
-      const isMatchingCurrent = updatedOrg._id === orgId;
-
-      if (isMatchingCurrent) {
-        // Check if I am still a member
-        const isStillMember = updatedOrg.members?.some(m => {
-          const memberUserId = m.user?._id?.toString() || m.user?.toString() || m.user;
-          return memberUserId === user?._id?.toString();
-        });
-
-        if (!isStillMember) {
-          console.log('🚪 You were removed from this organization. Cleaning up...');
-          setCurrentOrganization(null); // Clear immediately to stop Dashboard from fetching
-          setOrganizations(prev => prev.filter(org => org._id !== orgId)); // Remove from list immediately
+      if (updatedOrg._id === orgId) {
+        if (!updatedOrg.members?.some(isMe)) {
+          // Removed from this organization
+          setCurrentOrganization(null);
+          setOrganizations(prev => prev.filter(org => org._id !== orgId));
           localStorage.removeItem('currentOrganization');
           refreshOrganizations();
           return;
         }
-
-        // Update global currentOrganization state
         setCurrentOrganization(updatedOrg);
         localStorage.setItem('currentOrganization', JSON.stringify(updatedOrg));
       }
 
-      // Update the sidebars/switcher list
       setOrganizations(prev => {
-        const isMember = updatedOrg.members?.some(m => {
-          const memberUserId = m.user?._id?.toString() || m.user?.toString() || m.user;
-          return memberUserId === user?._id?.toString();
-        });
-
-        if (!isMember) {
+        if (!updatedOrg.members?.some(isMe)) {
           return prev.filter(org => org._id !== updatedOrg._id);
         }
         return prev.map(org => org._id === updatedOrg._id ? updatedOrg : org);
       });
     };
 
+    const handleOrgDeleted = ({ orgId: deletedId }) => {
+      if (deletedId === orgId) refreshOrganizations();
+      else setOrganizations(prev => prev.filter(org => org._id !== deletedId));
+    };
+
     socket.on('org:updated', handleOrgUpdated);
-    
+    socket.on('org:deleted', handleOrgDeleted);
+
     return () => {
       socket.off('org:updated', handleOrgUpdated);
-      socket.emit('leave-org', orgId);
+      socket.off('org:deleted', handleOrgDeleted);
+      leaveOrg(orgId);
     };
   }, [currentOrganization?._id]);
 
+  /**
+   * Resolves to the user data, or to { mfaRequired: true } when a 2FA code is still needed
+   * (the Login page then shows the code step).
+   */
   const login = async (email, password) => {
     isHandlingAuth.current = true; // Block listener from double-fetching
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
-
-      console.log('🔑 LOGIN DATA:', data);
-      console.log('🔑 LOGIN ERROR:', error);
-
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
+      if (!data.session) throw new Error('No session returned from Supabase');
 
-      if (!data.session) {
-        throw new Error('No session returned from Supabase');
-      }
-
-      // Cache token, then fetch user data
       setAuthToken(data.session.access_token);
-      const userData = await fetchUserData();
-      
-      if (!userData) {
-        throw new Error('Failed to fetch user data from backend');
+
+      const pending = await getPendingMfa();
+      if (pending) {
+        setMfaPending(pending);
+        return { mfaRequired: true };
       }
 
-      console.log('✅ Login complete, user:', userData.email);
+      const userData = await fetchUserData();
+      if (!userData) throw new Error('Failed to fetch user data from backend');
+      await joinPendingInvite();
       return userData;
     } finally {
-      isHandlingAuth.current = false; // Unblock listener
+      isHandlingAuth.current = false;
     }
+  };
+
+  const verifyMfa = async (code) => {
+    if (!mfaPending) throw new Error('No verification in progress');
+    isHandlingAuth.current = true;
+
+    try {
+      const { error } = await supabase.auth.mfa.challengeAndVerify({
+        factorId: mfaPending.factorId,
+        code: code.replace(/\s/g, ''),
+      });
+      if (error) throw error;
+
+      const { data } = await supabase.auth.getSession();
+      setAuthToken(data.session?.access_token);
+      setMfaPending(null);
+
+      const userData = await fetchUserData();
+      if (!userData) throw new Error('Failed to fetch user data from backend');
+      await joinPendingInvite();
+      return userData;
+    } finally {
+      isHandlingAuth.current = false;
+    }
+  };
+
+  const cancelMfa = async () => {
+    setMfaPending(null);
+    try {
+      await supabase.auth.signOut();
+    } catch { /* already signed out */ }
+    clearLocalState();
   };
 
   const register = async (name, email, password) => {
@@ -294,11 +355,27 @@ export const AuthProvider = ({ children }) => {
     if (error) throw error;
   };
 
+  // Used by the reset-link flow (the emailed link itself proves identity)
   const updatePassword = async (newPassword) => {
-    const { error } = await supabase.auth.updateUser({
-      password: newPassword
-    });
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
     if (error) throw error;
+    sessionStorage.removeItem('fd_recovery');
+    // Log out every other device: whoever knew the old password is kicked out
+    await supabase.auth.signOut({ scope: 'others' });
+  };
+
+  // Used from Settings: the current password must be proven first.
+  const changePassword = async (currentPassword, newPassword) => {
+    // Check on a throwaway client so the live session (and its 2FA level) stays untouched
+    const { error: verifyError } = await createEphemeralClient().auth.signInWithPassword({
+      email: user.email,
+      password: currentPassword,
+    });
+    if (verifyError) throw new Error('Current password is incorrect');
+
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    if (error) throw error;
+    await supabase.auth.signOut({ scope: 'others' });
   };
 
   const logout = async () => {
@@ -307,45 +384,13 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       console.error('Sign out error:', error);
     }
-    setAuthToken(null);
-    setUser(null);
-    setOrganizations([]);
-    setCurrentOrganization(null);
-    localStorage.removeItem('currentOrganization');
+    clearLocalState();
+    setMfaPending(null);
   };
 
   const switchOrganization = (org) => {
     setCurrentOrganization(org);
     localStorage.setItem('currentOrganization', JSON.stringify(org));
-  };
-
-  const refreshOrganizations = async () => {
-    try {
-      const response = await api.get('/organizations');
-      setOrganizations(response.data);
-
-      if (currentOrganization) {
-        const updatedCurrentOrg = response.data.find(org => org._id === currentOrganization._id);
-        if (updatedCurrentOrg) {
-          // Org still exists — update with fresh data
-          setCurrentOrganization(updatedCurrentOrg);
-          localStorage.setItem('currentOrganization', JSON.stringify(updatedCurrentOrg));
-        } else if (response.data.length > 0) {
-          // Current org was deleted — fall back to personal org or first available
-          const fallback =
-            response.data.find(o => o._id === user?.personalOrganization?.toString()) ||
-            response.data.find(o => o._id === user?.personalOrganization) ||
-            response.data[0];
-          setCurrentOrganization(fallback);
-          localStorage.setItem('currentOrganization', JSON.stringify(fallback));
-        } else {
-          setCurrentOrganization(null);
-          localStorage.removeItem('currentOrganization');
-        }
-      }
-    } catch (error) {
-      console.error('Failed to refresh organizations:', error);
-    }
   };
 
   const updateAvatar = (avatarUrl) => {
@@ -361,8 +406,13 @@ export const AuthProvider = ({ children }) => {
     logout,
     resetPassword,
     updatePassword,
+    changePassword,
+    mfaPending,
+    verifyMfa,
+    cancelMfa,
     switchOrganization,
     refreshOrganizations,
+    refreshUser: fetchUserData,
     updateAvatar,
     loading,
     isAuthenticated: !!user,

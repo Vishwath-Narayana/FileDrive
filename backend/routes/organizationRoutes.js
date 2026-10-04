@@ -33,6 +33,6 @@ router.delete('/:organizationId/invitations/:invitationId', authMiddleware, revo
 router.delete('/:id', authMiddleware, deleteOrganization); // generic last
 router.post('/invitations/:invitationId/accept', authMiddleware, acceptInvitation);
 router.post('/invitations/:invitationId/reject', authMiddleware, rejectInvitation);
-router.post('/accept-invite', acceptInviteByToken);
+router.post('/accept-invite', authMiddleware, acceptInviteByToken);
 
 module.exports = router;
