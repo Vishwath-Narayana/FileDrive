@@ -13,6 +13,12 @@ const fileSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  // Object key in the R2/S3 bucket (private, served via short-lived signed URLs)
+  storageKey: {
+    type: String,
+    index: true
+  },
+  // Legacy Cloudinary fields, kept only so the migration script can read old records
   cloudinaryPublicId: {
     type: String
   },
@@ -39,7 +45,8 @@ const fileSchema = new mongoose.Schema({
   organization: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Organization',
-    required: true
+    required: true,
+    index: true
   },
   favoritedBy: [{
     type: mongoose.Schema.Types.ObjectId,
