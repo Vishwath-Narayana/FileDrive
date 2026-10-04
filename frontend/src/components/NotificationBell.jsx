@@ -22,12 +22,13 @@ const NotificationBell = ({ socket }) => {
   useEffect(() => {
     if (!socket || !user) return;
 
-    const eventName = `notification:new:${user._id}`;
-    socket.on(eventName, (notification) => {
+    // The server sends this only to the sockets of the invited user
+    const handleNew = (notification) => {
       setNotifications(prev => [notification, ...prev]);
-    });
+    };
+    socket.on('notification:new', handleNew);
 
-    return () => socket.off(eventName);
+    return () => socket.off('notification:new', handleNew);
   }, [socket, user]);
 
   // Close on outside click

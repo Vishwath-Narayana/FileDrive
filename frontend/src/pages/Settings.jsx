@@ -6,31 +6,31 @@ import Sidebar from '../components/Sidebar';
 import Topbar from '../components/Topbar';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { supabase } from '../services/supabaseClient';
+import TwoFactorSettings from '../components/TwoFactorSettings';
+import { validatePassword, passwordStrength as calcStrength } from '../utils/password';
 
 const Settings = () => {
   const navigate = useNavigate();
-  const { user, updateAvatar, updatePassword } = useAuth();
+  const { user, updateAvatar, changePassword, refreshUser } = useAuth();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [activeSection, setActiveSection] = useState('profile');
 
   const [name, setName] = useState(user?.name || '');
   const [email] = useState(user?.email || '');
   const [age, setAge] = useState(user?.age || '');
-  const [avatarPreview, setAvatarPreview] = useState(
-    user?.avatar ? `http://localhost:5001${user.avatar}` : null
-  );
+  const [avatarPreview, setAvatarPreview] = useState(user?.avatar || null);
   const [avatarFile, setAvatarFile] = useState(null);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [savingProfile, setSavingProfile] = useState(false);
 
+  const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [updatingPassword, setUpdatingPassword] = useState(false);
 
-  const passwordStrength = newPassword.length === 0 ? 0 : newPassword.length < 6 ? 1 : newPassword.length < 10 ? 2 : 3;
+  const passwordStrength = calcStrength(newPassword);
   const strengthLabels = ['', 'Weak', 'Good', 'Strong'];
   const strengthColors = ['', 'var(--accent-red)', 'var(--accent-amber)', 'var(--accent-green)'];
 
@@ -77,8 +77,8 @@ const Settings = () => {
     try {
       setSavingProfile(true);
       await api.put('/users/profile', { name, age: age ? Number(age) : null });
+      await refreshUser();
       toast.success('Profile updated successfully');
-      window.location.reload();
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to update profile');
     } finally {
@@ -89,12 +89,17 @@ const Settings = () => {
   const handleUpdatePassword = async (e) => {
     e.preventDefault();
 
-    if (!newPassword || !confirmPassword) {
+    if (!currentPassword || !newPassword || !confirmPassword) {
       toast.error('Please fill in all password fields');
       return;
     }
-    if (newPassword.length < 6) {
-      toast.error('Password must be at least 6 characters');
+    const passwordError = validatePassword(newPassword);
+    if (passwordError) {
+      toast.error(passwordError);
+      return;
+    }
+    if (newPassword === currentPassword) {
+      toast.error('New password must be different from the current one');
       return;
     }
     if (newPassword !== confirmPassword) {
@@ -104,10 +109,10 @@ const Settings = () => {
 
     try {
       setUpdatingPassword(true);
-      const { error } = await supabase.auth.updateUser({ password: newPassword });
-      if (error) throw error;
+      await changePassword(currentPassword, newPassword);
 
-      toast.success('Password updated successfully!');
+      toast.success('Password updated. Other devices have been signed out.');
+      setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
     } catch (error) {
@@ -369,6 +374,18 @@ const Settings = () => {
                 </div>
 
                 <form onSubmit={handleUpdatePassword} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  <div>
+                    <label style={labelStyle} htmlFor="current-password">CURRENT PASSWORD</label>
+                    <input
+                      id="current-password"
+                      type="password"
+                      value={currentPassword}
+                      onChange={(e) => setCurrentPassword(e.target.value)}
+                      className="input-field"
+                      placeholder="••••••••"
+                      autoComplete="current-password"
+                    />
+                  </div>
                   <div className="settings-passwords-grid">
                     {/* New password */}
                     <div>
@@ -467,12 +484,12 @@ const Settings = () => {
                   <div style={{ paddingTop: '8px', borderTop: '1px solid var(--border)' }}>
                     <button
                       type="submit"
-                      disabled={updatingPassword || !newPassword || !confirmPassword}
+                      disabled={updatingPassword || !currentPassword || !newPassword || !confirmPassword}
                       className="btn-primary-indigo"
                       style={{
-                        opacity: (!newPassword || !confirmPassword) ? 0.4 : 1,
-                        cursor: (updatingPassword || !newPassword || !confirmPassword) ? 'not-allowed' : 'pointer',
-                        pointerEvents: (!newPassword || !confirmPassword) ? 'none' : 'auto',
+                        opacity: (!currentPassword || !newPassword || !confirmPassword) ? 0.4 : 1,
+                        cursor: (updatingPassword || !currentPassword || !newPassword || !confirmPassword) ? 'not-allowed' : 'pointer',
+                        pointerEvents: (!currentPassword || !newPassword || !confirmPassword) ? 'none' : 'auto',
                       }}
                     >
                       {updatingPassword ? (
@@ -485,6 +502,8 @@ const Settings = () => {
                   </div>
                 </form>
               </div>
+
+              <TwoFactorSettings />
             </div>
           </div>
         </main>

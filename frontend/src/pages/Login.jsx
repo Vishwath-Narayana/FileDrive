@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-hot-toast';
-import { ArrowRight, Eye, EyeOff } from 'lucide-react';
+import { ArrowRight, Eye, EyeOff, ShieldCheck } from 'lucide-react';
 import logo from '../assets/logo.png';
 
 const Login = () => {
@@ -11,7 +11,8 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  const [code, setCode] = useState('');
+  const { login, mfaPending, verifyMfa, cancelMfa } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -30,7 +31,8 @@ const Login = () => {
 
     try {
       setLoading(true);
-      await login(email, password);
+      const result = await login(email, password);
+      if (result?.mfaRequired) return; // second step is shown below
       toast.success('Welcome back!', { icon: '👋' });
       navigate('/dashboard');
     } catch (error) {
@@ -39,6 +41,58 @@ const Login = () => {
       setLoading(false);
     }
   };
+
+  const handleVerify = async (e) => {
+    e.preventDefault();
+    if (code.replace(/\s/g, '').length !== 6) {
+      toast.error('Enter the 6-digit code from your authenticator app');
+      return;
+    }
+    try {
+      setLoading(true);
+      await verifyMfa(code);
+      toast.success('Welcome back!', { icon: '👋' });
+      navigate('/dashboard');
+    } catch (error) {
+      toast.error(error.message || 'Invalid code, try again');
+      setCode('');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const mfaForm = (
+    <form onSubmit={handleVerify} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <div style={{ textAlign: 'center' }}>
+        <ShieldCheck size={28} style={{ color: 'var(--accent-indigo)', marginBottom: '8px' }} />
+        <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.5, margin: 0 }}>
+          Open your authenticator app and enter the 6-digit code for FileDrive.
+        </p>
+      </div>
+      <input
+        id="mfa-code"
+        inputMode="numeric"
+        autoComplete="one-time-code"
+        autoFocus
+        maxLength={7}
+        value={code}
+        onChange={(e) => setCode(e.target.value.replace(/[^\d\s]/g, ''))}
+        className="input-field"
+        placeholder="123456"
+        style={{ textAlign: 'center', letterSpacing: '0.4em', fontSize: '18px', fontFamily: 'var(--font-mono)' }}
+      />
+      <button type="submit" disabled={loading} className="btn-primary" style={{ width: '100%', justifyContent: 'center', height: '40px', fontSize: '13px' }}>
+        {loading ? 'Verifying...' : 'Verify and sign in'}
+      </button>
+      <button
+        type="button"
+        onClick={() => { setCode(''); setPassword(''); cancelMfa(); }}
+        style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '12px', color: 'var(--text-tertiary)' }}
+      >
+        Use a different account
+      </button>
+    </form>
+  );
 
   return (
     <div style={{
@@ -50,8 +104,8 @@ const Login = () => {
     }}>
       <Link to="/" style={{ marginBottom: '32px', textAlign: 'center', display: 'block', textDecoration: 'none' }}>
         <img src={logo} alt="FileDrive Logo" style={{ width: '48px', height: '48px', objectFit: 'cover', borderRadius: '12px', margin: '0 auto 16px', boxShadow: 'var(--accent-indigo-glow)' }} />
-        <h1 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.03em' }}>Welcome back</h1>
-        <p style={{ fontSize: '12px', color: 'var(--text-quaternary)', marginTop: '6px', fontFamily: 'var(--font-mono)', letterSpacing: '0.03em' }}>ENTER YOUR CREDENTIALS TO CONTINUE</p>
+        <h1 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.03em' }}>{mfaPending ? 'Two-step verification' : 'Welcome back'}</h1>
+        <p style={{ fontSize: '12px', color: 'var(--text-quaternary)', marginTop: '6px', fontFamily: 'var(--font-mono)', letterSpacing: '0.03em' }}>{mfaPending ? 'ONE MORE STEP TO SIGN IN' : 'ENTER YOUR CREDENTIALS TO CONTINUE'}</p>
       </Link>
 
       <div className="animate-slide-up" style={{ width: '100%', maxWidth: '400px' }}>
@@ -62,6 +116,7 @@ const Login = () => {
           border: '1px solid var(--border)',
           boxShadow: '0 12px 40px rgba(0,0,0,0.4)',
         }}>
+          {mfaPending ? mfaForm : (
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
             <div>
               <label htmlFor="email" className="sys-label" style={{ display: 'block', marginBottom: '8px' }}>
@@ -147,6 +202,7 @@ const Login = () => {
               )}
             </button>
           </form>
+          )}
 
           <div style={{ marginTop: '24px', paddingTop: '20px', textAlign: 'center', borderTop: '1px solid var(--border)' }}>
             <p style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>
